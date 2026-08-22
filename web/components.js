@@ -1,4 +1,4 @@
-import { METRICS, STORAGE_KEY, PLAYER_WINDOWS, MIN_MINS_OPTIONS } from "./registry.js";
+import { METRICS, STORAGE_KEY, MIN_MINS_OPTIONS } from "./registry.js";
 
 const tipEl = () => document.getElementById("tooltip");
 
@@ -269,9 +269,10 @@ export function lastGwSlice(rows, n) {
 
 export function aggregatePlayers(matches, state, { prices = {} } = {}) {
   const filtered = filterMatches(matches, { ...state, players: null });
-  const sliced = state.rangeLocked
-    ? gwRangeSlice(filtered, state.gwFrom, state.gwTo)
-    : lastGwSlice(filtered, state.window || 5);
+  const sliced =
+    state.gwFrom != null && state.gwTo != null
+      ? gwRangeSlice(filtered, state.gwFrom, state.gwTo)
+      : lastGwSlice(filtered, 5);
   const { rows: windowed, from, to } = sliced;
   const groups = new Map();
   for (const r of windowed) {
@@ -334,9 +335,10 @@ export function aggregateTeamRows(rows, state) {
     if (venue && !inList(state.venues, venue)) return false;
     return true;
   });
-  const sliced = state.rangeLocked
-    ? gwRangeSlice(filtered, state.gwFrom, state.gwTo)
-    : lastGwSlice(filtered, state.window || 5);
+  const sliced =
+    state.gwFrom != null && state.gwTo != null
+      ? gwRangeSlice(filtered, state.gwFrom, state.gwTo)
+      : lastGwSlice(filtered, 5);
   const { rows: win, from, to } = sliced;
   const byTeam = new Map();
   for (const r of win) {
@@ -742,10 +744,8 @@ export function makeTable(cfg) {
     venues: asArray(persisted.venues || (persisted.venue && persisted.venue !== "all" ? persisted.venue : null), ["H", "A"]),
     posFilter: asArray(persisted.posFilter || persisted.position, cfg.positions || []),
     players: persisted.players || [],
-    window: persisted.window || cfg.defaultWindow || 5,
     gwFrom: persisted.gwFrom ?? null,
     gwTo: persisted.gwTo ?? null,
-    rangeLocked: persisted.rangeLocked ?? false,
     currentOnly: true,
     detail: persisted.detail ?? false,
     positions: cfg.positions,
@@ -760,7 +760,6 @@ export function makeTable(cfg) {
   controls.className = "controls";
   controls.dataset.name = `${view}.controls`;
 
-  const lastCtrl = lastWindowControl(state, `${view}.filter.window`, render);
   const gwCtrl = gwRangeControl(state, `${view}.filter.range`, render);
   const seasonMs = makeMultiSelect({
     name: `${view}.filter.season`,
@@ -828,15 +827,21 @@ export function makeTable(cfg) {
     });
   }
 
-  controls.append(lastCtrl, gwCtrl, seasonMs.el, compMs.el, venueMs.el);
-  if (posMs) controls.appendChild(posMs.el);
-  if (playerMs) controls.appendChild(playerMs.el);
-  if (!cfg.hideMins) controls.appendChild(minsControl(state, `${view}.filter.mins`, render));
-  if (!cfg.hideSearch) controls.appendChild(searchControl(state, `${view}.filter.search`, render));
+  const filterRow = document.createElement("div");
+  filterRow.className = "controls-row";
+  const sliderRow = document.createElement("div");
+  sliderRow.className = "controls-row";
+  filterRow.append(seasonMs.el, compMs.el, venueMs.el);
+  if (posMs) filterRow.appendChild(posMs.el);
+  if (playerMs) filterRow.appendChild(playerMs.el);
+  if (!cfg.hideSearch) filterRow.appendChild(searchControl(state, `${view}.filter.search`, render));
   if (!cfg.hidePer90 && ((cfg.per90Keys && cfg.per90Keys.length) || (cfg.always90Keys && cfg.always90Keys.length))) {
-    controls.appendChild(per90Control(state, `${view}.filter.per90`, render));
+    filterRow.appendChild(per90Control(state, `${view}.filter.per90`, render));
   }
-  if (!cfg.hideDetail && cfg.extraColumns?.length) controls.appendChild(detailControl(state, `${view}.filter.detail`, render));
+  if (!cfg.hideDetail && cfg.extraColumns?.length) filterRow.appendChild(detailControl(state, `${view}.filter.detail`, render));
+  sliderRow.appendChild(gwCtrl);
+  if (!cfg.hideMins) sliderRow.appendChild(minsControl(state, `${view}.filter.mins`, render));
+  controls.append(filterRow, sliderRow);
 
   const count = document.createElement("p");
   count.className = "showing";
@@ -915,11 +920,12 @@ export function makeTable(cfg) {
     table.appendChild(tb);
     const from = sorted[0]?.gw_from ?? state.gwFrom;
     const to = sorted[0]?.gw_to ?? state.gwTo;
+    if (from && to) {
+      state.gwFrom = from;
+      state.gwTo = to;
+    }
     const range = from && to ? `GW ${from}–${to}` : "";
-    const mode = state.rangeLocked ? "exact range" : `last ${state.window} GW`;
-    count.textContent = `Showing ${sorted.length} · ${mode}${range ? ` · ${range}` : ""}`;
-    const lastLabel = host.querySelector("[data-window-label]");
-    if (lastLabel) lastLabel.textContent = `Last ${state.window} GW`;
+    count.textContent = `Showing ${sorted.length}${range ? ` · ${range}` : ""}`;
     const rangeLabel = host.querySelector("[data-range-label]");
     if (rangeLabel && from && to) rangeLabel.textContent = `GW ${from}–${to}`;
     const fromEl = host.querySelector("[data-from]");
@@ -964,33 +970,16 @@ function cmp(a, b, dir) {
   return (a - b) * (dir === "asc" ? 1 : -1);
 }
 
-function lastWindowControl(state, name, render) {
-  const opts = PLAYER_WINDOWS;
-  const idx = Math.max(0, opts.indexOf(state.window));
-  const box = labeledCtrl(
-    name,
-    "Last N completed gameweeks in the selected season (1–38).",
-    `<span class="ctrl-copy"><span data-window-label>Last ${state.window} GW</span>
-    <input type="range" min="0" max="${opts.length - 1}" step="1" value="${idx}" /></span>`
-  );
-  box.querySelector("input").addEventListener("input", (e) => {
-    state.window = opts[Number(e.target.value)] || opts[0];
-    state.rangeLocked = false;
-    render();
-  });
-  return box;
-}
-
 function gwRangeControl(state, name, render) {
-  if (state.gwFrom == null) state.gwFrom = 1;
-  if (state.gwTo == null) state.gwTo = 38;
+  const fromVal = state.gwFrom ?? 1;
+  const toVal = state.gwTo ?? 38;
   const box = labeledCtrl(
     name,
-    "Exact gameweek range. Use this when Last N is not the window you want.",
-    `<span class="ctrl-copy"><span data-range-label>GW ${state.gwFrom}–${state.gwTo}</span>
+    "Exact gameweek range inside the selected season.",
+    `<span class="ctrl-copy"><span data-range-label>GW ${fromVal}–${toVal}</span>
     <span class="dual-range">
-      <label class="range-leg">From<input data-from type="range" min="1" max="38" value="${state.gwFrom}" /></label>
-      <label class="range-leg">To<input data-to type="range" min="1" max="38" value="${state.gwTo}" /></label>
+      <label class="range-leg">From<input data-from type="range" min="1" max="38" value="${fromVal}" /></label>
+      <label class="range-leg">To<input data-to type="range" min="1" max="38" value="${toVal}" /></label>
     </span></span>`
   );
   const from = box.querySelector("[data-from]");
@@ -1001,8 +990,6 @@ function gwRangeControl(state, name, render) {
     if (a > b) [a, b] = [b, a];
     state.gwFrom = a;
     state.gwTo = b;
-    state.window = Math.max(1, b - a + 1);
-    state.rangeLocked = true;
     render();
   };
   from.addEventListener("input", sync);

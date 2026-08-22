@@ -64,6 +64,16 @@ Static site in `web/`. After masters exist:
 
 Presentation edits never rebuild Parquet. Netlify publish directory is `web/` (JSON is copied to `web/data/`). See `docs/dashboard_readme.md`.
 
+### Roll back the last UI versions
+
+```bash
+git log --oneline -5
+git checkout c98e1a5 -- web          # previous snapshot (material sidebar)
+git checkout HEAD -- web             # undo a checkout, if needed
+```
+
+Keep the last two dashboard commits. Ask before going further back.
+
 ## Tests
 
 ```bash

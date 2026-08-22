@@ -20,9 +20,6 @@
             <small>Match facts first</small>
           </div>
         </div>
-        <button type="button" class="icon-btn" id="sidebar-collapse" data-name="nav.collapse" aria-label="Collapse menu">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l-6 6 6 6M21 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-        </button>
       </div>
       <nav class="side-nav" data-name="nav.links" aria-label="Primary">
         <a href="#home" class="nav-link" data-page="home" data-name="nav.home">
@@ -40,9 +37,15 @@
             <i class="chev" aria-hidden="true"></i>
           </button>
           <div class="nav-kids">
-            <a href="#attackers" data-page="attackers" data-name="nav.attackers">Attackers</a>
-            <a href="#defenders" data-page="defenders" data-name="nav.defenders">Defenders</a>
-            <a href="#gk" data-page="gk" data-name="nav.gk">Goalkeepers</a>
+            <a class="nav-link" href="#attackers" data-page="attackers" data-name="nav.attackers">
+              <span class="nav-dot" aria-hidden="true"></span><span>Attackers</span>
+            </a>
+            <a class="nav-link" href="#defenders" data-page="defenders" data-name="nav.defenders">
+              <span class="nav-dot" aria-hidden="true"></span><span>Defenders</span>
+            </a>
+            <a class="nav-link" href="#gk" data-page="gk" data-name="nav.gk">
+              <span class="nav-dot" aria-hidden="true"></span><span>Goalkeepers</span>
+            </a>
           </div>
         </div>
         <div class="nav-block" data-group="insights" data-name="nav.insights">
@@ -52,9 +55,15 @@
             <i class="chev" aria-hidden="true"></i>
           </button>
           <div class="nav-kids">
-            <a href="#insights-players" data-page="insights-players" data-name="nav.insights.players">Players</a>
-            <a href="#insights-matches" data-page="insights-matches" data-name="nav.insights.matches">Matches</a>
-            <a href="#insights-teams" data-page="insights-teams" data-name="nav.insights.teams">Teams</a>
+            <a class="nav-link" href="#insights-players" data-page="insights-players" data-name="nav.insights.players">
+              <span class="nav-dot" aria-hidden="true"></span><span>Players</span>
+            </a>
+            <a class="nav-link" href="#insights-matches" data-page="insights-matches" data-name="nav.insights.matches">
+              <span class="nav-dot" aria-hidden="true"></span><span>Matches</span>
+            </a>
+            <a class="nav-link" href="#insights-teams" data-page="insights-teams" data-name="nav.insights.teams">
+              <span class="nav-dot" aria-hidden="true"></span><span>Teams</span>
+            </a>
           </div>
         </div>
         <a href="#teams" class="nav-link" data-page="teams" data-name="nav.teams">
@@ -69,6 +78,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12v13H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 7V5h6v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
           <span>Data</span>
         </a>
+        <button type="button" class="nav-link" id="sidebar-collapse" data-name="nav.collapse" aria-label="Collapse menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>Collapse</span>
+        </button>
       </nav>
     </aside>
 
@@ -77,6 +90,8 @@
         <button type="button" class="icon-btn" id="sidebar-open" aria-label="Open menu">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
         </button>
+        <p class="topbar-brand">FPL Pulse Talk</p>
+        <span class="topbar-sep" aria-hidden="true"></span>
         <p id="topbar-title" class="topbar-title">Home</p>
       </header>
       <p id="boot-error" class="boot-error" hidden></p>
