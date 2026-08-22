@@ -102,6 +102,7 @@ export const VIEWS = {
     hidePer90: true,
     hideDetail: true,
     hidePlayers: true,
+    hideCost: true,
   },
 };
 

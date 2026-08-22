@@ -265,7 +265,7 @@ function insightBaseState(key, extra = {}) {
 }
 
 function mountGlobalInsightFilters(host, namePrefix, state, extras, render) {
-  host.className = "controls";
+  host.className = "insight-filters";
   host.dataset.name = `${namePrefix}.controls`;
   host.innerHTML = "";
   const seasonMs = makeMultiSelect({

@@ -21,6 +21,7 @@ The italic **i** appears only when you hover a named label (not on changing valu
 | `{view}.filter.position` | Attackers MID/FWD (multi-select) |
 | `{view}.filter.players` | Player picker (multi-select) |
 | `{view}.filter.mins` | Min minutes / appearance |
+| `{view}.filter.cost` | FPL price range (£m) |
 | `{view}.filter.search` | Search |
 | `{view}.filter.per90` | Per-90 toggle |
 | `{view}.filter.detail` | More metrics |

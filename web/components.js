@@ -746,6 +746,8 @@ export function makeTable(cfg) {
     players: persisted.players || [],
     gwFrom: persisted.gwFrom ?? null,
     gwTo: persisted.gwTo ?? null,
+    costMin: persisted.costMin ?? 4,
+    costMax: persisted.costMax ?? 15,
     currentOnly: true,
     detail: persisted.detail ?? false,
     positions: cfg.positions,
@@ -841,6 +843,7 @@ export function makeTable(cfg) {
   if (!cfg.hideDetail && cfg.extraColumns?.length) filterRow.appendChild(detailControl(state, `${view}.filter.detail`, render));
   sliderRow.appendChild(gwCtrl);
   if (!cfg.hideMins) sliderRow.appendChild(minsControl(state, `${view}.filter.mins`, render));
+  if (!cfg.hideCost && !cfg.hidePlayers) sliderRow.appendChild(costControl(state, `${view}.filter.cost`, render));
   controls.append(filterRow, sliderRow);
 
   const count = document.createElement("p");
@@ -872,6 +875,9 @@ export function makeTable(cfg) {
       playerMs.setOptions(unique, state.players);
     }
     let rows = source.filter((r) => (r.mins_per_app || 0) >= Number(state.minMins || 0));
+    if (!cfg.hideCost && !cfg.hidePlayers) {
+      rows = rows.filter((r) => r.Cost == null || (r.Cost >= state.costMin && r.Cost <= state.costMax));
+    }
     if (state.players?.length) {
       rows = rows.filter((r) => state.players.includes(String(r.pc ?? r.pid)));
     }
@@ -1011,6 +1017,33 @@ function minsControl(state, name, render) {
     label.textContent = `Min/app ≥ ${state.minMins}`;
     render();
   });
+  return box;
+}
+
+function costControl(state, name, render) {
+  const box = labeledCtrl(
+    name,
+    "Current-season FPL price in £m.",
+    `<span class="ctrl-copy"><span data-cost-label>£${Number(state.costMin).toFixed(1)}–${Number(state.costMax).toFixed(1)}m</span>
+    <span class="dual-range">
+      <label class="range-leg">From £<input data-cost-from type="range" min="4" max="15" step="0.5" value="${state.costMin}" /></label>
+      <label class="range-leg">To £<input data-cost-to type="range" min="4" max="15" step="0.5" value="${state.costMax}" /></label>
+    </span></span>`
+  );
+  const from = box.querySelector("[data-cost-from]");
+  const to = box.querySelector("[data-cost-to]");
+  const label = box.querySelector("[data-cost-label]");
+  const sync = () => {
+    let a = Number(from.value);
+    let b = Number(to.value);
+    if (a > b) [a, b] = [b, a];
+    state.costMin = a;
+    state.costMax = b;
+    label.textContent = `£${a.toFixed(1)}–${b.toFixed(1)}m`;
+    render();
+  };
+  from.addEventListener("input", sync);
+  to.addEventListener("input", sync);
   return box;
 }
 
