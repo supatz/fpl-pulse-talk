@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FPL Pulse Talk</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="tooltip" hidden></div>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar" data-name="nav.shell">
+      <div class="sidebar-head">
+        <div class="brand" data-name="nav.brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div class="brand-copy">
+            <strong>FPL Pulse Talk</strong>
+            <small>Match facts first</small>
+          </div>
+        </div>
+        <button type="button" class="icon-btn" id="sidebar-collapse" data-name="nav.collapse" aria-label="Collapse menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l-6 6 6 6M21 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+      </div>
+      <nav class="side-nav" data-name="nav.links" aria-label="Primary">
+        <a href="#home" class="nav-link" data-page="home" data-name="nav.home">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5V20H4z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>Home</span>
+        </a>
+        <a href="#fixtures" class="nav-link" data-page="fixtures" data-name="nav.fixtures">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 10h16M9 5v3M15 5v3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>Fixtures</span>
+        </a>
+        <div class="nav-block" data-group="players" data-name="nav.players">
+          <button type="button" class="nav-link nav-parent" data-page="players">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 19c1.4-3 4-4.5 7-4.5S17.6 16 19 19" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            <span>Players</span>
+            <i class="chev" aria-hidden="true"></i>
+          </button>
+          <div class="nav-kids">
+            <a href="#attackers" data-page="attackers" data-name="nav.attackers">Attackers</a>
+            <a href="#defenders" data-page="defenders" data-name="nav.defenders">Defenders</a>
+            <a href="#gk" data-page="gk" data-name="nav.gk">Goalkeepers</a>
+          </div>
+        </div>
+        <div class="nav-block" data-group="insights" data-name="nav.insights">
+          <button type="button" class="nav-link nav-parent" data-page="insights">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V9l7-5 7 5v10H5z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 19v-6h4v6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            <span>Insights</span>
+            <i class="chev" aria-hidden="true"></i>
+          </button>
+          <div class="nav-kids">
+            <a href="#insights-players" data-page="insights-players" data-name="nav.insights.players">Players</a>
+            <a href="#insights-matches" data-page="insights-matches" data-name="nav.insights.matches">Matches</a>
+            <a href="#insights-teams" data-page="insights-teams" data-name="nav.insights.teams">Teams</a>
+          </div>
+        </div>
+        <a href="#teams" class="nav-link" data-page="teams" data-name="nav.teams">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 12h15M12 4c2.4 2.6 3.6 5.4 3.6 8S14.4 17.4 12 20c-2.4-2.6-3.6-5.4-3.6-8S9.6 6.6 12 4z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+          <span>Teams</span>
+        </a>
+        <a href="#chips" class="nav-link" data-page="chips" data-name="nav.chips">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="6" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>Chips</span>
+        </a>
+        <a href="#data" class="nav-link" data-page="data" data-name="nav.data">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12v13H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 7V5h6v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>Data</span>
+        </a>
+      </nav>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar" data-name="nav.topbar">
+        <button type="button" class="icon-btn" id="sidebar-open" aria-label="Open menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+        <p id="topbar-title" class="topbar-title">Home</p>
+      </header>
+      <p id="boot-error" class="boot-error" hidden></p>
+      <main id="main">
+        <section class="page" id="page-home">
+          <div class="page-head">
+            <div class="name-row" data-name="home.title"><h1>See the next decision, not just the last result.</h1></div>
+            <p id="home-meta" class="lede" data-name="home.meta"></p>
+          </div>
+          <div id="home-jumps" data-name="home.jumps"></div>
+        </section>
+
+        <section class="page" id="page-fixtures" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="fixtures.title"><h1>Fixtures</h1></div>
+            <p class="lede">One gameweek of predicted-xG cards. The next GW appears only after this one is finished.</p>
+            <p id="fixtures-gw-label" class="lede tight" data-name="fixtures.gwlabel"></p>
+          </div>
+          <div class="toolbar" data-name="fixtures.controls">
+            <div id="fixtures-comp-host"></div>
+            <a id="fdr-link" class="btn-ext" data-name="fixtures.fdr" target="_blank" rel="noopener">Full FDR planner ↗</a>
+          </div>
+          <div id="fixtures-cards" class="fx-grid" data-name="fixtures.cards"></div>
+          <div class="name-row" data-name="fixtures.ticker.title"><h2>Next six gameweeks</h2></div>
+          <div id="fixtures-ticker" class="ticker-wrap" data-name="fixtures.ticker"></div>
+        </section>
+
+        <section class="page" id="page-attackers" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="attackers.title"><h1>Attackers</h1></div>
+            <p class="lede">Last N GW for recent form, or set an exact GW range. Team and player filters sit on the table.</p>
+          </div>
+          <div id="attackers-root"></div>
+        </section>
+
+        <section class="page" id="page-defenders" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="defenders.title"><h1>Defenders</h1></div>
+            <p class="lede">Tkl, CBI and DefCon stay per 90. Use More metrics for aerials and volume defending.</p>
+          </div>
+          <div id="defenders-root"></div>
+        </section>
+
+        <section class="page" id="page-gk" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="gk.title"><h1>Goalkeepers</h1></div>
+            <p class="lede">xGP is xG prevented via saves. xGOTf is on-target xG faced.</p>
+          </div>
+          <div id="gk-root"></div>
+        </section>
+
+        <section class="page" id="page-insights-players" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="insights.players.title"><h1>Player insights</h1></div>
+            <p class="lede">Compact lists. Window is last N gameweeks, capped at 10. Green is overperformance, red is under, amber is a watch.</p>
+          </div>
+          <div id="insights-players-controls"></div>
+          <div class="insight-grid">
+            <section>
+              <div class="name-row" data-name="insights.players.topxgi.title"><h2>Top xGI</h2></div>
+              <div id="insights-topxgi"></div>
+            </section>
+            <section>
+              <div class="name-row" data-name="insights.players.rising.title"><h2>Rising xGI/90</h2></div>
+              <div id="insights-rising"></div>
+            </section>
+            <section>
+              <div class="name-row" data-name="insights.players.finishing.title"><h2>Finishing over / under</h2></div>
+              <div id="insights-finishing"></div>
+            </section>
+            <section>
+              <div class="name-row" data-name="insights.players.quiet.title"><h2>High xGI, low return</h2></div>
+              <div id="insights-quiet"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="page-insights-matches" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="insights.matches.title"><h1>Match insights</h1></div>
+            <p class="lede">Current Premier League season. Defaults to the latest finished gameweek. Pick GW and match to drill in.</p>
+          </div>
+          <div id="insights-matches-controls"></div>
+          <div id="insights-matches-board" data-name="insights.matches.board"></div>
+        </section>
+
+        <section class="page" id="page-insights-teams" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="insights.teams.title"><h1>Team insights</h1></div>
+            <p class="lede">Club-level signals in the last N gameweeks. Green / red only on over and under performance.</p>
+          </div>
+          <div id="insights-teams-controls"></div>
+          <div class="insight-grid">
+            <section>
+              <div class="name-row" data-name="insights.teams.attack.title"><h2>Highest xG for</h2></div>
+              <div id="insights-team-attack"></div>
+            </section>
+            <section>
+              <div class="name-row" data-name="insights.teams.defend.title"><h2>Lowest xG against</h2></div>
+              <div id="insights-team-defend"></div>
+            </section>
+            <section>
+              <div class="name-row" data-name="insights.teams.over.title"><h2>Goals vs xG</h2></div>
+              <div id="insights-team-over"></div>
+            </section>
+            <section>
+              <div class="name-row" data-name="insights.teams.leak.title"><h2>Goals conceded vs xGA</h2></div>
+              <div id="insights-team-leak"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="page-teams" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="teams.title"><h1>Teams</h1></div>
+            <p class="lede">Last N or an exact GW range, with season, competition and home/away filters.</p>
+          </div>
+          <div id="teams-root"></div>
+        </section>
+
+        <section class="page" id="page-chips" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="chips.title"><h1>Chips</h1></div>
+            <p class="lede" data-name="chips.placeholder">Chip planner is next. New configs, not a rewrite.</p>
+          </div>
+        </section>
+
+        <section class="page" id="page-data" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="data.title"><h1>Data</h1></div>
+            <p class="lede">Public <a href="https://github.com/olbauday/FPL-Core-Insights" target="_blank" rel="noopener">olbauday/FPL-Core-Insights</a>. Snapshot, not live.</p>
+          </div>
+          <dl id="data-facts" class="facts" data-name="data.facts"></dl>
+          <ul id="data-notes" class="notes" data-name="data.notes"></ul>
+        </section>
+      </main>
+      <footer class="foot" data-name="footer">
+        <span>Hover a label to reveal a small <i>i</i>, then click to copy its name. Values stay unmarked.</span>
+      </footer>
+    </div>
+  </div>
+  <div class="nav-scrim" id="nav-scrim" hidden></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

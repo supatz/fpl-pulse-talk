@@ -1,0 +1,6 @@
+[build]
+  publish = "web"
+  # Static site — no build command. Refresh serving JSON, then deploy the web/ folder.
+
+[build.environment]
+  PYTHON_VERSION = "3.13"
