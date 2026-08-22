@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-# Double-click in Finder to refresh the dataset.
-cd "$(dirname "$0")/.."
-exec "./scripts/refresh.sh"
+# Double-click in Finder. Asks: dataset only, git push, or both.
+cd "$(dirname "$0")"
+exec "./refresh.sh"

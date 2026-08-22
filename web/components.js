@@ -1,4 +1,4 @@
-import { METRICS, STORAGE_KEY, MIN_MINS_OPTIONS } from "./registry.js";
+import { METRICS, METRIC_GROUP_LABELS, STORAGE_KEY, MIN_MINS_OPTIONS } from "./registry.js";
 
 const tipEl = () => document.getElementById("tooltip");
 
@@ -226,7 +226,7 @@ export function renderInsightList(el, rows, opts = {}) {
 const SUM_FIELDS = [
   "G", "A", "PenG", "xG", "xA", "xGI", "Sh", "SoT", "CC", "TiB", "BCM", "xGOT",
   "Sv", "GC", "xGOTf", "xGP", "Tkl", "CBI", "DefCon", "npxG", "F3", "Dr", "YC",
-  "Aer", "Clr", "Int", "Blk", "Rec", "SiB", "HC", "SW",
+  "Aer", "Clr", "Int", "Blk", "Rec", "SiB", "HC", "SW", "Cr", "SPxG", "PS",
 ];
 
 function inList(list, value) {
@@ -315,12 +315,18 @@ export function aggregatePlayers(matches, state, { prices = {} } = {}) {
     row.Saves = row.Sv;
     const ptsByGw = new Map();
     const csByGw = new Map();
+    const bonByGw = new Map();
+    const bpsByGw = new Map();
     for (const r of list) {
       if (r.pts != null && !ptsByGw.has(r.gw)) ptsByGw.set(r.gw, r.pts);
       if (r.cs != null && !csByGw.has(r.gw)) csByGw.set(r.gw, r.cs);
+      if (r.Bon != null && !bonByGw.has(r.gw)) bonByGw.set(r.gw, r.Bon);
+      if (r.BPS != null && !bpsByGw.has(r.gw)) bpsByGw.set(r.gw, r.BPS);
     }
     row.Pts = [...ptsByGw.values()].reduce((a, b) => a + Number(b), 0);
     row.CS = [...csByGw.values()].reduce((a, b) => a + Number(b), 0);
+    row.Bon = [...bonByGw.values()].reduce((a, b) => a + Number(b), 0);
+    row.BPS = [...bpsByGw.values()].reduce((a, b) => a + Number(b), 0);
     out.push(row);
   }
   return out;
@@ -749,7 +755,8 @@ export function makeTable(cfg) {
     costMin: persisted.costMin ?? 4,
     costMax: persisted.costMax ?? 15,
     currentOnly: true,
-    detail: persisted.detail ?? false,
+    moreMetrics: persisted.moreMetrics ?? false,
+    groups: persisted.groups || [],
     positions: cfg.positions,
     roster: cfg.roster,
   };
@@ -840,7 +847,7 @@ export function makeTable(cfg) {
   if (!cfg.hidePer90 && ((cfg.per90Keys && cfg.per90Keys.length) || (cfg.always90Keys && cfg.always90Keys.length))) {
     filterRow.appendChild(per90Control(state, `${view}.filter.per90`, render));
   }
-  if (!cfg.hideDetail && cfg.extraColumns?.length) filterRow.appendChild(detailControl(state, `${view}.filter.detail`, render));
+  if (!cfg.hideDetail && cfg.metricGroups) filterRow.appendChild(metricGroupControl(state, cfg, `${view}.filter.detail`, render));
   sliderRow.appendChild(gwCtrl);
   if (!cfg.hideMins) sliderRow.appendChild(minsControl(state, `${view}.filter.mins`, render));
   if (!cfg.hideCost && !cfg.hidePlayers) sliderRow.appendChild(costControl(state, `${view}.filter.cost`, render));
@@ -860,7 +867,13 @@ export function makeTable(cfg) {
   decorateNames(host);
 
   function columns() {
-    return state.detail && cfg.extraColumns?.length ? cfg.columns.concat(cfg.extraColumns) : cfg.columns;
+    const cols = [...(cfg.columns || [])];
+    if (!state.moreMetrics || !cfg.metricGroups) return cols;
+    for (const key of state.groups || []) {
+      const extra = cfg.metricGroups[key];
+      if (extra) cols.push(...extra.filter((c) => !cols.includes(c)));
+    }
+    return cols;
   }
 
   function render() {
@@ -886,6 +899,7 @@ export function makeTable(cfg) {
       rows = rows.filter((r) => `${r.player || ""} ${r.team || ""}`.toLowerCase().includes(q));
     }
     const cols = columns();
+    if (!cols.includes(state.sort)) state.sort = cfg.defaultSort;
     const sorted = [...rows].sort((a, b) => cmp(cellValue(a, state.sort, state, cfg), cellValue(b, state.sort, state, cfg), state.dir));
     const thead = document.createElement("thead");
     const hr = document.createElement("tr");
@@ -1073,16 +1087,46 @@ function per90Control(state, name, render) {
   return box;
 }
 
-function detailControl(state, name, render) {
-  const box = labeledCtrl(
-    name,
-    "Show extra detailed metrics. We will group these later.",
-    `<span class="ctrl-copy check"><input type="checkbox" ${state.detail ? "checked" : ""} /><span>More metrics</span></span>`
-  );
-  box.querySelector("input").addEventListener("change", (e) => {
-    state.detail = e.target.checked;
+function metricGroupControl(state, cfg, name, render) {
+  const groups = Object.keys(cfg.metricGroups || {});
+  const box = document.createElement("div");
+  box.className = "ctrl metric-groups";
+  box.dataset.name = name;
+  box.dataset.tip = "Turn on More metrics, then pick Creativity, Threat, Defending, or FPL.";
+  box.appendChild(nameDot(name));
+  const copy = document.createElement("div");
+  copy.className = "ctrl-copy";
+  const sw = document.createElement("label");
+  sw.className = "switch-row";
+  sw.innerHTML = `<span class="switch"><input type="checkbox" ${state.moreMetrics ? "checked" : ""} /><i></i></span><span>More metrics</span>`;
+  sw.querySelector("input").addEventListener("change", (e) => {
+    state.moreMetrics = e.target.checked;
+    if (!state.moreMetrics) state.groups = [];
+    chips.hidden = !state.moreMetrics;
+    chips.querySelectorAll(".group-chip").forEach((c) => c.classList.remove("on"));
     render();
   });
+  const chips = document.createElement("div");
+  chips.className = "group-chips";
+  chips.hidden = !state.moreMetrics;
+  groups.forEach((key) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = `group-chip${(state.groups || []).includes(key) ? " on" : ""}`;
+    chip.textContent = METRIC_GROUP_LABELS[key] || key;
+    chip.addEventListener("click", () => {
+      if (!state.moreMetrics) return;
+      const set = new Set(state.groups || []);
+      if (set.has(key)) set.delete(key);
+      else set.add(key);
+      state.groups = [...set];
+      chip.classList.toggle("on", set.has(key));
+      render();
+    });
+    chips.appendChild(chip);
+  });
+  copy.append(sw, chips);
+  box.appendChild(copy);
   return box;
 }
 

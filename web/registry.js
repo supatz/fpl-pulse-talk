@@ -40,6 +40,11 @@ export const METRICS = {
   Int: { label: "Int", tip: "Interceptions.", fmt: "int", per90: true },
   Blk: { label: "Blk", tip: "Blocks.", fmt: "int", per90: true },
   Rec: { label: "Rec", tip: "Recoveries.", fmt: "int", per90: true },
+  Cr: { label: "Cr", tip: "Accurate crosses.", fmt: "int", per90: true },
+  SPxG: { label: "SPxG", tip: "Set-piece expected goals.", fmt: "2dp", per90: true },
+  Bon: { label: "Bonus", tip: "FPL bonus points in the selected gameweeks.", fmt: "int" },
+  BPS: { label: "BPS", tip: "Bonus point system score in the selected gameweeks.", fmt: "int" },
+  PS: { label: "PS", tip: "Penalties saved.", fmt: "int" },
   SiB: { label: "SiB", tip: "Saves inside the box.", fmt: "int", per90: true },
   HC: { label: "HC", tip: "High claims.", fmt: "int" },
   SW: { label: "SW", tip: "Sweeper actions.", fmt: "int" },
@@ -54,36 +59,56 @@ export const METRICS = {
   CST: { label: "CS", tip: "Team clean sheets in the window.", fmt: "int" },
 };
 
+export const METRIC_GROUP_LABELS = {
+  creativity: "Creativity",
+  threat: "Threat",
+  defending: "Defending",
+  fpl: "FPL metrics",
+};
+
 export const VIEWS = {
   attackers: {
     page: "attackers",
     positions: ["Forward", "Midfielder"],
-    columns: ["player", "team", "pos", "Cost", "apps", "mins_per_app", "Pts", "G", "A", "PenG", "xG", "xA", "xGI", "Sh", "SoT", "CC", "TiB", "BCM"],
-    extraColumns: ["xGOT", "npxG", "F3", "Dr", "YC"],
+    columns: ["player", "team", "pos", "Cost", "apps", "Pts", "G", "xG", "npxG", "A", "xA", "xGI", "CC", "SoT"],
+    metricGroups: {
+      creativity: ["Dr", "F3", "Cr"],
+      threat: ["SPxG", "xGOT", "Sh", "TiB", "BCM"],
+      defending: ["DefCon", "CBI", "Tkl", "Rec"],
+      fpl: ["Bon", "BPS", "YC"],
+    },
     defaultSort: "xGI",
     defaultDir: "desc",
-    per90Keys: ["G", "A", "xG", "xA", "xGI", "Sh", "SoT", "CC", "TiB", "xGOT", "npxG", "F3", "Dr"],
-    always90Keys: [],
+    per90Keys: ["G", "A", "xG", "xA", "xGI", "Sh", "SoT", "CC", "TiB", "xGOT", "npxG", "F3", "Dr", "Cr", "SPxG", "Rec"],
+    always90Keys: ["Tkl", "CBI", "DefCon"],
     minMinsDefault: 60,
     positionFilter: true,
   },
   defenders: {
     page: "defenders",
     positions: ["Defender"],
-    columns: ["player", "team", "Cost", "apps", "mins_per_app", "Pts", "CS", "G", "A", "xG", "xA", "xGI", "CC", "Tkl", "CBI", "DefCon"],
-    extraColumns: ["Aer", "Clr", "Int", "Blk", "Rec", "YC"],
+    columns: ["player", "team", "pos", "Cost", "apps", "Pts", "CS", "GC", "DefCon", "G", "xG", "A", "xA", "xGI", "CC", "SoT"],
+    metricGroups: {
+      creativity: ["Dr", "F3", "Cr"],
+      threat: ["SPxG", "xGOT", "Sh", "TiB", "BCM"],
+      defending: ["Clr", "Blk", "Int", "Tkl"],
+      fpl: ["Bon", "BPS", "YC"],
+    },
     defaultSort: "DefCon",
     defaultDir: "desc",
-    per90Keys: ["G", "A", "xG", "xA", "xGI", "CC", "Aer", "Clr", "Int", "Blk", "Rec"],
-    always90Keys: ["Tkl", "CBI", "DefCon"],
+    per90Keys: ["G", "A", "xG", "xA", "xGI", "CC", "SoT", "Dr", "F3", "Cr", "SPxG", "xGOT", "Sh", "TiB", "Clr", "Blk", "Int", "GC"],
+    always90Keys: ["Tkl", "DefCon"],
     minMinsDefault: 60,
   },
   gk: {
     page: "gk",
     positions: ["Goalkeeper"],
-    columns: ["player", "team", "Cost", "apps", "mins_per_app", "Pts", "CS", "Saves", "GC", "xGOTf", "xGP"],
-    extraColumns: ["SiB", "HC", "SW", "YC"],
-    defaultSort: "xGP",
+    columns: ["player", "team", "pos", "Cost", "apps", "Pts", "CS", "GC"],
+    metricGroups: {
+      defending: ["Saves", "SiB", "xGOTf", "xGP", "PS"],
+      fpl: ["Bon", "BPS", "YC"],
+    },
+    defaultSort: "Pts",
     defaultDir: "desc",
     per90Keys: ["Saves", "GC", "xGOTf", "SiB"],
     always90Keys: [],
@@ -106,7 +131,7 @@ export const VIEWS = {
   },
 };
 
-export const STORAGE_KEY = "fplpulse.v3";
+export const STORAGE_KEY = "fplpulse.v4";
 export const PLAYER_WINDOWS = Array.from({ length: 38 }, (_, i) => i + 1);
 export const INSIGHT_WINDOWS = Array.from({ length: 10 }, (_, i) => i + 1);
 export const MIN_MINS_OPTIONS = [0, 30, 45, 60, 70, 80];

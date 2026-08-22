@@ -149,20 +149,43 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         "sweeper_actions",
         "np_xg",
         "recoveries",
+        "accurate_crosses",
+        "set_piece_xg",
+        "penalties_saved",
     ]
     pm = prepare_player_match(pm)
     pm = _f(pm, extra)
+    pm = pm.drop([c for c in ("bonus", "bps", "bon") if c in pm.columns])
     if not gw.is_empty():
-        pts = gw.select(
+        gw_keep = [
             "season",
             "player_id",
             "gw",
             pl.col("total_points").cast(pl.Float64, strict=False).alias("pts"),
             pl.col("clean_sheets").cast(pl.Float64, strict=False).alias("cs"),
-        ).unique(subset=["season", "player_id", "gw"], keep="last")
+        ]
+        if "bonus" in gw.columns:
+            gw_keep.append(pl.col("bonus").cast(pl.Float64, strict=False).alias("bon"))
+        if "bps" in gw.columns:
+            gw_keep.append(pl.col("bps").cast(pl.Float64, strict=False).alias("bps"))
+        if "penalties_saved" in gw.columns:
+            gw_keep.append(pl.col("penalties_saved").cast(pl.Float64, strict=False).alias("ps_gw"))
+        pts = gw.select(gw_keep).unique(subset=["season", "player_id", "gw"], keep="last")
         pm = pm.join(pts, on=["season", "player_id", "gw"], how="left")
     else:
         pm = pm.with_columns(pl.lit(None).alias("pts"), pl.lit(None).alias("cs"))
+    if "bon" not in pm.columns:
+        pm = pm.with_columns(pl.lit(None).alias("bon"))
+    if "bps" not in pm.columns:
+        pm = pm.with_columns(pl.lit(None).alias("bps"))
+    if "penalties_saved" in pm.columns and "ps_gw" in pm.columns:
+        pm = pm.with_columns(pl.coalesce(["penalties_saved", "ps_gw"]).alias("PS"))
+    elif "penalties_saved" in pm.columns:
+        pm = pm.with_columns(pl.col("penalties_saved").alias("PS"))
+    elif "ps_gw" in pm.columns:
+        pm = pm.with_columns(pl.col("ps_gw").alias("PS"))
+    else:
+        pm = pm.with_columns(pl.lit(None).alias("PS"))
     pm = pm.join(teams.select("team_code", "short"), on="team_code", how="left")
     keep = {
         "season": "s",
@@ -210,6 +233,11 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         "sweeper_actions": "SW",
         "pts": "pts",
         "cs": "cs",
+        "accurate_crosses": "Cr",
+        "set_piece_xg": "SPxG",
+        "bon": "Bon",
+        "bps": "BPS",
+        "PS": "PS",
     }
     exprs = []
     for src, dest in keep.items():

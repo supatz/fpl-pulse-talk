@@ -211,6 +211,7 @@ function renderPlayerView(key) {
     view: key,
     columns: cfg.columns,
     extraColumns: cfg.extraColumns,
+    metricGroups: cfg.metricGroups,
     defaultSort: cfg.defaultSort,
     defaultDir: cfg.defaultDir,
     per90Keys: cfg.per90Keys,
