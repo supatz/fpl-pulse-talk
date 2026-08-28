@@ -1,3 +1,4 @@
 polars>=1.20
 pyarrow>=17
 pytest>=8
+understatapi>=0.7.1

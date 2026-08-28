@@ -8,3 +8,4 @@ logs/
 *.tmp
 *.parquet.tmp
 .incremental.json
+exports/
