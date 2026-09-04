@@ -31,11 +31,12 @@ const PAGES = [
   "insights-players",
   "insights-matches",
   "insights-teams",
+  "insights-understat",
   "teams",
   "chips",
   "data",
 ];
-const INSIGHT_PAGES = ["insights-players", "insights-matches", "insights-teams"];
+const INSIGHT_PAGES = ["insights-players", "insights-matches", "insights-teams", "insights-understat"];
 
 async function loadData() {
   const results = await Promise.all(
@@ -59,15 +60,18 @@ const PAGE_TITLES = {
   "insights-players": "Insights · Players",
   "insights-matches": "Insights · Matches",
   "insights-teams": "Insights · Teams",
+  "insights-understat": "Insights · Understat",
   teams: "Teams",
   chips: "Chips",
   data: "Data",
 };
 
 function showPage(id) {
+  id = String(id || "").replace(/^#/, "");
   if (id === "insights") id = "insights-players";
-  const page = PAGES.includes(id) ? id : "home";
-  document.querySelectorAll(".page").forEach((p) => {
+  const hasPage = Boolean(document.getElementById(`page-${id}`));
+  const page = hasPage ? id : "home";
+  document.querySelectorAll("main > .page").forEach((p) => {
     p.hidden = p.id !== `page-${page}`;
   });
   document.querySelectorAll("[data-page]").forEach((a) => {
@@ -94,6 +98,16 @@ function showPage(id) {
     if (scrim) scrim.hidden = true;
   }
   if (location.hash !== `#${page}`) history.replaceState(null, "", `#${page}`);
+  if (page === "insights-understat") {
+    requestAnimationFrame(() => {
+      try {
+        window.initUnderstatShots?.();
+      } catch (err) {
+        const status = document.getElementById("us-status");
+        if (status) status.textContent = `Understat view failed to start: ${err.message}`;
+      }
+    });
+  }
 }
 
 function wireShell() {
@@ -128,6 +142,7 @@ function wireNav() {
       const page = el.dataset.page;
       if (!page || page === "players" || page === "insights") return;
       e.preventDefault();
+      e.stopPropagation();
       showPage(page);
     });
   });

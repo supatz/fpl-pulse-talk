@@ -8,7 +8,7 @@ from pathlib import Path
 
 import polars as pl
 
-from pipeline.understat.config import ROLLING_WINDOWS, SERVING_DIR, WEB_DATA_DIR
+from pipeline.understat.config import ROLLING_WINDOWS, SERVING_DIR, WEB_DATA_DIR, SEASONS
 from pipeline.understat.derive import build_derived
 from pipeline.understat.normalize import now_utc
 
@@ -203,7 +203,15 @@ def build_all_serving(derived: dict[str, pl.DataFrame] | None = None) -> dict[st
     }
     _write_json(SERVING_DIR / "us_player_situation.json", player_payload)
 
-    return {"us_team_situation": team_payload, "us_player_situation": player_payload}
+    from pipeline.understat.shot_treemap import build_shot_treemap_serving
+
+    treemap_payload = build_shot_treemap_serving(fpl_seasons=meta.get("seasons") or list(SEASONS.values()))
+
+    return {
+        "us_team_situation": team_payload,
+        "us_player_situation": player_payload,
+        "us_shot_treemap": treemap_payload,
+    }
 
 
 # Back-compat alias

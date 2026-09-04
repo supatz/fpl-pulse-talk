@@ -22,8 +22,8 @@ Enable the Monday / Thursday schedule (08:00 local time):
 
 | When | Command |
 |---|---|
-| **Manual trigger** | `./scripts/refresh.sh` (in Terminal it asks: dataset, git push, or both) |
-| Same, via Python | `.venv/bin/python build.py --refresh` |
+| **Manual trigger** | `./scripts/refresh.sh` (in Terminal it asks: dataset, git push, or both). Dataset runs FPL then Understat. |
+| Same, via Python | `.venv/bin/python build.py --refresh` then `.venv/bin/python build_understat.py --refresh` |
 | Finder | double-click `scripts/refresh.command` (same menu) |
 | Scheduled (after install) | Monday and Thursday 08:00 **dataset only**, or `launchctl start com.fpl.masterdataset.refresh` |
 | Ignore cache, rebuild all | `.venv/bin/python build.py --full` |

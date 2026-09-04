@@ -1,6 +1,6 @@
 # FPL master datasets — data dictionary
 
-Generated `2026-09-02T08:30:52Z`.
+Generated `2026-09-04T18:22:21Z`.
 
 Source: public [`olbauday/FPL-Core-Insights`](https://github.com/olbauday/FPL-Core-Insights).
 
@@ -93,11 +93,11 @@ Rows: **17,403**. Columns: **114**.
 | `match_gw` | `Int64` | 0 (0.0%) |  |
 | `kickoff_utc` | `String` | 749 (4.3%) |  |
 | `is_home` | `Boolean` | 1,327 (7.6%) | True if the row's team/player is the home side. |
-| `opponent_code` | `Int64` | 3,213 (18.5%) | Opponent club code. |
-| `team_goals_for` | `Float64` | 229 (1.3%) |  |
-| `team_goals_against` | `Float64` | 229 (1.3%) |  |
+| `opponent_code` | `Int64` | 3,221 (18.5%) | Opponent club code. |
+| `team_goals_for` | `Float64` | 249 (1.4%) |  |
+| `team_goals_against` | `Float64` | 249 (1.4%) |  |
 | `venue` | `String` | 0 (0.0%) | H or A. |
-| `result` | `String` | 229 (1.3%) |  |
+| `result` | `String` | 249 (1.4%) |  |
 | `started` | `Boolean` | 3,903 (22.4%) |  |
 | `formation` | `String` | 3,903 (22.4%) |  |
 | `lineup_status` | `String` | 3,903 (22.4%) |  |
@@ -118,8 +118,8 @@ Rows: **17,403**. Columns: **114**.
 | `now_cost` | `Float64` | 1,039 (6.0%) | FPL price in £m as a decimal (e.g. 7.0). Do not divide by 10. |
 | `selected_by_percent` | `Float64` | 1,039 (6.0%) |  |
 | `form` | `Float64` | 1,039 (6.0%) |  |
-| `penalties_order` | `String` | 15,715 (90.3%) |  |
-| `direct_freekicks_order` | `String` | 15,654 (90.0%) |  |
+| `penalties_order` | `String` | 15,717 (90.3%) |  |
+| `direct_freekicks_order` | `String` | 15,653 (89.9%) |  |
 | `corners_and_indirect_freekicks_order` | `String` | 15,090 (86.7%) |  |
 | `status` | `String` | 1,039 (6.0%) |  |
 | `gw_match_index` | `Int64` | 0 (0.0%) | 1-based index of this match within the player's GW. |
@@ -131,7 +131,7 @@ Rows: **17,403**. Columns: **114**.
 
 ## `player_gw`
 
-Rows: **31,223**. Columns: **52**.
+Rows: **31,246**. Columns: **52**.
 
 | Column | Dtype | Nulls | Notes |
 |---|---|---:|---|
@@ -139,7 +139,7 @@ Rows: **31,223**. Columns: **52**.
 | `gw` | `Int64` | 0 (0.0%) | FPL gameweek from the GW folder number (includes 0 for pre-season). |
 | `web_name` | `String` | 0 (0.0%) |  |
 | `status` | `String` | 0 (0.0%) |  |
-| `news` | `String` | 20,149 (64.5%) |  |
+| `news` | `String` | 20,147 (64.5%) |  |
 | `now_cost` | `Float64` | 0 (0.0%) | FPL price in £m as a decimal (e.g. 7.0). Do not divide by 10. |
 | `selected_by_percent` | `Float64` | 0 (0.0%) |  |
 | `form` | `Float64` | 0 (0.0%) |  |
@@ -152,10 +152,10 @@ Rows: **31,223**. Columns: **52**.
 | `ep_this` | `Float64` | 0 (0.0%) |  |
 | `transfers_in_event` | `Int64` | 0 (0.0%) |  |
 | `transfers_out_event` | `Int64` | 0 (0.0%) |  |
-| `corners_and_indirect_freekicks_order` | `String` | 28,835 (92.4%) |  |
-| `direct_freekicks_order` | `String` | 29,378 (94.1%) |  |
-| `penalties_order` | `String` | 29,425 (94.2%) |  |
-| `set_piece_threat` | `String` | 31,223 (100.0%) |  |
+| `corners_and_indirect_freekicks_order` | `String` | 28,859 (92.4%) |  |
+| `direct_freekicks_order` | `String` | 29,401 (94.1%) |  |
+| `penalties_order` | `String` | 29,450 (94.3%) |  |
+| `set_piece_threat` | `String` | 31,246 (100.0%) |  |
 | `minutes` | `Float64` | 0 (0.0%) | Minutes played (Opta/match layer). Missing is unknown, not zero. |
 | `goals_scored` | `Float64` | 0 (0.0%) |  |
 | `assists` | `Float64` | 0 (0.0%) |  |

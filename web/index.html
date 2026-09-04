@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FPL Pulse Talk</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=5" />
+  <link rel="stylesheet" href="./understat-shots.css?v=5" />
 </head>
 <body>
   <div id="tooltip" hidden></div>
@@ -69,6 +70,10 @@
             <a class="nav-link" href="#insights-teams" data-page="insights-teams" data-name="nav.insights.teams">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V5h10l-2 3 2 3H8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
               <span>Teams</span>
+            </a>
+            <a class="nav-link" href="#insights-understat" data-page="insights-understat" data-name="nav.insights.understat">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="4" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="10" width="7" height="10" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span>Understat</span>
             </a>
           </div>
         </div>
@@ -210,6 +215,97 @@
           </div>
         </section>
 
+        <section class="page" id="page-insights-understat" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="insights.understat.title"><h1>Understat</h1></div>
+            <p class="lede">How teams create and concede shots. Treemap first, then situation and last-action mix — including a defensive (against) view.</p>
+          </div>
+          <div class="us-shots" id="us-shots-root">
+            <nav class="views" aria-label="Views" data-name="shots.views">
+              <button type="button" class="view on" data-view="treemap" data-name="shots.views.treemap">Player treemap</button>
+              <button type="button" class="view" data-view="situation" data-name="shots.views.situation">Situation matrix</button>
+              <button type="button" class="view" data-view="last_action" data-name="shots.views.last_action">Last-action matrix</button>
+              <button type="button" class="view" data-view="against" data-name="shots.views.against">Against (defence)</button>
+            </nav>
+
+            <section class="controls" aria-label="Filters" data-name="shots.controls">
+              <div class="controls-main">
+                <div class="controls-body">
+                  <div class="filters-row">
+                    <div class="field-stack" data-name="shots.controls.season_stack">
+                      <label class="field field-eq" data-name="shots.controls.season">
+                        <span>Season</span>
+                        <select id="us-season"></select>
+                      </label>
+                      <label class="check" data-name="shots.controls.per90">
+                        <input type="checkbox" id="us-per90" />
+                        <span>Per 90</span>
+                      </label>
+                    </div>
+                    <label class="field field-eq" data-name="shots.controls.metric">
+                      <span id="us-metric-label">Metric</span>
+                      <select id="us-metric">
+                        <option value="xg">xG</option>
+                        <option value="shots">Shots</option>
+                        <option value="sot">Shots on target</option>
+                        <option value="cc">Chances created</option>
+                        <option value="cc_xg">xG assisted</option>
+                      </select>
+                    </label>
+                    <div class="field field-eq" data-name="shots.controls.situations">
+                      <span>Situations</span>
+                      <div class="ms-drop" id="us-situations-drop">
+                        <button type="button" class="ms-toggle" id="us-situations-toggle" aria-expanded="false">All situations</button>
+                        <div class="ms-menu" id="us-situations-menu" hidden></div>
+                      </div>
+                    </div>
+                    <label class="field field-eq" id="us-against-dim-wrap" data-name="shots.controls.against_split" hidden>
+                      <span>Against split</span>
+                      <select id="us-against-dim">
+                        <option value="situation">Situation</option>
+                        <option value="last_action">Last-action group</option>
+                      </select>
+                    </label>
+                    <div class="field field-teams" data-name="shots.controls.teams">
+                      <span>Teams</span>
+                      <div id="us-team-pills" class="pills pills-teams"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="team-actions">
+                  <button type="button" class="ghost" id="us-top-teams" data-name="shots.controls.top_teams">Top 10</button>
+                  <button type="button" class="ghost" id="us-all-teams" data-name="shots.controls.all_teams">All teams</button>
+                  <button type="button" class="ghost" id="us-help-open" data-name="shots.controls.definitions">Definitions</button>
+                </div>
+              </div>
+            </section>
+
+            <p class="status" id="us-status" data-name="shots.status"></p>
+            <div id="us-chart" class="chart" role="img" aria-label="Shot creation visualization" data-name="shots.chart.treemap"></div>
+            <div id="us-matrix" class="matrix" hidden data-name="shots.chart.matrix"></div>
+            <p class="footnote" id="us-footnote" data-name="shots.footnote"></p>
+
+            <aside id="us-drawer" class="drawer" hidden data-name="shots.drawer">
+              <div class="drawer-head">
+                <h2 id="us-drawer-title">Team</h2>
+                <button type="button" class="ghost" id="us-drawer-close">Close</button>
+              </div>
+              <div id="us-drawer-body" data-name="shots.drawer.body"></div>
+            </aside>
+
+            <dialog id="us-defs" data-name="shots.defs">
+              <form method="dialog" class="defs-card">
+                <header>
+                  <h2>How to read this</h2>
+                  <button value="close" class="ghost">Close</button>
+                </header>
+                <div id="us-defs-body"></div>
+              </form>
+            </dialog>
+            <div id="us-tip" class="tip" hidden></div>
+          </div>
+        </section>
+
         <section class="page" id="page-teams" hidden>
           <div class="page-head">
             <div class="name-row" data-name="teams.title"><h1>Teams</h1></div>
@@ -240,6 +336,8 @@
     </div>
     <button type="button" class="nav-scrim" id="nav-scrim" hidden aria-label="Close menu"></button>
   </div>
-  <script type="module" src="./app.js"></script>
+  <script src="./vendor/d3.min.js"></script>
+  <script src="./understat-shots.js?v=5"></script>
+  <script type="module" src="./app.js?v=5"></script>
 </body>
 </html>

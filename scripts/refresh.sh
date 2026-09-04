@@ -15,6 +15,9 @@ refresh_dataset() {
   mkdir -p "$ROOT/logs"
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] refresh start" | tee -a "$ROOT/logs/refresh.log"
   "$ROOT/.venv/bin/python" "$ROOT/build.py" --refresh
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] understat refresh start" | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/understat_refresh.log"
+  "$ROOT/.venv/bin/python" "$ROOT/build_understat.py" --refresh
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] understat refresh done" | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/understat_refresh.log"
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] refresh done" | tee -a "$ROOT/logs/refresh.log"
 }
 
@@ -52,7 +55,7 @@ MODE="dataset"
 if [[ -t 0 ]]; then
   echo
   echo "FPL Pulse Talk — what do you want to update?"
-  echo "  1) Dataset only   (masters + serving JSON for the site)"
+  echo "  1) Dataset only   (FPL + Understat masters + serving JSON for the site)"
   echo "  2) Git push only  (commit local changes and update GitHub / Netlify)"
   echo "  3) Both           (refresh data, then commit and push)"
   echo "  q) Cancel"

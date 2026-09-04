@@ -19,7 +19,7 @@ Separate Understat masters joined to FPL `team_code` at serving time. Raw API JS
 .venv/bin/python build_understat.py --force
 ```
 
-FPL site refresh stays in `./scripts/refresh.sh`. Merge the two later when Understat is finalized.
+`./scripts/refresh.sh` / `refresh.command` now run FPL then Understat on the dataset path (including the Mon/Thu schedule). Use `./scripts/refresh_understat.sh` to refresh Understat alone.
 
 ## Layout
 
@@ -38,4 +38,15 @@ FPL site refresh stays in `./scripts/refresh.sh`. Merge the two later when Under
 | `serving/us_player_situation.json` | Player samples (understat ids until map) |
 | `docs/understat_data_dictionary.md` | Headers + grain + sample rows |
 
-Reusable modules: `pipeline/understat/` (`client`, `cache`, `ingest`, `derive`, `serve`, `zones`, `maps`, `dictionary`).
+Reusable modules: `pipeline/understat/` (`client`, `cache`, `ingest`, `derive`, `serve`, `zones`, `maps`, `dictionary`, `last_action_groups`, `shot_treemap`).
+
+## Shot treemap explore page (standalone)
+
+```bash
+.venv/bin/python build_understat.py --derive-only   # refreshes serving JSON
+.venv/bin/python serve.py                           # http://127.0.0.1:8765/
+# site: http://127.0.0.1:8765/index.html#insights-understat
+# standalone: http://127.0.0.1:8765/understat-shots.html
+```
+
+Page: Insights → Understat (`web/index.html#insights-understat`) plus standalone `web/understat-shots.html`. Data: `serving/us_shot_treemap.json` (mirrored to `web/data/`).

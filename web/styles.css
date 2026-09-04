@@ -5,8 +5,8 @@
   --ink: #f4f7f6;
   --muted: #9aafb8;
   --line: #2d3d4a;
-  --accent: #2fb3a0;
-  --accent-2: #7ee0cf;
+  --accent: #3ddc97;
+  --accent-2: #8af0c4;
   --card: #1e2a35;
   --good: #3ecf8e;
   --bad: #ef7a72;
@@ -46,11 +46,12 @@ a:hover { text-decoration: underline; }
   min-width: 0;
   width: 100%;
   background:
-    linear-gradient(180deg, rgba(47, 179, 160, 0.10), transparent 34%),
+    linear-gradient(180deg, rgba(61, 220, 151, 0.10), transparent 34%),
     var(--bg-2);
   border-right: 1px solid var(--line);
   padding: 16px 10px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   z-index: 30;
 }
 .sidebar [data-name] { position: relative; }
@@ -65,7 +66,7 @@ a:hover { text-decoration: underline; }
 .mark {
   width: 28px; height: 28px; flex: 0 0 auto;
   border-radius: 7px;
-  background: linear-gradient(145deg, #5ee0c8, #1b7f72);
+  background: linear-gradient(145deg, #3ddc97, #1f8f63);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 6px 14px rgba(20, 90, 80, 0.35);
 }
 .icon-btn {
@@ -89,9 +90,9 @@ a:hover { text-decoration: underline; }
   background: var(--accent); opacity: 0.7; margin-inline: 5.5px;
 }
 .nav-link span { white-space: nowrap; }
-.nav-link:hover { background: rgba(47, 179, 160, 0.12); text-decoration: none; }
+.nav-link:hover { background: rgba(61, 220, 151, 0.12); text-decoration: none; }
 .nav-link.active {
-  background: rgba(47, 179, 160, 0.22);
+  background: rgba(61, 220, 151, 0.22);
   color: #e9fffa;
   box-shadow: inset 2px 0 0 var(--accent);
 }
@@ -106,7 +107,7 @@ a:hover { text-decoration: underline; }
   display: grid; gap: 2px; max-height: 0; overflow: hidden;
   transition: max-height 240ms var(--ease);
 }
-.nav-block.is-open .nav-kids { max-height: 180px; }
+.nav-block.is-open .nav-kids { max-height: 280px; }
 #sidebar-collapse { margin-top: 8px; }
 
 .app.is-collapsed .brand-copy,
@@ -300,7 +301,7 @@ main { max-width: 1240px; margin: 0 auto; padding: 28px 22px 72px; }
   border: 1px solid var(--line); background: var(--paper); color: var(--muted);
   border-radius: 99px; padding: 4px 10px; font: 12px var(--font); cursor: pointer;
 }
-.group-chip.on { border-color: var(--accent); color: var(--ink); background: rgba(47, 179, 160, 0.18); }
+.group-chip.on { border-color: var(--accent); color: var(--ink); background: rgba(61, 220, 151, 0.18); }
 .brand, .name-row, .btn-ext, .showing, .lede { display: flex; align-items: center; gap: 8px; }
 .stat-card { position: relative; }
 .stat-card > .name-dot { position: absolute; left: 8px; top: 8px; }

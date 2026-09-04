@@ -1,6 +1,6 @@
 # Understat masters — data dictionary (samples)
 
-Generated `2026-08-25T14:31:01Z`.
+Generated `2026-09-04T18:22:57Z`.
 
 FPL dimensions on the **site** come from FPL sources. These tables hold Understat metrics.
 Team-facing derived tables are joined to FPL `team_code` via `data/understat/maps/team_map.csv`.
@@ -45,72 +45,72 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 ```json
 [
   {
-    "match_id": "31189",
+    "match_id": "31199",
     "understat_season": "2026",
     "season": "2026-2027",
     "league": "EPL",
     "is_result": true,
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "home_team_id": "228",
-    "away_team_id": "80",
-    "home_team": "Fulham",
-    "away_team": "Chelsea",
-    "home_short": "FLH",
-    "away_short": "CHE",
-    "home_goals": 2.0,
-    "away_goals": 3.0,
-    "home_xg": 1.4171,
-    "away_xg": 2.5838,
-    "forecast_w": 0.1414,
-    "forecast_d": 0.1945,
-    "forecast_l": 0.6641,
-    "ingested_at_utc": "2026-08-25T14:30:23Z",
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "home_team_id": "71",
+    "away_team_id": "83",
+    "home_team": "Aston Villa",
+    "away_team": "Arsenal",
+    "home_short": "AVL",
+    "away_short": "ARS",
+    "home_goals": 0.0,
+    "away_goals": 1.0,
+    "home_xg": 0.2819,
+    "away_xg": 1.5244,
+    "forecast_w": 0.0199,
+    "forecast_d": 0.1473,
+    "forecast_l": 0.8328,
+    "ingested_at_utc": "2026-09-04T18:22:42Z",
     "source": "understat.com"
   },
   {
-    "match_id": "31188",
+    "match_id": "31198",
     "understat_season": "2026",
     "season": "2026-2027",
     "league": "EPL",
     "is_result": true,
-    "kickoff_raw": "2026-08-23 15:30:00",
-    "home_team_id": "86",
-    "away_team_id": "87",
-    "home_team": "Newcastle United",
-    "away_team": "Liverpool",
-    "home_short": "NEW",
-    "away_short": "LIV",
-    "home_goals": 2.0,
+    "kickoff_raw": "2026-08-30 15:30:00",
+    "home_team_id": "89",
+    "away_team_id": "285",
+    "home_team": "Manchester United",
+    "away_team": "Ipswich",
+    "home_short": "MUN",
+    "away_short": "IPS",
+    "home_goals": 5.0,
     "away_goals": 2.0,
-    "home_xg": 1.5946,
-    "away_xg": 3.1313,
-    "forecast_w": 0.0947,
-    "forecast_d": 0.1538,
-    "forecast_l": 0.7515,
-    "ingested_at_utc": "2026-08-25T14:30:23Z",
+    "home_xg": 4.8661,
+    "away_xg": 1.8055,
+    "forecast_w": 0.9204,
+    "forecast_d": 0.0581,
+    "forecast_l": 0.0215,
+    "ingested_at_utc": "2026-09-04T18:22:42Z",
     "source": "understat.com"
   },
   {
-    "match_id": "31186",
+    "match_id": "31195",
     "understat_season": "2026",
     "season": "2026-2027",
     "league": "EPL",
     "is_result": true,
-    "kickoff_raw": "2026-08-23 13:00:00",
-    "home_team_id": "220",
-    "away_team_id": "71",
-    "home_team": "Brighton",
-    "away_team": "Aston Villa",
-    "home_short": "BRI",
-    "away_short": "AVL",
-    "home_goals": 4.0,
+    "kickoff_raw": "2026-08-30 13:00:00",
+    "home_team_id": "77",
+    "away_team_id": "228",
+    "home_team": "Sunderland",
+    "away_team": "Fulham",
+    "home_short": "SUN",
+    "away_short": "FLH",
+    "home_goals": 1.0,
     "away_goals": 0.0,
-    "home_xg": 4.0033,
-    "away_xg": 0.2752,
-    "forecast_w": 0.9902,
-    "forecast_d": 0.0093,
-    "forecast_l": 0.0005,
-    "ingested_at_utc": "2026-08-25T14:30:23Z",
+    "home_xg": 1.5623,
+    "away_xg": 1.024,
+    "forecast_w": 0.5186,
+    "forecast_d": 0.2682,
+    "forecast_l": 0.2132,
+    "ingested_at_utc": "2026-09-04T18:22:42Z",
     "source": "understat.com"
   }
 ]
@@ -121,7 +121,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per shot  
 **What:** Atomic fact: situation, last_action, coords, zone, player  
-**Rows:** 9,801
+**Rows:** 10,076
 
 ### Headers
 
@@ -187,7 +187,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "y": 0.699,
     "shot_zone": "outside_box",
     "is_goal": false,
-    "ingested_at_utc": "2026-08-25T14:30:09Z",
+    "ingested_at_utc": "2026-09-04T18:22:25Z",
     "source": "understat.com"
   },
   {
@@ -217,7 +217,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "y": 0.313,
     "shot_zone": "penalty_area",
     "is_goal": false,
-    "ingested_at_utc": "2026-08-25T14:30:09Z",
+    "ingested_at_utc": "2026-09-04T18:22:25Z",
     "source": "understat.com"
   },
   {
@@ -247,7 +247,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "y": 0.505,
     "shot_zone": "penalty_area",
     "is_goal": false,
-    "ingested_at_utc": "2026-08-25T14:30:09Z",
+    "ingested_at_utc": "2026-09-04T18:22:25Z",
     "source": "understat.com"
   }
 ]
@@ -258,7 +258,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team per match  
 **What:** PPDA, deep completions, match xG/xGA from team history  
-**Rows:** 780
+**Rows:** 800
 
 ### Headers
 
@@ -310,121 +310,121 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
   {
     "understat_season": "2026",
     "season": "2026-2027",
-    "team_id": "80",
-    "team_title": "Chelsea",
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "is_home": false,
-    "h_a": "a",
-    "result": "w",
-    "scored": 3.0,
-    "conceded": 2.0,
-    "xg": 2.5838,
-    "xga": 1.4171,
-    "npxg": 2.5838,
-    "npxga": 1.4171,
-    "npxgd": 1.1668,
-    "xpts": 2.1868,
-    "deep": 10.0,
-    "deep_allowed": 5.0,
-    "ppda_att": 361.0,
-    "ppda_def": 19.0,
-    "ppda": 19.0,
-    "ppda_allowed_att": 195.0,
-    "ppda_allowed_def": 24.0,
-    "ppda_allowed": 8.125,
-    "wins_cum": 1.0,
-    "draws_cum": 0.0,
-    "losses_cum": 0.0,
-    "pts_cum": 3.0,
-    "match_id": "31189",
-    "opponent_id": "228",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
-    "ingested_at_utc": "2026-08-25T14:30:23Z",
-    "source": "understat.com"
-  },
-  {
-    "understat_season": "2026",
-    "season": "2026-2027",
-    "team_id": "228",
-    "team_title": "Fulham",
-    "kickoff_raw": "2026-08-24 19:00:00",
+    "team_id": "71",
+    "team_title": "Aston Villa",
+    "kickoff_raw": "2026-08-31 19:00:00",
     "is_home": true,
     "h_a": "h",
     "result": "l",
-    "scored": 2.0,
-    "conceded": 3.0,
-    "xg": 1.4171,
-    "xga": 2.5838,
-    "npxg": 1.4171,
-    "npxga": 2.5838,
-    "npxgd": -1.1668,
-    "xpts": 0.6187,
+    "scored": 0.0,
+    "conceded": 1.0,
+    "xg": 0.2819,
+    "xga": 1.5244,
+    "npxg": 0.2819,
+    "npxga": 1.5244,
+    "npxgd": -1.2425,
+    "xpts": 0.207,
     "deep": 5.0,
-    "deep_allowed": 10.0,
-    "ppda_att": 195.0,
-    "ppda_def": 24.0,
-    "ppda": 8.125,
-    "ppda_allowed_att": 361.0,
-    "ppda_allowed_def": 19.0,
-    "ppda_allowed": 19.0,
+    "deep_allowed": 8.0,
+    "ppda_att": 300.0,
+    "ppda_def": 16.0,
+    "ppda": 18.75,
+    "ppda_allowed_att": 169.0,
+    "ppda_allowed_def": 17.0,
+    "ppda_allowed": 9.9412,
     "wins_cum": 0.0,
     "draws_cum": 0.0,
     "losses_cum": 1.0,
     "pts_cum": 0.0,
-    "match_id": "31189",
-    "opponent_id": "80",
-    "team_code": 54,
-    "team": "Fulham",
-    "team_short": "FUL",
-    "opponent_code": 8,
-    "opponent": "Chelsea",
-    "opponent_short": "CHE",
-    "ingested_at_utc": "2026-08-25T14:30:23Z",
+    "match_id": "31199",
+    "opponent_id": "83",
+    "team_code": 7,
+    "team": "Aston Villa",
+    "team_short": "AVL",
+    "opponent_code": 3,
+    "opponent": "Arsenal",
+    "opponent_short": "ARS",
+    "ingested_at_utc": "2026-09-04T18:22:47Z",
     "source": "understat.com"
   },
   {
     "understat_season": "2026",
     "season": "2026-2027",
-    "team_id": "86",
-    "team_title": "Newcastle United",
-    "kickoff_raw": "2026-08-23 15:30:00",
+    "team_id": "83",
+    "team_title": "Arsenal",
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "is_home": false,
+    "h_a": "a",
+    "result": "w",
+    "scored": 1.0,
+    "conceded": 0.0,
+    "xg": 1.5244,
+    "xga": 0.2819,
+    "npxg": 1.5244,
+    "npxga": 0.2819,
+    "npxgd": 1.2425,
+    "xpts": 2.6457,
+    "deep": 8.0,
+    "deep_allowed": 5.0,
+    "ppda_att": 169.0,
+    "ppda_def": 17.0,
+    "ppda": 9.9412,
+    "ppda_allowed_att": 300.0,
+    "ppda_allowed_def": 16.0,
+    "ppda_allowed": 18.75,
+    "wins_cum": 1.0,
+    "draws_cum": 0.0,
+    "losses_cum": 0.0,
+    "pts_cum": 3.0,
+    "match_id": "31199",
+    "opponent_id": "71",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
+    "ingested_at_utc": "2026-09-04T18:22:47Z",
+    "source": "understat.com"
+  },
+  {
+    "understat_season": "2026",
+    "season": "2026-2027",
+    "team_id": "89",
+    "team_title": "Manchester United",
+    "kickoff_raw": "2026-08-30 15:30:00",
     "is_home": true,
     "h_a": "h",
-    "result": "d",
-    "scored": 2.0,
+    "result": "w",
+    "scored": 5.0,
     "conceded": 2.0,
-    "xg": 1.5946,
-    "xga": 3.1313,
-    "npxg": 1.5946,
-    "npxga": 2.3702,
-    "npxgd": -0.7755,
-    "xpts": 0.4379,
-    "deep": 3.0,
-    "deep_allowed": 4.0,
-    "ppda_att": 193.0,
+    "xg": 4.8661,
+    "xga": 1.8055,
+    "npxg": 4.1049,
+    "npxga": 1.8055,
+    "npxgd": 2.2995,
+    "xpts": 2.8193,
+    "deep": 11.0,
+    "deep_allowed": 3.0,
+    "ppda_att": 226.0,
     "ppda_def": 22.0,
-    "ppda": 8.7727,
-    "ppda_allowed_att": 165.0,
-    "ppda_allowed_def": 29.0,
-    "ppda_allowed": 5.6897,
-    "wins_cum": 0.0,
-    "draws_cum": 1.0,
+    "ppda": 10.2727,
+    "ppda_allowed_att": 301.0,
+    "ppda_allowed_def": 22.0,
+    "ppda_allowed": 13.6818,
+    "wins_cum": 1.0,
+    "draws_cum": 0.0,
     "losses_cum": 0.0,
-    "pts_cum": 1.0,
-    "match_id": "31188",
-    "opponent_id": "87",
-    "team_code": 4,
-    "team": "Newcastle",
-    "team_short": "NEW",
-    "opponent_code": 14,
-    "opponent": "Liverpool",
-    "opponent_short": "LIV",
-    "ingested_at_utc": "2026-08-25T14:30:23Z",
+    "pts_cum": 3.0,
+    "match_id": "31198",
+    "opponent_id": "285",
+    "team_code": 1,
+    "team": "Man Utd",
+    "team_short": "MUN",
+    "opponent_code": 40,
+    "opponent": "Ipswich Town",
+    "opponent_short": "IPS",
+    "ingested_at_utc": "2026-09-04T18:22:47Z",
     "source": "understat.com"
   }
 ]
@@ -435,7 +435,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × season × context_family × context_value  
 **What:** Season splits incl. attackSpeed (for + against)  
-**Rows:** 1,222
+**Rows:** 1,269
 
 ### Headers
 
@@ -485,7 +485,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "team_code": 43,
     "team": "Man City",
     "team_short": "MCI",
-    "ingested_at_utc": "2026-08-25T14:30:21Z",
+    "ingested_at_utc": "2026-09-04T18:22:40Z",
     "source": "understat.com"
   },
   {
@@ -507,7 +507,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "team_code": 91,
     "team": "Bournemouth",
     "team_short": "BOU",
-    "ingested_at_utc": "2026-08-25T14:30:21Z",
+    "ingested_at_utc": "2026-09-04T18:22:40Z",
     "source": "understat.com"
   },
   {
@@ -529,7 +529,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "team_code": 8,
     "team": "Chelsea",
     "team_short": "CHE",
-    "ingested_at_utc": "2026-08-25T14:30:21Z",
+    "ingested_at_utc": "2026-09-04T18:22:40Z",
     "source": "understat.com"
   }
 ]
@@ -540,7 +540,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per player per season  
 **What:** Understat season totals (xg_chain, etc.)  
-**Rows:** 847
+**Rows:** 901
 
 ### Headers
 
@@ -594,7 +594,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "xg_buildup": 5.1635,
     "yellow_cards": 2.0,
     "red_cards": 0.0,
-    "ingested_at_utc": "2026-08-25T14:30:22Z",
+    "ingested_at_utc": "2026-09-04T18:22:41Z",
     "source": "understat.com"
   },
   {
@@ -618,7 +618,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "xg_buildup": 4.9276,
     "yellow_cards": 7.0,
     "red_cards": 0.0,
-    "ingested_at_utc": "2026-08-25T14:30:22Z",
+    "ingested_at_utc": "2026-09-04T18:22:41Z",
     "source": "understat.com"
   },
   {
@@ -642,7 +642,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "xg_buildup": 7.8937,
     "yellow_cards": 7.0,
     "red_cards": 0.0,
-    "ingested_at_utc": "2026-08-25T14:30:22Z",
+    "ingested_at_utc": "2026-09-04T18:22:41Z",
     "source": "understat.com"
   }
 ]
@@ -653,7 +653,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × match × situation  
 **What:** Shots/goals/us_xg created (for)  
-**Rows:** 2,094
+**Rows:** 2,147
 
 ### Headers
 
@@ -682,57 +682,57 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 [
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
-    "situation": "FromCorner",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
+    "situation": "DirectFreekick",
     "is_home": false,
-    "shots": 3,
-    "goals": 0,
-    "us_xg": 0.637,
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
-    "us_xg_per_shot": 0.2123,
-    "built_at_utc": "2026-08-25T14:30:33Z"
-  },
-  {
-    "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
-    "situation": "OpenPlay",
-    "is_home": false,
-    "shots": 15,
-    "goals": 3,
-    "us_xg": 1.9722,
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
-    "us_xg_per_shot": 0.1315,
-    "built_at_utc": "2026-08-25T14:30:33Z"
-  },
-  {
-    "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 54,
-    "team": "Fulham",
-    "team_short": "FUL",
-    "situation": "FromCorner",
-    "is_home": true,
     "shots": 1,
     "goals": 0,
-    "us_xg": 0.0398,
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "opponent_code": 8,
-    "opponent": "Chelsea",
-    "opponent_short": "CHE",
-    "us_xg_per_shot": 0.0398,
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "us_xg": 0.0909,
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
+    "us_xg_per_shot": 0.0909,
+    "built_at_utc": "2026-09-04T18:22:57Z"
+  },
+  {
+    "season": "2026-2027",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
+    "situation": "FromCorner",
+    "is_home": false,
+    "shots": 2,
+    "goals": 0,
+    "us_xg": 0.376,
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
+    "us_xg_per_shot": 0.188,
+    "built_at_utc": "2026-09-04T18:22:57Z"
+  },
+  {
+    "season": "2026-2027",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
+    "situation": "OpenPlay",
+    "is_home": false,
+    "shots": 4,
+    "goals": 1,
+    "us_xg": 1.0576,
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
+    "us_xg_per_shot": 0.2644,
+    "built_at_utc": "2026-09-04T18:22:57Z"
   }
 ]
 ```
@@ -742,7 +742,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × match × situation  
 **What:** Shots/goals/us_xga faced (against)  
-**Rows:** 2,094
+**Rows:** 2,147
 
 ### Headers
 
@@ -771,57 +771,57 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 [
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
-    "situation": "FromCorner",
-    "is_home": false,
-    "shots_faced": 1,
-    "goals_against": 0,
-    "us_xga": 0.0398,
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
-    "us_xga_per_shot": 0.0398,
-    "built_at_utc": "2026-08-25T14:30:33Z"
-  },
-  {
-    "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
     "situation": "OpenPlay",
     "is_home": false,
-    "shots_faced": 13,
-    "goals_against": 2,
-    "us_xga": 1.4231,
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
-    "us_xga_per_shot": 0.1095,
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "shots_faced": 7,
+    "goals_against": 0,
+    "us_xga": 0.2819,
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
+    "us_xga_per_shot": 0.0403,
+    "built_at_utc": "2026-09-04T18:22:57Z"
   },
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 54,
-    "team": "Fulham",
-    "team_short": "FUL",
+    "match_id": "31199",
+    "team_code": 7,
+    "team": "Aston Villa",
+    "team_short": "AVL",
+    "situation": "DirectFreekick",
+    "is_home": true,
+    "shots_faced": 1,
+    "goals_against": 0,
+    "us_xga": 0.0909,
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "opponent_code": 3,
+    "opponent": "Arsenal",
+    "opponent_short": "ARS",
+    "us_xga_per_shot": 0.0909,
+    "built_at_utc": "2026-09-04T18:22:57Z"
+  },
+  {
+    "season": "2026-2027",
+    "match_id": "31199",
+    "team_code": 7,
+    "team": "Aston Villa",
+    "team_short": "AVL",
     "situation": "FromCorner",
     "is_home": true,
-    "shots_faced": 3,
+    "shots_faced": 2,
     "goals_against": 0,
-    "us_xga": 0.637,
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "opponent_code": 8,
-    "opponent": "Chelsea",
-    "opponent_short": "CHE",
-    "us_xga_per_shot": 0.2123,
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "us_xga": 0.376,
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "opponent_code": 3,
+    "opponent": "Arsenal",
+    "opponent_short": "ARS",
+    "us_xga_per_shot": 0.188,
+    "built_at_utc": "2026-09-04T18:22:57Z"
   }
 ]
 ```
@@ -831,7 +831,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × match × situation × window  
 **What:** Rolling for-metrics over last 5/10/15 matches  
-**Rows:** 11,700
+**Rows:** 12,000
 
 ### Headers
 
@@ -861,60 +861,60 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 [
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
-    "kickoff_raw": "2026-08-24 19:00:00",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
+    "kickoff_raw": "2026-08-31 19:00:00",
     "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
     "situation": "DirectFreekick",
-    "shots": 0,
+    "shots": 2,
     "goals": 0,
-    "us_xg": 0.0,
+    "us_xg": 0.1284,
     "window": 5,
-    "built_at_utc": "2026-08-25T14:30:33Z",
-    "us_xg_per_shot": null
+    "built_at_utc": "2026-09-04T18:22:57Z",
+    "us_xg_per_shot": 0.0642
   },
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
-    "kickoff_raw": "2026-08-24 19:00:00",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
+    "kickoff_raw": "2026-08-31 19:00:00",
     "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
     "situation": "FromCorner",
-    "shots": 3,
+    "shots": 7,
     "goals": 0,
-    "us_xg": 0.637,
+    "us_xg": 0.5559,
     "window": 5,
-    "built_at_utc": "2026-08-25T14:30:33Z",
-    "us_xg_per_shot": 0.2123
+    "built_at_utc": "2026-09-04T18:22:57Z",
+    "us_xg_per_shot": 0.0794
   },
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
-    "kickoff_raw": "2026-08-24 19:00:00",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
+    "kickoff_raw": "2026-08-31 19:00:00",
     "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
     "situation": "OpenPlay",
-    "shots": 15,
-    "goals": 3,
-    "us_xg": 1.9722,
+    "shots": 18,
+    "goals": 4,
+    "us_xg": 2.6944,
     "window": 5,
-    "built_at_utc": "2026-08-25T14:30:33Z",
-    "us_xg_per_shot": 0.1315
+    "built_at_utc": "2026-09-04T18:22:57Z",
+    "us_xg_per_shot": 0.1497
   }
 ]
 ```
@@ -924,7 +924,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × match × situation × window  
 **What:** Rolling against-metrics over last 5/10/15 matches  
-**Rows:** 11,700
+**Rows:** 12,000
 
 ### Headers
 
@@ -954,60 +954,60 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 [
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
-    "kickoff_raw": "2026-08-24 19:00:00",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
+    "kickoff_raw": "2026-08-31 19:00:00",
     "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
     "situation": "DirectFreekick",
     "shots_faced": 0,
     "goals_against": 0,
     "us_xga": 0.0,
     "window": 5,
-    "built_at_utc": "2026-08-25T14:30:33Z",
+    "built_at_utc": "2026-09-04T18:22:57Z",
     "us_xga_per_shot": null
   },
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
-    "kickoff_raw": "2026-08-24 19:00:00",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
+    "kickoff_raw": "2026-08-31 19:00:00",
     "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
     "situation": "FromCorner",
-    "shots_faced": 1,
+    "shots_faced": 0,
     "goals_against": 0,
-    "us_xga": 0.0398,
+    "us_xga": 0.0,
     "window": 5,
-    "built_at_utc": "2026-08-25T14:30:33Z",
-    "us_xga_per_shot": 0.0398
+    "built_at_utc": "2026-09-04T18:22:57Z",
+    "us_xga_per_shot": null
   },
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
-    "kickoff_raw": "2026-08-24 19:00:00",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
+    "kickoff_raw": "2026-08-31 19:00:00",
     "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "opponent_short": "AVL",
     "situation": "OpenPlay",
-    "shots_faced": 13,
-    "goals_against": 2,
-    "us_xga": 1.4231,
+    "shots_faced": 11,
+    "goals_against": 0,
+    "us_xga": 0.8403,
     "window": 5,
-    "built_at_utc": "2026-08-25T14:30:33Z",
-    "us_xga_per_shot": 0.1095
+    "built_at_utc": "2026-09-04T18:22:57Z",
+    "us_xga_per_shot": 0.0764
   }
 ]
 ```
@@ -1017,7 +1017,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × match × shot_zone  
 **What:** Box / six-yard / outside-box  
-**Rows:** 2,125
+**Rows:** 2,184
 
 ### Headers
 
@@ -1044,51 +1044,51 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 [
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
     "shot_zone": "outside_box",
     "is_home": false,
-    "shots": 5,
+    "shots": 2,
     "goals": 0,
-    "us_xg": 0.1947,
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "us_xg": 0.1284,
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "built_at_utc": "2026-09-04T18:22:57Z"
   },
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
     "shot_zone": "penalty_area",
     "is_home": false,
-    "shots": 12,
-    "goals": 3,
-    "us_xg": 1.8294,
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "shots": 3,
+    "goals": 0,
+    "us_xg": 0.4095,
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "built_at_utc": "2026-09-04T18:22:57Z"
   },
   {
     "season": "2026-2027",
-    "match_id": "31189",
-    "team_code": 8,
-    "team": "Chelsea",
-    "team_short": "CHE",
+    "match_id": "31199",
+    "team_code": 3,
+    "team": "Arsenal",
+    "team_short": "ARS",
     "shot_zone": "six_yard",
     "is_home": false,
-    "shots": 1,
-    "goals": 0,
-    "us_xg": 0.5851,
-    "kickoff_raw": "2026-08-24 19:00:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "shots": 2,
+    "goals": 1,
+    "us_xg": 0.9865,
+    "kickoff_raw": "2026-08-31 19:00:00",
+    "opponent_code": 7,
+    "opponent": "Aston Villa",
+    "built_at_utc": "2026-09-04T18:22:57Z"
   }
 ]
 ```
@@ -1098,7 +1098,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per understat player × season × situation  
 **What:** Taker volume/quality by situation (player_code map TBD)  
-**Rows:** 1,348
+**Rows:** 1,451
 
 ### Headers
 
@@ -1131,7 +1131,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "primary_team_id": "88",
     "sample_last_action": "Cross",
     "us_xg_per_shot": 0.2218,
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "built_at_utc": "2026-09-04T18:22:57Z"
   },
   {
     "season": "2025-2026",
@@ -1144,7 +1144,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "primary_team_id": "244",
     "sample_last_action": "Rebound",
     "us_xg_per_shot": 0.2401,
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "built_at_utc": "2026-09-04T18:22:57Z"
   },
   {
     "season": "2025-2026",
@@ -1157,7 +1157,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "primary_team_id": "71",
     "sample_last_action": "Pass",
     "us_xg_per_shot": 0.2143,
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "built_at_utc": "2026-09-04T18:22:57Z"
   }
 ]
 ```
@@ -1167,7 +1167,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per creator name × season × situation  
 **What:** Assisted-shot xG by situation (player_code map TBD)  
-**Rows:** 1,025
+**Rows:** 1,112
 
 ### Headers
 
@@ -1194,7 +1194,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "assisted_goals": 10,
     "assisted_us_xg": 11.8637,
     "player_id": "1228",
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "built_at_utc": "2026-09-04T18:22:57Z"
   },
   {
     "season": "2025-2026",
@@ -1204,7 +1204,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "assisted_goals": 11,
     "assisted_us_xg": 9.0433,
     "player_id": "8094",
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "built_at_utc": "2026-09-04T18:22:57Z"
   },
   {
     "season": "2025-2026",
@@ -1214,7 +1214,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "assisted_goals": 5,
     "assisted_us_xg": 7.2875,
     "player_id": "8981",
-    "built_at_utc": "2026-08-25T14:30:33Z"
+    "built_at_utc": "2026-09-04T18:22:57Z"
   }
 ]
 ```
