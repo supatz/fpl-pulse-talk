@@ -30,4 +30,6 @@ The italic **i** appears only when you hover a named label (not on changing valu
 | `insights.players.*` / `insights.matches.*` / `insights.teams.*` | Insight filters and titles |
 | `insights.matches.board` / `insights.matches.grid` | Match insight containers |
 | `insights.understat.title` | Understat page heading |
-| `shots.*` | Understat explore chrome (views, filters, chart, drawer) |
+| `shots.*` | Understat explore chrome (views, filters, chart) |
+| `shots.drawer` | Player/team shot-mix drawer |
+| `us-tip` / `.tip` | Treemap hover (moved to `document.body` for positioning) |

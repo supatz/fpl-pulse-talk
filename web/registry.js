@@ -31,7 +31,7 @@ export const METRICS = {
   GC: { label: "GC", tip: "Goals conceded.", fmt: "int", per90: true },
   xGOTf: { label: "xGOTf", tip: "On-target xG faced.", fmt: "2dp", per90: true },
   xGP: { label: "xGP", tip: "xG prevented via saves (goals_prevented).", fmt: "2dp" },
-  npxG: { label: "npxG", tip: "Non-penalty xG from shots.", fmt: "2dp", per90: true },
+  npxG: { label: "npxG", tip: "Non-penalty xG from FPL-Core shots. If the shot join misses, xG − 0.79 × penalties scored.", fmt: "2dp", per90: true },
   F3: { label: "F3", tip: "Passes into the final third.", fmt: "int", per90: true },
   Dr: { label: "Dr", tip: "Successful dribbles.", fmt: "int", per90: true },
   YC: { label: "YC", tip: "Yellow cards.", fmt: "int" },

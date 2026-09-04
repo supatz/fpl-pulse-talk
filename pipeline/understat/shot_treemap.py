@@ -94,7 +94,29 @@ def build_shot_treemap_serving(
 
     minutes = pl.DataFrame()
     if league_player.height:
-        minutes = league_player.select("season", "player_id", pl.col("time").alias("minutes"))
+        keep = ["season", "player_id", pl.col("time").alias("minutes")]
+        if "games" in league_player.columns:
+            keep.append(pl.col("games").alias("games"))
+        minutes = league_player.select(keep)
+
+    player_matches = (
+        s.group_by(["season", "team_code", "player_id"])
+        .agg(pl.col("match_id").n_unique().alias("shot_matches"))
+        if s.height
+        else pl.DataFrame()
+    )
+    player_sit = (
+        s.group_by(["season", "team_code", "player_id", "situation"])
+        .agg(pl.col("xg").sum().alias("xg"), pl.len().alias("shots"), pl.col("is_sot").sum().alias("sot"))
+        if s.height
+        else pl.DataFrame()
+    )
+    player_lag = (
+        s.group_by(["season", "team_code", "player_id", "last_action_group"])
+        .agg(pl.col("xg").sum().alias("xg"), pl.len().alias("shots"), pl.col("is_sot").sum().alias("sot"))
+        if s.height
+        else pl.DataFrame()
+    )
 
     # Name → id within season (for chances created / assisted-by)
     name_id = (
@@ -118,6 +140,7 @@ def build_shot_treemap_serving(
             pl.col("is_goal").fill_null(False).sum().alias("goals"),
         )
         .join(minutes, on=["season", "player_id"], how="left")
+        .join(player_matches, on=["season", "team_code", "player_id"], how="left")
         .with_columns(_p90("xg"), _p90("shots"), _p90("sot"), _p90("goals"))
     )
 
@@ -270,6 +293,13 @@ def build_shot_treemap_serving(
     teams_out: list[dict] = []
 
     def clean_player(p: dict) -> dict:
+        games = p.get("games")
+        shot_matches = p.get("shot_matches")
+        matches = games if games not in (None, 0) else shot_matches
+        mins = p.get("minutes")
+        mins_per90 = None
+        if mins is not None and matches:
+            mins_per90 = mins / matches
         return {
             "player_id": p.get("player_id"),
             "player_name": html.unescape(p.get("player_name") or "") or None,
@@ -280,7 +310,9 @@ def build_shot_treemap_serving(
             "cc": int(p.get("cc") or 0),
             "cc_xg": _round(p.get("cc_xg") or 0),
             "cc_sot": int(p.get("cc_sot") or 0),
-            "minutes": _round(p.get("minutes"), 1),
+            "minutes": _round(mins, 1),
+            "matches": int(matches) if matches is not None else None,
+            "mins_per90": _round(mins_per90, 1),
             "xg_p90": _round(p.get("xg_p90")),
             "shots_p90": _round(p.get("shots_p90")),
             "sot_p90": _round(p.get("sot_p90")),
@@ -310,9 +342,36 @@ def build_shot_treemap_serving(
             if not pid:
                 continue
             if pid in by_id:
-                # merge already have cc fields from join
                 continue
             by_id[pid] = clean_player(c)
+        for pid, row in by_id.items():
+            sit_rows = (
+                player_sit.filter(
+                    (pl.col("season") == season) & (pl.col("team_code") == code) & (pl.col("player_id") == pid)
+                ).to_dicts()
+                if player_sit.height
+                else []
+            )
+            lag_rows = (
+                player_lag.filter(
+                    (pl.col("season") == season) & (pl.col("team_code") == code) & (pl.col("player_id") == pid)
+                ).to_dicts()
+                if player_lag.height
+                else []
+            )
+            row["by_situation"] = [
+                {"situation": r["situation"], "xg": _round(r["xg"]), "shots": int(r["shots"]), "sot": int(r["sot"])}
+                for r in sit_rows
+            ]
+            row["by_last_action_group"] = [
+                {
+                    "group": r["last_action_group"],
+                    "xg": _round(r["xg"]),
+                    "shots": int(r["shots"]),
+                    "sot": int(r["sot"]),
+                }
+                for r in lag_rows
+            ]
         players = list(by_id.values())
 
         sit = for_sit.filter((pl.col("season") == season) & (pl.col("team_code") == code)).to_dicts()

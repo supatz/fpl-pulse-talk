@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FPL Pulse Talk</title>
-  <link rel="stylesheet" href="./styles.css?v=5" />
-  <link rel="stylesheet" href="./understat-shots.css?v=5" />
+  <link rel="stylesheet" href="./styles.css?v=8" />
+  <link rel="stylesheet" href="./understat-shots.css?v=10" />
 </head>
 <body>
   <div id="tooltip" hidden></div>
@@ -241,6 +241,10 @@
                         <input type="checkbox" id="us-per90" />
                         <span>Per 90</span>
                       </label>
+                      <label class="check" data-name="shots.controls.min45">
+                        <input type="checkbox" id="us-min45" />
+                        <span>45+ mins</span>
+                      </label>
                     </div>
                     <label class="field field-eq" data-name="shots.controls.metric">
                       <span id="us-metric-label">Metric</span>
@@ -337,7 +341,7 @@
     <button type="button" class="nav-scrim" id="nav-scrim" hidden aria-label="Close menu"></button>
   </div>
   <script src="./vendor/d3.min.js"></script>
-  <script src="./understat-shots.js?v=5"></script>
-  <script type="module" src="./app.js?v=5"></script>
+  <script src="./understat-shots.js?v=10"></script>
+  <script type="module" src="./app.js?v=7"></script>
 </body>
 </html>

@@ -1,0 +1,15 @@
+---
+description: Keep docs/decision_log.md current whenever a product or data decision is locked or a fix encodes a rule.
+alwaysApply: true
+---
+
+# Decision log
+
+When the user locks a product/data choice, accepts a compromise, or we ship a fix that future work must not undo:
+
+1. Add or replace a row in **Locked now** and a dated **Chronology** entry in `docs/decision_log.md` in the **same change**.
+2. Update the matching how-to doc (`docs/dashboard_readme.md`, `docs/understat_pipeline.md`, README) if commands or page behaviour changed.
+3. Do not mix FPL-Core and Understat player metrics or minutes. There is no `player_map`.
+4. If the user asks to put work on git, include the decision log with the implementing files.
+
+Example chronology line: choice, why, path, drawbacks if the choice is a fallback.

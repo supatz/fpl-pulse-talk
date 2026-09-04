@@ -17,6 +17,8 @@ SERVING = ROOT / "serving"
 WEB_DATA = ROOT / "web" / "data"
 CACHE = ROOT / ".cache" / "FPL-Core-Insights" / "data"
 SOURCE = "olbauday/FPL-Core-Insights"
+# Typical Opta penalty xG. Used only when FPL-Core shots.csv left player_id null.
+PENALTY_XG = 0.79
 FDR_URL = "https://premierfantasytools.com/fpl-fixture-difficulty/"
 WINDOWS = (5, 10, 15)
 HOME_NUDGE = 1.08
@@ -155,6 +157,16 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
     ]
     pm = prepare_player_match(pm)
     pm = _f(pm, extra)
+    if "np_xg" in pm.columns and "xg" in pm.columns:
+        pen = pl.col("penalties_scored") if "penalties_scored" in pm.columns else pl.lit(0.0)
+        pm = pm.with_columns(
+            pl.when(pl.col("np_xg").is_not_null())
+            .then(pl.col("np_xg"))
+            .when(pl.col("xg").is_not_null())
+            .then((pl.col("xg") - pl.lit(PENALTY_XG) * pen.fill_null(0)).clip(lower_bound=0))
+            .otherwise(None)
+            .alias("np_xg")
+        )
     pm = pm.drop([c for c in ("bonus", "bps", "bon") if c in pm.columns])
     if not gw.is_empty():
         gw_keep = [

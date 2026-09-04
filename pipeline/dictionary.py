@@ -21,7 +21,7 @@ DESCRIPTIONS = {
     "minutes": "Minutes played (Opta/match layer). Missing is unknown, not zero.",
     "xg": "Opta/match-layer expected goals. Distinct from FPL expected_goals and shot-model xG.",
     "xa": "Opta expected assists.",
-    "np_xg": "Non-penalty xG aggregated from shots.situation.",
+    "np_xg": "Non-penalty xG from FPL-Core shots (situation != penalty) joined on match_id + player_id. Serving fills gaps with xG − 0.79 × penalties_scored when the shot join is null.",
     "set_piece_xg": "Shot-model xG on set-piece situations.",
     "open_play_xg": "Shot-model xG on open-play situations.",
     "fpl_points": "FPL gameweek points attached for convenience. Authoritative series is player_gw. Do not sum on DGW rows.",

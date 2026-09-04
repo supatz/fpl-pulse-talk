@@ -247,11 +247,11 @@ body.us-shots-standalone .us-shots {
   pointer-events: none;
 }.us-shots .chart .team-sub{
   font-family: var(--font);
-  font-weight: 600;
+  font-weight: 700;
   pointer-events: none;
 }.us-shots .chart .player-name, .us-shots .chart .player-val{
-  font-family: var(--font);
-  font-weight: 700;
+  font-family: "Helvetica Neue", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
   pointer-events: none;
 }.us-shots .chart rect.team-shell{
   stroke: rgba(12, 18, 16, 0.65);
@@ -427,9 +427,11 @@ body.us-shots-standalone .us-shots {
 }@media (hover: hover) and (pointer: fine){
   .us-shots [data-name]:hover > .name-dot,
   .us-shots [data-name]:focus-within > .name-dot { opacity: 0.75; pointer-events: auto; }
-}.us-shots .name-dot.copied{ color: var(--accent); opacity: 1; }.us-shots .field > .name-dot, .us-shots .check > .name-dot, .us-shots .view > .name-dot{ left: -2px; top: -2px; }.us-shots .chart > .name-dot, .us-shots .matrix > .name-dot{ left: 10px; top: 10px; }.us-shots .controls > .name-dot{ left: 8px; top: 8px; }.us-shots .footnote{ margin: 12px 2px 0; color: var(--muted); font-size: 12px; }.us-shots .tip{
+}.us-shots .name-dot.copied{ color: var(--accent); opacity: 1; }.us-shots .field > .name-dot, .us-shots .check > .name-dot, .us-shots .view > .name-dot{ left: -2px; top: -2px; }.us-shots .chart > .name-dot, .us-shots .matrix > .name-dot{ left: 10px; top: 10px; }.us-shots .controls > .name-dot{ left: 8px; top: 8px; }.us-shots .footnote{ margin: 12px 2px 0; color: var(--muted); font-size: 12px; }.us-shots .tip, .us-shots.tip{
   position: fixed;
-  z-index: 40;
+  top: 0;
+  left: 0;
+  z-index: 80;
   pointer-events: none;
   background: #0a100e;
   border: 1px solid var(--line);
@@ -437,9 +439,25 @@ body.us-shots-standalone .us-shots {
   padding: 10px 12px;
   border-radius: 10px;
   font-size: 12px;
-  max-width: 280px;
+  max-width: 380px;
+  min-width: 220px;
+  line-height: 1.35;
   box-shadow: 0 16px 40px rgba(0,0,0,0.45);
-}.us-shots .drawer{
+}.us-shots .tip-title, .us-shots.tip .tip-title{
+  font-weight: 700;
+  margin-bottom: 2px;
+}.us-shots .tip-row, .us-shots.tip .tip-row{
+  display: grid;
+  gap: 6px 18px;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}.us-shots .tip-row.cols-1, .us-shots.tip .tip-row.cols-1{ grid-template-columns: minmax(0, 1fr); }.us-shots .tip-row.cols-2, .us-shots.tip .tip-row.cols-2{ grid-template-columns: repeat(2, minmax(0, 1fr)); }.us-shots .tip-row.cols-3, .us-shots.tip .tip-row.cols-3{ grid-template-columns: repeat(3, minmax(0, 1fr)); }.us-shots .tip-row.cols-4, .us-shots.tip .tip-row.cols-4{ grid-template-columns: repeat(4, minmax(0, 1fr)); }.us-shots .tip-row.cols-5, .us-shots.tip .tip-row.cols-5{ grid-template-columns: repeat(5, minmax(0, 1fr)); }.us-shots .tip-cell span, .us-shots.tip .tip-cell span{
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}.us-shots .tip-cell b, .us-shots.tip .tip-cell b{ font-weight: 600; }.us-shots .drawer{
   position: fixed;
   top: 0;
   right: 0;
@@ -469,7 +487,7 @@ body.us-shots-standalone .us-shots {
   font-weight: 600;
   color: var(--muted);
   font-size: 12px;
-}.us-shots .drawer-meta{ margin: 0 0 8px; color: var(--muted); font-size: 13px; }.us-shots .drawer-note{ margin: 0 0 12px; color: var(--accent); font-size: 12px; }.us-shots .drawer-body h4, .us-shots #us-drawer-body h4{
+}.us-shots .drawer-meta{ margin: 0 0 10px; color: var(--ink); font-size: 13px; }.us-shots .drawer-note{ margin: 0 0 12px; color: var(--accent); font-size: 12px; }.us-shots .drawer-body h4, .us-shots #us-drawer-body h4{
   margin: 16px 0 6px;
   font-size: 13px;
   text-transform: uppercase;

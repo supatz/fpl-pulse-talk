@@ -1,8 +1,20 @@
 # Understat dataset plan — EPL (use-case driven)
 
-**Status:** design — not built yet  
+**Status:** **built** for the team + player shot explore (2026-09). This file is the original design; current locks are in [`decision_log.md`](./decision_log.md).
+
 **Depends on:** [understat_api_endpoints.md](./understat_api_endpoints.md)  
-**Site pattern:** same as `fpl-pulse-talk` / this repo — parquet masters → compact serving JSON (`build_serving.py`)
+**Site pattern:** parquet masters → compact serving JSON (`build_understat.py`)
+
+**Shipped vs still open**
+
+| Item | Status |
+|---|---|
+| Team map → FPL `team_code` | Shipped (`data/understat/maps/team_map.csv`) |
+| Shot fact + situation / last-action / against | Shipped |
+| Insights → Understat treemap + matrices | Shipped |
+| Per-player situation / last-action in `us_shot_treemap.json` | Shipped |
+| Curated `player_map` (FPL `player_code`) | **Not built** — serving player JSON still uses Understat ids |
+| Match join to FPL `match_id` | Planned; not required for the explore page |
 
 ### Locked decisions
 

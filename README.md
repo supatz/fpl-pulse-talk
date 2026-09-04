@@ -1,6 +1,19 @@
-# FPL master datasets
+# FPL Pulse Talk
 
-Local **player-match**, **player-gw**, **team-match**, and **fixtures** masters built from the public [`olbauday/FPL-Core-Insights`](https://github.com/olbauday/FPL-Core-Insights) repo. No GitHub login or token is used.
+Static dashboard (`web/`) plus two **separate** local datasets. Do not mix player minutes or metrics across them. Locked choices live in [`docs/decision_log.md`](docs/decision_log.md) — update that file whenever we decide or fix something. Doc index: [`docs/README.md`](docs/README.md).
+
+## Datasets
+
+| Dataset | Source | Powers |
+|---|---|---|
+| **FPL-Core** | Public [`olbauday/FPL-Core-Insights`](https://github.com/olbauday/FPL-Core-Insights) (cached under `.cache/FPL-Core-Insights/data/`) | Home, Fixtures, Attackers / Defenders / GK, Insights Players / Matches / Teams, Teams |
+| **Understat** | understat.com → `master/understat/` | Insights → Understat only (`#insights-understat` and `web/understat-shots.html`) |
+
+There is **no** curated FPL ↔ Understat `player_map`. Understat player minutes are `league_player.time`.
+
+## FPL-Core masters
+
+Local **player-match**, **player-gw**, **team-match**, and **fixtures** masters. No GitHub login or token is used.
 
 The pipeline extracts **every competition** (Premier League, cups, Europe, Community Shield, Super Cup, friendlies / GW0) and tags each row with `competition`. The dashboard can filter later. `By Gameweek/` is never read, so matches are not double-counted.
 
@@ -59,10 +72,13 @@ Static site in `web/`. After masters exist:
 
 ```bash
 .venv/bin/python build_serving.py
+.venv/bin/python build_understat.py --serving-only   # Understat JSON + player shot mixes
 .venv/bin/python serve.py          # http://127.0.0.1:8765/
 ```
 
 Presentation edits never rebuild Parquet. Netlify publish directory is `web/` (JSON is copied to `web/data/`). See `docs/dashboard_readme.md`.
+
+Attackers **npxG** is FPL-Core only: shot-joined non-penalty xG, or `xG − 0.79 × penalties_scored` when the shot `player_id` is blank.
 
 ### Roll back the last UI versions
 

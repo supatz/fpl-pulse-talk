@@ -1,6 +1,8 @@
 # Understat pipeline (EPL)
 
-Separate Understat masters joined to FPL `team_code` at serving time. Raw API JSON is cached under `.cache/understat/` so iteration does not re-scrape.
+Separate Understat masters joined to FPL **`team_code`** at serving time. Player rows stay on Understat `player_id` until a curated `player_map` exists. Raw API JSON is cached under `.cache/understat/` so iteration does not re-scrape.
+
+This dataset powers **Insights → Understat only**. Do not mix it into Attackers or other FPL-Core tables. Decisions: [`decision_log.md`](./decision_log.md).
 
 ## Commands
 
@@ -11,6 +13,9 @@ Separate Understat masters joined to FPL `team_code` at serving time. Raw API JS
 # Scheduled / manual refresh: re-pull fixture indexes + new match shots only
 ./scripts/refresh_understat.sh
 # or: make understat-refresh
+
+# Serving JSON only (includes player situation / last-action mixes for the drawer)
+.venv/bin/python build_understat.py --serving-only
 
 # Rebuild analytics/serving/dictionary only (no network)
 .venv/bin/python build_understat.py --derive-only
@@ -50,3 +55,5 @@ Reusable modules: `pipeline/understat/` (`client`, `cache`, `ingest`, `derive`, 
 ```
 
 Page: Insights → Understat (`web/index.html#insights-understat`) plus standalone `web/understat-shots.html`. Data: `serving/us_shot_treemap.json` (mirrored to `web/data/`).
+
+Each shipped player includes `matches`, `minutes`, `mins_per90` (`minutes / matches`), `by_situation`, and `by_last_action_group`. The drawer looks those up from serving data. Against (shots faced) is team-only. Player minutes are Understat `league_player.time` / `games`, not FPL.

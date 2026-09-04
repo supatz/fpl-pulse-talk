@@ -1,5 +1,5 @@
 /* Understat shot explore — treemap + linked matrix views */
-const DATA_URL = "./data/us_shot_treemap.json";
+const DATA_URL = "./data/us_shot_treemap.json?v=10";
 const TOP_N = 5;
 const TOP_TEAMS = 10;
 const HEADER_H = 42;
@@ -44,8 +44,10 @@ const state = {
   metric: "xg",
   situations: new Set(), // empty = all situations
   per90: false,
+  min45: false,
   againstDim: "situation",
   teams: new Set(),
+  teamMode: "preset",
   drawer: null,
   focusTeam: null,
   focusSlices: new Set(), // multi-select legend filters on linked mix
@@ -99,6 +101,7 @@ function bindEls() {
   els.sitMenu = $("us-situations-menu");
   els.sitDrop = $("us-situations-drop");
   els.per90 = $("us-per90");
+  els.min45 = $("us-min45");
   els.againstDim = $("us-against-dim");
   els.againstWrap = $("us-against-dim-wrap");
   els.teams = $("us-team-pills");
@@ -123,17 +126,36 @@ function bindEvents() {
     state.season = els.season.value;
     state.focusTeam = null;
     state.focusSlices.clear();
-    resetPresetTeams();
-    populateTeams();
-    render();
+    if (state.teamMode !== "custom") applyTeamMode();
+    else {
+      populateTeams();
+      render();
+    }
   });
   els.metric.addEventListener("change", () => {
     state.metric = els.metric.value;
-    render();
+    if (state.teamMode === "all") {
+      updateAgainstControls();
+      populateTeams();
+      render();
+    } else {
+      state.teamMode = "preset";
+      applyTeamMode();
+    }
     if (state.drawer && !els.drawer.hidden) openDrawer(state.drawer.team, state.drawer.player);
   });
   els.per90.addEventListener("change", () => {
     state.per90 = els.per90.checked;
+    if (state.teamMode === "all") {
+      render();
+    } else {
+      state.teamMode = "preset";
+      applyTeamMode();
+    }
+    if (state.drawer && !els.drawer.hidden) openDrawer(state.drawer.team, state.drawer.player);
+  });
+  els.min45?.addEventListener("change", () => {
+    state.min45 = els.min45.checked;
     render();
     if (state.drawer && !els.drawer.hidden) openDrawer(state.drawer.team, state.drawer.player);
   });
@@ -154,14 +176,12 @@ function bindEvents() {
     }
   });
   $("us-all-teams").addEventListener("click", () => {
-    state.teams = new Set(seasonTeamsAll().map((t) => String(t.team_code)));
-    populateTeams();
-    render();
+    state.teamMode = "all";
+    applyTeamMode();
   });
   els.topTeamsBtn.addEventListener("click", () => {
-    resetPresetTeams();
-    populateTeams();
-    render();
+    state.teamMode = "preset";
+    applyTeamMode();
   });
   $("us-help-open").addEventListener("click", () => {
     fillDefs();
@@ -271,45 +291,64 @@ function seasonTeamsAll() {
   return (state.data.teams || []).filter((t) => t.season === state.season);
 }
 
-function priorSeason() {
-  const seasons = state.data.seasons || [];
-  const i = seasons.indexOf(state.season);
-  if (i > 0) return seasons[i - 1];
-  return state.season;
-}
-
-function topTeamCodesByLastYearXg() {
-  const ref = priorSeason();
-  const present = new Set(seasonTeamsAll().map((t) => String(t.team_code)));
-  return (state.data.teams || [])
-    .filter((t) => t.season === ref)
-    .slice()
-    .sort((a, b) => (b.xg || 0) - (a.xg || 0))
-    .map((t) => String(t.team_code))
-    .filter((c) => present.has(c))
-    .slice(0, TOP_TEAMS);
-}
-
-/** xGC = sum of against-situation xGA for the current season. */
-function teamXgc(t) {
-  return (t.against_situation || []).reduce((a, r) => a + (Number(r.xga) || 0), 0);
-}
-
-function bottomTeamCodesByXgc() {
-  return seasonTeamsAll()
-    .slice()
-    .sort((a, b) => teamXgc(b) - teamXgc(a))
-    .slice(0, TOP_TEAMS)
-    .map((t) => String(t.team_code));
-}
-
 function isAgainstView() {
   return state.view === "against";
 }
 
+/** Season-to-date team value for the selected metric (creation or conceded). */
+function playerPassesMins(p) {
+  if (!state.min45) return true;
+  return (Number(p.minutes) || 0) >= 45;
+}
+
+function teamRankValue(t) {
+  if (isAgainstView()) {
+    const rows = t.against_situation || [];
+    const m = state.metric;
+    let raw = 0;
+    if (m === "shots") raw = rows.reduce((a, r) => a + (Number(r.shots_faced) || 0), 0);
+    else if (m === "sot") raw = rows.reduce((a, r) => a + (Number(r.sot_faced) || 0), 0);
+    else raw = rows.reduce((a, r) => a + (Number(r.xga) || 0), 0);
+    if (state.per90 && t.matches) return raw / t.matches;
+    return raw;
+  }
+  return Number(t[metricKey()]) || 0;
+}
+
+function presetTeamCodes() {
+  return seasonTeamsAll()
+    .slice()
+    .sort((a, b) => teamRankValue(b) - teamRankValue(a))
+    .slice(0, TOP_TEAMS)
+    .map((t) => String(t.team_code));
+}
+
 function resetPresetTeams() {
-  const codes = isAgainstView() ? bottomTeamCodesByXgc() : topTeamCodesByLastYearXg();
-  state.teams = new Set(codes);
+  state.teamMode = "preset";
+  state.teams = new Set(presetTeamCodes());
+}
+
+function applyTeamMode() {
+  updateAgainstControls();
+  if (state.teamMode === "all") {
+    state.teams = new Set(seasonTeamsAll().map((t) => String(t.team_code)));
+  } else if (state.teamMode === "preset") {
+    state.teams = new Set(presetTeamCodes());
+  } else {
+    const live = new Set(seasonTeamsAll().map((t) => String(t.team_code)));
+    state.teams = new Set([...state.teams].filter((c) => live.has(c)));
+    if (!state.teams.size) {
+      state.teamMode = "preset";
+      state.teams = new Set(presetTeamCodes());
+    }
+  }
+  populateTeams();
+  render();
+}
+
+function rankMetricLabel() {
+  const lab = metricLabel();
+  return isAgainstView() ? `${lab} conceded` : lab;
 }
 
 function updateAgainstControls() {
@@ -318,8 +357,8 @@ function updateAgainstControls() {
   if (els.topTeamsBtn) {
     els.topTeamsBtn.textContent = against ? "Bottom 10" : "Top 10";
     els.topTeamsBtn.title = against
-      ? "Select 10 teams with highest xGC (xG conceded)"
-      : "Select top 10 by prior-season xG created";
+      ? `10 teams with the most ${rankMetricLabel()} in ${state.season}`
+      : `10 teams with the most ${rankMetricLabel()} in ${state.season}`;
   }
 }
 
@@ -327,19 +366,15 @@ function populateTeams() {
   const teams = seasonTeamsAll()
     .slice()
     .sort((a, b) => a.team_short.localeCompare(b.team_short));
-  const preset = new Set(isAgainstView() ? bottomTeamCodesByXgc() : topTeamCodesByLastYearXg());
+  const preset = new Set(presetTeamCodes());
   els.teams.innerHTML = teams
     .map((t) => {
       const code = String(t.team_code);
       const on = state.teams.has(code);
       const isPreset = preset.has(code);
-      const tip = isAgainstView()
-        ? isPreset
-          ? `Bottom 10 by xGC (${fmt(teamXgc(t))})`
-          : t.team || t.team_short
-        : isPreset
-          ? "Top 10 by prior-season xG"
-          : t.team || t.team_short;
+      const tip = isPreset
+        ? `${isAgainstView() ? "Bottom" : "Top"} 10 by ${rankMetricLabel()} (${fmt(teamRankValue(t))})`
+        : t.team || t.team_short;
       return `<button type="button" class="pill ${on ? "on" : ""} ${isPreset ? "is-top" : ""}" data-code="${code}" title="${tip}">${t.team_short}</button>`;
     })
     .join("");
@@ -348,7 +383,8 @@ function populateTeams() {
       const code = btn.dataset.code;
       if (state.teams.has(code)) state.teams.delete(code);
       else state.teams.add(code);
-      if (!state.teams.size) resetPresetTeams();
+      state.teamMode = state.teams.size ? "custom" : "preset";
+      if (!state.teams.size) state.teams = new Set(presetTeamCodes());
       populateTeams();
       render();
     });
@@ -359,7 +395,7 @@ function populateTeams() {
 function visibleTeams() {
   const all = seasonTeamsAll();
   if (!state.teams.size) {
-    const preset = new Set(isAgainstView() ? bottomTeamCodesByXgc() : topTeamCodesByLastYearXg());
+    const preset = new Set(presetTeamCodes());
     return all.filter((t) => preset.has(String(t.team_code)));
   }
   return all.filter((t) => state.teams.has(String(t.team_code)));
@@ -404,6 +440,7 @@ function setView(view) {
   updateAgainstControls();
   // Switching into/out of Against refreshes the Top/Bottom 10 preset
   if (wasAgainst !== againstOnly) {
+    if (state.teamMode !== "custom") state.teamMode = "preset";
     resetPresetTeams();
     populateTeams();
     state.focusSlices.clear();
@@ -448,6 +485,7 @@ function renderTreemap() {
     .map((t) => {
       const players = (t.players || [])
         .slice()
+        .filter(playerPassesMins)
         .sort((a, b) => val(b, key) - val(a, key))
         .filter((p) => val(p, key) > 0)
         .slice(0, TOP_N)
@@ -472,11 +510,11 @@ function renderTreemap() {
     })
     .filter((t) => t.players.length);
 
-  const prior = priorSeason();
   const nAll = seasonTeamsAll().length;
   const sitNote = sitActive ? ` · ${[...sitActive].join(", ")}` : "";
-  els.status.textContent = `Showing ${nodes.length} of ${nAll} teams · default top ${TOP_TEAMS} by ${prior} xG · ${label}${sitNote}`;
-  els.footnote.textContent = `Sh = shots · SoT = on target. Use team pills / Top ${TOP_TEAMS} / All teams to change who appears. Source: Understat · ${state.data.built_at_utc || ""}`;
+  const presetNote = isAgainstView() ? `bottom ${TOP_TEAMS}` : `top ${TOP_TEAMS}`;
+  els.status.textContent = `Showing ${nodes.length} of ${nAll} teams · ${presetNote} by ${state.season} ${rankMetricLabel()} · ${label}${sitNote}`;
+  els.footnote.textContent = `Sh = shots · SoT = on target. Top / Bottom ${TOP_TEAMS} uses the selected season and metric, and updates as matches are added. Source: Understat · ${state.data.built_at_utc || ""}`;
 
   const width = els.chart.clientWidth || 1000;
   const height = els.chart.clientHeight || 640;
@@ -550,7 +588,7 @@ function renderTreemap() {
     .attr("ry", 14)
     .attr("fill", (d) => teamFill(d.data.team_short, 0.55))
     .on("click", (_, d) => openDrawer(d.data))
-    .on("mousemove", (event, d) => showTip(event, teamTip(d.data)))
+    .on("mousemove", (event, d) => showTip(event, teamTip(d.data, teams)))
     .on("mouseleave", hideTip);
 
   // Subtle header wash — light tint of team pastel
@@ -621,12 +659,7 @@ function renderTreemap() {
         .attr("ry", 6)
         .attr("fill", fill)
         .on("click", () => openDrawer(d.teamNode.data, d.data))
-        .on("mousemove", (event) =>
-          showTip(
-            event,
-            `<strong>${d.data.fullName}</strong><br>${d.data.team_short} · ${label} ${fmt(d.data.value)}`
-          )
-        )
+        .on("mousemove", (event) => showTip(event, playerTip(resolvePlayer(d.teamNode.data, d.data), d.teamNode.data)))
         .on("mouseleave", hideTip);
 
       // Font scales with metric share within the team (top player largest).
@@ -694,10 +727,10 @@ function renderLinked(mode) {
     cols = cols.filter((c) => sitActive.has(c));
   }
 
-  const prior = priorSeason();
   const nAll = seasonTeamsAll().length;
+  const presetNote = isAgainstView() ? `bottom ${TOP_TEAMS}` : `top ${TOP_TEAMS}`;
   els.status.textContent = `Showing ${teams.length} of ${nAll} · ${title} · ${against ? mixShortLabel(true) : label} · click rank or mix to link panes`;
-  els.footnote.textContent = `Rank = who leads · Mix = how share breaks down · Detail = absolute values + top players. Default top ${TOP_TEAMS} by ${prior} xG. Source: Understat · ${state.data.built_at_utc || ""}`;
+  els.footnote.textContent = `Rank = who leads · Mix = how share breaks down · Detail = absolute values + top players. ${presetNote} by ${state.season} ${rankMetricLabel()}. Source: Understat · ${state.data.built_at_utc || ""}`;
 
   if (!teams.length || !cols.length) {
     els.matrix.innerHTML = `<p class="empty">No data for this filter.</p>`;
@@ -904,6 +937,7 @@ function drawDetail(focusRow, cols, unit, against, mode) {
 
   const players = (t.players || [])
     .slice()
+    .filter(playerPassesMins)
     .sort((a, b) => val(b, key) - val(a, key))
     .filter((p) => val(p, key) > 0)
     .slice(0, TOP_N);
@@ -992,30 +1026,71 @@ function mixShortLabel(against) {
   return "xG";
 }
 
+function resolveTeam(team) {
+  if (!team || !state.data?.teams) return team;
+  const season = team.season || state.season;
+  return (
+    state.data.teams.find(
+      (t) =>
+        t.season === season &&
+        (team.team_code != null ? t.team_code === team.team_code : t.team_short === team.team_short)
+    ) || team
+  );
+}
+
+function resolvePlayer(team, player) {
+  if (!player) return null;
+  const srcTeam = resolveTeam(team);
+  const list = srcTeam?.players || team.players || [];
+  const pid = player.player_id;
+  const name = decodeHtml(player.player_name || player.fullName || "");
+  const found =
+    (pid != null && pid !== "" && list.find((p) => String(p.player_id) === String(pid))) ||
+    (name && list.find((p) => decodeHtml(p.player_name) === name)) ||
+    (name && list.find((p) => shortName(p.player_name) === shortName(name))) ||
+    player;
+  return withPlayerRates(found);
+}
+
+function withPlayerRates(p) {
+  if (!p) return p;
+  const out = { ...p };
+  if (out.matches == null) out.matches = out.games ?? out.shot_matches ?? null;
+  if (out.mins_per90 == null && out.minutes != null && out.matches) {
+    out.mins_per90 = out.minutes / out.matches;
+  }
+  return out;
+}
+
 function openDrawer(team, player) {
-  state.drawer = { team, player: player || null };
+  const srcTeam = resolveTeam(team);
+  const src = player ? resolvePlayer(srcTeam, player) : srcTeam;
+  state.drawer = { team: srcTeam, player: player ? src : null };
   els.drawer.hidden = false;
   els.drawerTitle.textContent = player
-    ? `${player.fullName || decodeHtml(player.player_name)} · ${team.team_short}`
-    : `${team.team || team.team_name || team.team_short}`;
+    ? `${src.fullName || decodeHtml(src.player_name)} · ${srcTeam.team_short}`
+    : `${srcTeam.team || srcTeam.team_name || srcTeam.team_short}`;
 
   const key = metricKey();
   const short = metricShort();
   const mixLabel = mixShortLabel(false);
   const againstLabel = mixShortLabel(true);
   const sitActive = activeSituations();
+  const isPlayer = Boolean(player);
 
-  let sit = (team.by_situation || []).slice();
+  let sit = (src.by_situation || []).slice();
   if (sitActive) sit = sit.filter((v) => sitActive.has(v.situation));
   sit.sort((a, b) => situationCellValue(b, false) - situationCellValue(a, false));
 
-  const lag = (team.by_last_action_group || [])
+  const lag = (src.by_last_action_group || [])
     .slice()
     .sort((a, b) => situationCellValue(b, false) - situationCellValue(a, false));
 
-  const ag = (team.against_situation || [])
-    .slice()
-    .sort((a, b) => situationCellValue(b, true) - situationCellValue(a, true));
+  const ag = isPlayer
+    ? []
+    : (srcTeam.against_situation || [])
+        .slice()
+        .sort((a, b) => situationCellValue(b, true) - situationCellValue(a, true));
 
   const sitTotal = sit.reduce((a, v) => a + situationCellValue(v, false), 0) || 0.0001;
   const lagTotal = lag.reduce((a, v) => a + situationCellValue(v, false), 0) || 0.0001;
@@ -1024,18 +1099,24 @@ function openDrawer(team, player) {
   const maxLag = Math.max(0.0001, ...lag.map((v) => situationCellValue(v, false)));
   const maxAg = Math.max(0.0001, ...ag.map((v) => situationCellValue(v, true)));
 
-  const subject = player || team;
-  const metaVal = fmt(val(subject, key));
-  const metaSh = player ? Math.round(player.shots || 0) : Math.round(team.shots || 0);
-  const metaSot = player ? Math.round(player.sot || 0) : Math.round(team.sot || 0);
+  const matches = isPlayer ? src.matches : srcTeam.matches;
+  const mins90 = isPlayer ? src.mins_per90 : null;
+  const metaCells = [
+    { label: short, value: fmt(val(src, key)) },
+    { label: "Sh", value: Math.round(src.shots || 0) },
+    { label: "SoT", value: Math.round(src.sot || 0) },
+    { label: "Matches", value: matches ?? "—" },
+  ];
+  if (isPlayer) metaCells.push({ label: "Avg mins/90", value: mins90 != null ? fmt(mins90) : "—" });
 
-  const splitNote =
-    state.metric === "cc" || state.metric === "cc_xg"
+  const splitNote = isPlayer
+    ? `<p class="drawer-note">Player shot mix only. Against (conceded) is a team view.</p>`
+    : state.metric === "cc" || state.metric === "cc_xg"
       ? `<p class="drawer-note">Situation / last-action splits use xG (CC is not split in the source).</p>`
       : "";
 
   els.drawerBody.innerHTML = `
-    <p class="drawer-meta">${short} ${metaVal} · Sh ${metaSh} · SoT ${metaSot} · matches ${team.matches || "—"}</p>
+    <div class="drawer-meta tip-row cols-${metaCells.length}">${tipCells(metaCells)}</div>
     ${splitNote}
     <h4>Situation mix (attack) · ${mixLabel}</h4>
     ${
@@ -1047,7 +1128,7 @@ function openDrawer(team, player) {
           total: sitTotal,
         })),
         mixLabel
-      ) || '<p class="empty">No data</p>'
+      ) || '<p class="empty">No shot mix for this player</p>'
     }
     <h4>Last-action groups · ${mixLabel}</h4>
     ${
@@ -1059,9 +1140,12 @@ function openDrawer(team, player) {
           total: lagTotal,
         })),
         mixLabel
-      ) || '<p class="empty">No data</p>'
+      ) || '<p class="empty">No last-action mix for this player</p>'
     }
-    <h4>Against — situation conceded · ${againstLabel}</h4>
+    ${
+      isPlayer
+        ? ""
+        : `<h4>Against — situation conceded · ${againstLabel}</h4>
     ${
       mixRows(
         ag.map((v) => ({
@@ -1072,6 +1156,7 @@ function openDrawer(team, player) {
         })),
         againstLabel
       ) || '<p class="empty">No data</p>'
+    }`
     }
   `;
 }
@@ -1103,12 +1188,13 @@ function fillDefs() {
 
   const body = $("us-defs-body");
   body.innerHTML = `
-    <div class="def-block"><h3>Teams filter</h3><p>All clubs stay in the pill list. Creation views default to <em>Top 10</em> by prior-season xG. Against view uses <em>Bottom 10</em> by <strong>xGC</strong> (xG conceded = sum of against-situation xGA).</p></div>
+    <div class="def-block"><h3>Teams filter</h3><p>All clubs stay in the pill list. <em>Top 10</em> / <em>Bottom 10</em> uses the selected season and metric (highest value). Against view ranks by that metric conceded. The list updates as new gameweeks are ingested.</p></div>
     <div class="def-block"><h3>Linked panes</h3><p>Rank → Mix → Detail. Multi-select mix legends to sort Rank by absolute metric and Mix by %; clear all legends to reset.</p></div>
     <div class="def-block"><h3>Source</h3><p>${notes.source || "Understat shot model metrics."}</p></div>
     <div class="def-block"><h3>SoT</h3><p>${notes.sot || "Goal + SavedShot + ShotOnPost. Blocked shots excluded."}</p></div>
     <div class="def-block"><h3>Chances created</h3><p>${notes.cc || "From shot player_assisted (passer before the shot)."}</p></div>
     <div class="def-block"><h3>Per 90</h3><p>${notes.per90_team || ""} ${notes.per90_player || ""}</p></div>
+    <div class="def-block"><h3>45+ mins</h3><p>Hides players with under 45 Understat season minutes (<code>league_player.time</code>). No FPL minutes join — there is no curated player map yet.</p></div>
     <div class="def-block"><h3>Situations</h3><p>OpenPlay, FromCorner, SetPiece, DirectFreekick, Penalty — how the shot chance arose.</p></div>
     <div class="def-block"><h3>Last-action groups</h3><p>Preceding action before the shot, rolled into readable groups:</p></div>
     ${lagHtml || "<div class='def-block'><p>Combination, Through ball, Crosses, Dribble, Turnover, Second ball, Unknown.</p></div>"}
@@ -1117,9 +1203,96 @@ function fillDefs() {
   `;
 }
 
+function pct(part, whole) {
+  if (!whole) return "—";
+  return `${((part / whole) * 100).toFixed(1)}%`;
+}
+
+function seasonMetricTotal() {
+  return seasonTeamsAll().reduce((a, t) => a + teamRankValue(t), 0);
+}
+
+function tipCells(cells) {
+  return cells
+    .map((c) => `<div class="tip-cell"><span>${c.label}</span><b>${c.value}</b></div>`)
+    .join("");
+}
+
+function tipBlock(title, rows) {
+  const body = rows
+    .filter((row) => row && row.length)
+    .map((cells) => `<div class="tip-row cols-${cells.length}">${tipCells(cells)}</div>`)
+    .join("");
+  return `<div class="tip-title">${title}</div>${body}`;
+}
+
+function volumeCells(obj, skip) {
+  const cells = [
+    { key: "xg", label: "xG", value: fmt(obj.xg) },
+    { key: "shots", label: "Sh", value: Math.round(obj.shots || 0) },
+    { key: "sot", label: "SoT", value: Math.round(obj.sot || 0) },
+    { key: "goals", label: "G", value: obj.goals || 0 },
+  ];
+  return cells.filter((c) => c.key !== skip);
+}
+
+function metricSkipKey() {
+  const key = metricKey();
+  if (key === "xg" || key === "xg_p90") return "xg";
+  if (key === "shots" || key === "shots_p90") return "shots";
+  if (key === "sot" || key === "sot_p90") return "sot";
+  return null;
+}
+
 function teamTip(t) {
   const key = metricKey();
-  return `<strong>${t.team_short}</strong><br>${metricLabel()} ${fmt(val(t, key))}<br>Sh ${t.shots || 0} · SoT ${t.sot || 0}`;
+  const v = isAgainstView() ? teamRankValue(t) : val(t, key);
+  const lab = rankMetricLabel();
+  const extra =
+    key.startsWith("cc")
+      ? []
+      : [
+          { label: "CC", value: fmt(t.cc) },
+          { label: "xG asst", value: fmt(t.cc_xg) },
+        ];
+  return tipBlock(`${t.team || t.team_short}`, [
+    [{ label: "Matches", value: t.matches ?? "—" }],
+    [
+      { label: lab, value: fmt(v) },
+      { label: `Share of ${state.season}`, value: pct(v, seasonMetricTotal()) },
+    ],
+    volumeCells(t, metricSkipKey()),
+    extra,
+  ]);
+}
+
+function playerTip(p, team) {
+  if (!p) return "";
+  const src = withPlayerRates(p);
+  const key = metricKey();
+  const v = val(src, key);
+  const roster = (resolveTeam(team).players || team.players || []).filter(playerPassesMins);
+  const teamTot = roster.reduce((a, x) => a + val(x, key), 0);
+  const lab = metricLabel();
+  const extra = key.startsWith("cc")
+    ? [{ label: "Mins", value: src.minutes != null ? fmt(src.minutes) : "—" }]
+    : [
+        { label: "CC", value: fmt(src.cc) },
+        { label: "xG asst", value: fmt(src.cc_xg) },
+        { label: "Mins", value: src.minutes != null ? fmt(src.minutes) : "—" },
+      ];
+  return tipBlock(`${src.fullName || decodeHtml(src.player_name)} · ${team.team_short}`, [
+    [
+      { label: "Matches", value: src.matches ?? "—" },
+      { label: "Avg mins/90", value: src.mins_per90 != null ? fmt(src.mins_per90) : "—" },
+    ],
+    [
+      { label: lab, value: fmt(v) },
+      { label: `Share of ${team.team_short}`, value: pct(v, teamTot) },
+    ],
+    volumeCells(src, metricSkipKey()),
+    extra,
+  ]);
 }
 
 function teamMeta(t, key) {
@@ -1223,11 +1396,18 @@ function truncate(s, n) {
 }
 
 function showTip(event, html) {
+  if (!els.tip) return;
+  if (els.tip.parentElement !== document.body) {
+    els.tip.classList.add("us-shots");
+    document.body.appendChild(els.tip);
+  }
   els.tip.hidden = false;
   els.tip.innerHTML = html;
-  const x = Math.min(window.innerWidth - 220, event.clientX + 14);
-  const y = Math.min(window.innerHeight - 80, event.clientY + 14);
-  els.tip.style.transform = `translate(${x}px, ${y}px)`;
+  const x = Math.min(window.innerWidth - 320, event.clientX + 14);
+  const y = Math.min(window.innerHeight - 240, event.clientY + 14);
+  els.tip.style.left = `${Math.max(8, x)}px`;
+  els.tip.style.top = `${Math.max(8, y)}px`;
+  els.tip.style.transform = "none";
 }
 
 function hideTip() {

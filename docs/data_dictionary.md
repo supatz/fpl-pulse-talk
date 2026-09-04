@@ -105,7 +105,7 @@ Rows: **17,403**. Columns: **114**.
 | `rating` | `Float64` | 4,826 (27.7%) |  |
 | `yellow_cards` | `Float64` | 4,587 (26.4%) |  |
 | `red_cards` | `Float64` | 4,587 (26.4%) |  |
-| `np_xg` | `Float64` | 10,857 (62.4%) | Non-penalty xG aggregated from shots.situation. |
+| `np_xg` | `Float64` | 10,857 (62.4%) | Non-penalty xG from shots (situation != penalty). Serving may fill gaps with xG − 0.79 × penalties_scored. |
 | `set_piece_xg` | `Float64` | 10,857 (62.4%) | Shot-model xG on set-piece situations. |
 | `open_play_xg` | `Float64` | 10,857 (62.4%) | Shot-model xG on open-play situations. |
 | `penalty_shots` | `UInt32` | 10,857 (62.4%) |  |
@@ -207,7 +207,7 @@ Rows: **1,909**. Columns: **115**.
 | `elo` | `Float64` | 983 (51.5%) |  |
 | `possession` | `Float64` | 895 (46.9%) |  |
 | `xg` | `Float64` | 896 (46.9%) | Opta/match-layer expected goals. Distinct from FPL expected_goals and shot-model xG. |
-| `np_xg` | `Float64` | 930 (48.7%) | Non-penalty xG aggregated from shots.situation. |
+| `np_xg` | `Float64` | 930 (48.7%) | Non-penalty xG from shots (situation != penalty). Serving may fill gaps with xG − 0.79 × penalties_scored. |
 | `xg_open_play` | `String` | 924 (48.4%) |  |
 | `xg_set_play` | `String` | 924 (48.4%) |  |
 | `xgot` | `Float64` | 924 (48.4%) |  |
