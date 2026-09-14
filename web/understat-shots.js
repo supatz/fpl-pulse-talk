@@ -1,9 +1,24 @@
-/* Understat shot explore — treemap + linked matrix views */
-const DATA_URL = "./data/us_shot_treemap.json?v=10";
+/* Understat shot explore — treemap + linked matrix views + match timing */
+const DATA_URL = "./data/us_shot_treemap.json?v=11";
+const TIMING_URL = "./data/us_team_timing.json?v=2";
+const TEMPO_URL = "./data/us_team_attack_speed.json?v=1";
 const TOP_N = 5;
 const TOP_TEAMS = 10;
 const HEADER_H = 42;
 const MIN_FONT = 5;
+const TIMING_INTERVALS = ["1-15", "16-30", "31-45", "46-60", "61-75", "76+"];
+const TEMPO_SPEEDS = ["Fast", "Standard", "Normal", "Slow"];
+const TIMING_UNIFORM = 1 / TIMING_INTERVALS.length;
+/** Cap for deviation fill: ±this share (≈16.7pp) maps to a full half-bar. */
+const TIMING_DEV_SCALE = TIMING_UNIFORM;
+const TIMING_METRIC_NAMES = {
+  G: "Goals scored",
+  xG: "Expected goals",
+  Sh: "Shots taken",
+  ShC: "Shots conceded",
+  GC: "Goals conceded",
+  xGC: "Expected goals against",
+};
 
 /** Soft pastel palette from design swatch (16). */
 const PALETTE = [
@@ -39,9 +54,16 @@ const SLICE_COLORS = [
 
 const state = {
   data: null,
+  timingData: null,
+  tempoData: null,
   view: "treemap",
   season: "2026-2027",
   metric: "xg",
+  timingMetric: "G",
+  timingSort: "total",
+  tempoSort: "total",
+  gwFrom: 1,
+  gwTo: 38,
   situations: new Set(), // empty = all situations
   per90: false,
   min45: false,
@@ -72,12 +94,24 @@ async function init() {
   bindEvents();
   if (!$("app")) decorateNames(document.querySelector(".us-shots") || document);
   try {
-    state.data = await fetch(DATA_URL).then((r) => {
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return r.json();
-    });
+    const [shots, timing, tempo] = await Promise.all([
+      fetch(DATA_URL).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }),
+      fetch(TIMING_URL)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+      fetch(TEMPO_URL)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+    ]);
+    state.data = shots;
+    state.timingData = timing;
+    state.tempoData = tempo;
     populateSeasons();
     populateSituations();
+    syncTimingGwRange({ resetDefaults: true });
     resetPresetTeams();
     populateTeams();
     if (typeof d3 === "undefined") throw new Error("Chart library missing (vendor/d3.min.js).");
@@ -94,6 +128,7 @@ if (document.body?.classList.contains("us-shots-standalone")) {
 
 function bindEls() {
   const root = document.querySelector(".us-shots") || document;
+  els.root = root.classList?.contains("us-shots") ? root : document.querySelector(".us-shots");
   els.season = $("us-season");
   els.metric = $("us-metric");
   els.metricLabel = $("us-metric-label");
@@ -104,6 +139,12 @@ function bindEls() {
   els.min45 = $("us-min45");
   els.againstDim = $("us-against-dim");
   els.againstWrap = $("us-against-dim-wrap");
+  els.timingMetric = $("us-timing-metric");
+  els.timing = $("us-timing");
+  els.tempo = $("us-tempo");
+  els.gwFrom = $("us-gw-from");
+  els.gwTo = $("us-gw-to");
+  els.gwLabel = $("us-timing-gw-label");
   els.teams = $("us-team-pills");
   els.topTeamsBtn = $("us-top-teams");
   els.chart = $("us-chart");
@@ -126,6 +167,7 @@ function bindEvents() {
     state.season = els.season.value;
     state.focusTeam = null;
     state.focusSlices.clear();
+    syncTimingGwRange({ resetDefaults: true });
     if (state.teamMode !== "custom") applyTeamMode();
     else {
       populateTeams();
@@ -163,6 +205,29 @@ function bindEvents() {
     state.againstDim = els.againstDim.value;
     if (state.view === "against") render();
   });
+  els.timingMetric?.addEventListener("change", () => {
+    state.timingMetric = els.timingMetric.value;
+    if (state.teamMode !== "custom") {
+      state.teamMode = "preset";
+      applyTeamMode();
+    } else render();
+  });
+  const syncGwInputs = () => {
+    if (!els.gwFrom || !els.gwTo) return;
+    let a = Number(els.gwFrom.value);
+    let b = Number(els.gwTo.value);
+    if (a > b) [a, b] = [b, a];
+    state.gwFrom = a;
+    state.gwTo = b;
+    if (els.gwLabel) els.gwLabel.textContent = `GW ${a}–${b}`;
+    if (state.teamMode !== "custom") {
+      state.teamMode = "preset";
+      applyTeamMode();
+    } else if (state.view === "timing") renderTiming();
+    else if (state.view === "tempo") renderTempo();
+  };
+  els.gwFrom?.addEventListener("input", syncGwInputs);
+  els.gwTo?.addEventListener("input", syncGwInputs);
   els.sitToggle.addEventListener("click", (e) => {
     e.stopPropagation();
     const open = els.sitMenu.hidden;
@@ -192,7 +257,9 @@ function bindEvents() {
     state.drawer = null;
   });
   window.addEventListener("resize", debounce(() => {
-    if (els.chart && els.chart.clientWidth) render();
+    if (state.view === "timing") renderTiming();
+    else if (state.view === "tempo") renderTempo();
+    else if (els.chart && els.chart.clientWidth) render();
   }, 120));
 }
 
@@ -288,11 +355,33 @@ function activeSituations() {
 
 /** All teams in the selected season (for filter pills). */
 function seasonTeamsAll() {
+  if (isTimingView()) return timingTeamsAll();
+  if (isTempoView()) return tempoTeamsAll();
   return (state.data.teams || []).filter((t) => t.season === state.season);
+}
+
+function timingTeamsAll() {
+  return (state.timingData?.teams || []).filter((t) => t.season === state.season);
+}
+
+function tempoTeamsAll() {
+  return (state.tempoData?.teams || []).filter((t) => t.season === state.season);
 }
 
 function isAgainstView() {
   return state.view === "against";
+}
+
+function isTimingView() {
+  return state.view === "timing";
+}
+
+function isTempoView() {
+  return state.view === "tempo";
+}
+
+function isContextView() {
+  return isTimingView() || isTempoView();
 }
 
 /** Season-to-date team value for the selected metric (creation or conceded). */
@@ -302,6 +391,12 @@ function playerPassesMins(p) {
 }
 
 function teamRankValue(t) {
+  if (isTimingView()) {
+    return Number(aggregateTimingTeam(t).totals?.[state.timingMetric]) || 0;
+  }
+  if (isTempoView()) {
+    return Number(t.totals?.[state.timingMetric]) || 0;
+  }
   if (isAgainstView()) {
     const rows = t.against_situation || [];
     const m = state.metric;
@@ -347,6 +442,7 @@ function applyTeamMode() {
 }
 
 function rankMetricLabel() {
+  if (isContextView()) return TIMING_METRIC_NAMES[state.timingMetric] || state.timingMetric;
   const lab = metricLabel();
   return isAgainstView() ? `${lab} conceded` : lab;
 }
@@ -430,16 +526,23 @@ function metricShort() {
 
 function setView(view) {
   const wasAgainst = state.view === "against";
+  const wasTiming = state.view === "timing";
+  const wasTempo = state.view === "tempo";
   state.view = view;
   els.tabs.forEach((b) => b.classList.toggle("on", b.dataset.view === view));
   const againstOnly = view === "against";
+  const timingOnly = view === "timing";
+  const tempoOnly = view === "tempo";
+  const contextOnly = timingOnly || tempoOnly;
+  if (els.root) {
+    els.root.dataset.mode = timingOnly ? "timing" : tempoOnly ? "tempo" : "shots";
+  }
   els.againstWrap.hidden = !againstOnly;
   if (againstOnly) els.againstWrap.removeAttribute("hidden");
   else els.againstWrap.setAttribute("hidden", "");
   els.againstWrap.setAttribute("aria-hidden", againstOnly ? "false" : "true");
   updateAgainstControls();
-  // Switching into/out of Against refreshes the Top/Bottom 10 preset
-  if (wasAgainst !== againstOnly) {
+  if (wasAgainst !== againstOnly || wasTiming !== timingOnly || wasTempo !== tempoOnly) {
     if (state.teamMode !== "custom") state.teamMode = "preset";
     resetPresetTeams();
     populateTeams();
@@ -447,7 +550,14 @@ function setView(view) {
   }
   const treemap = view === "treemap";
   els.chart.hidden = !treemap;
-  els.matrix.hidden = treemap;
+  els.matrix.hidden = treemap || contextOnly;
+  if (els.timing) els.timing.hidden = !timingOnly;
+  if (els.tempo) els.tempo.hidden = !tempoOnly;
+  if (timingOnly) syncTimingGwRange();
+  if (els.drawer && contextOnly) {
+    els.drawer.hidden = true;
+    state.drawer = null;
+  }
   render();
 }
 
@@ -472,6 +582,8 @@ function render() {
   if (state.view === "treemap") renderTreemap();
   else if (state.view === "situation") renderLinked("situation");
   else if (state.view === "last_action") renderLinked("last_action");
+  else if (state.view === "timing") renderTiming();
+  else if (state.view === "tempo") renderTempo();
   else renderLinked("against");
 }
 
@@ -1190,6 +1302,9 @@ function fillDefs() {
   body.innerHTML = `
     <div class="def-block"><h3>Teams filter</h3><p>All clubs stay in the pill list. <em>Top 10</em> / <em>Bottom 10</em> uses the selected season and metric (highest value). Against view ranks by that metric conceded. The list updates as new gameweeks are ingested.</p></div>
     <div class="def-block"><h3>Linked panes</h3><p>Rank → Mix → Detail. Multi-select mix legends to sort Rank by absolute metric and Mix by %; clear all legends to reset.</p></div>
+    <div class="def-block"><h3>Match timing</h3><p>Each row is a 90-minute clock split into Understat intervals (<code>1-15</code> … <code>76+</code>). Built from Understat <strong>shots</strong> joined to FPL Premier League gameweeks. The From/To GW slider filters which matches are summed. Fill is <strong>deviation from a uniform clock</strong> (~16.7% per bucket). Numbers stay absolute value + %. Gold = peak interval for that team (by share). Click a clock header or Total to sort teams.</p></div>
+    <div class="def-block"><h3>Attack tempo</h3><p>Season Understat <code>attackSpeed</code> mix: Fast → Standard → Normal → Slow (how quickly possession moved before the shot). Same metrics as timing. <strong>Not GW-filterable</strong> — Understat only publishes this as a season profile. Fill = share of the team’s season total; gold = dominant tempo. Click speed headers / Total to sort (Fast share is useful for transition threat).</p></div>
+    <div class="def-block"><h3>Timing metrics</h3><p>G = goals scored · xG = Understat xG · Sh = shots · ShC = shots conceded · GC = goals conceded · xGC = xG conceded. From <code>team_context_season</code> where <code>context_family=timing</code>.</p></div>
     <div class="def-block"><h3>Source</h3><p>${notes.source || "Understat shot model metrics."}</p></div>
     <div class="def-block"><h3>SoT</h3><p>${notes.sot || "Goal + SavedShot + ShotOnPost. Blocked shots excluded."}</p></div>
     <div class="def-block"><h3>Chances created</h3><p>${notes.cc || "From shot player_assisted (passer before the shot)."}</p></div>
@@ -1197,10 +1312,449 @@ function fillDefs() {
     <div class="def-block"><h3>45+ mins</h3><p>Hides players with under 45 Understat season minutes (<code>league_player.time</code>). No FPL minutes join — there is no curated player map yet.</p></div>
     <div class="def-block"><h3>Situations</h3><p>OpenPlay, FromCorner, SetPiece, DirectFreekick, Penalty — how the shot chance arose.</p></div>
     <div class="def-block"><h3>Last-action groups</h3><p>Preceding action before the shot, rolled into readable groups:</p></div>
-    ${lagHtml || "<div class='def-block'><p>Combination, Through ball, Crosses, Dribble, Turnover, Second ball, Unknown.</p></div>"}
+  ${lagHtml || "<div class='def-block'><p>Combination, Through ball, Crosses, Dribble, Turnover, Second ball, Unknown.</p></div>"}
     <div class="def-block"><h3>Against (defence)</h3><p>Shots / xG conceded (xGC), split by situation or last-action of the attacking side. Metric label becomes Metric (Against).</p></div>
     <div class="def-block"><h3>Labels</h3><p>Sh = shots · SoT = shots on target · xGC = xG conceded. Hover <em>i</em> copies <code>data-name</code>.</p></div>
   `;
+}
+
+function timingGwMeta() {
+  return state.timingData?.gw_meta?.[state.season] || { min: 1, max: 38, default_from: 1, default_to: 38 };
+}
+
+function syncTimingGwRange({ resetDefaults = false } = {}) {
+  const meta = timingGwMeta();
+  const min = Number(meta.min) || 1;
+  const max = Number(meta.max) || 38;
+  if (els.gwFrom) {
+    els.gwFrom.min = String(min);
+    els.gwFrom.max = String(max);
+  }
+  if (els.gwTo) {
+    els.gwTo.min = String(min);
+    els.gwTo.max = String(max);
+  }
+  if (resetDefaults) {
+    state.gwFrom = Number(meta.default_from) || min;
+    state.gwTo = Number(meta.default_to) || max;
+  } else {
+    state.gwFrom = Math.min(max, Math.max(min, Number(state.gwFrom) || min));
+    state.gwTo = Math.min(max, Math.max(min, Number(state.gwTo) || max));
+  }
+  if (state.gwFrom > state.gwTo) [state.gwFrom, state.gwTo] = [state.gwTo, state.gwFrom];
+  if (els.gwFrom) els.gwFrom.value = String(state.gwFrom);
+  if (els.gwTo) els.gwTo.value = String(state.gwTo);
+  if (els.gwLabel) els.gwLabel.textContent = `GW ${state.gwFrom}–${state.gwTo}`;
+}
+
+function emptyTimingIntervals() {
+  const values = {};
+  const share = {};
+  for (const mid of Object.keys(TIMING_METRIC_NAMES)) {
+    values[mid] = 0;
+    share[mid] = 0;
+  }
+  const intervals = {};
+  for (const iv of TIMING_INTERVALS) intervals[iv] = { values: { ...values }, share: { ...share } };
+  return { intervals, totals: { ...values } };
+}
+
+/** Sum shot-built GW slices into the ribbon shape (values + shares). */
+function aggregateTimingTeam(team) {
+  const out = emptyTimingIntervals();
+  if (!team?.gws) {
+    // legacy schema_version 1 fallback
+    if (team?.intervals) {
+      return {
+        intervals: team.intervals,
+        totals: team.totals || emptyTimingIntervals().totals,
+      };
+    }
+    return out;
+  }
+  const from = Number(state.gwFrom) || 1;
+  const to = Number(state.gwTo) || 38;
+  for (let gw = from; gw <= to; gw += 1) {
+    const slice = team.gws[String(gw)];
+    if (!slice) continue;
+    for (const iv of TIMING_INTERVALS) {
+      const cell = slice[iv];
+      if (!cell) continue;
+      for (const mid of Object.keys(TIMING_METRIC_NAMES)) {
+        out.intervals[iv].values[mid] += Number(cell[mid]) || 0;
+        out.totals[mid] += Number(cell[mid]) || 0;
+      }
+    }
+  }
+  for (const iv of TIMING_INTERVALS) {
+    const vals = out.intervals[iv].values;
+    const share = out.intervals[iv].share;
+    for (const mid of Object.keys(TIMING_METRIC_NAMES)) {
+      const tot = out.totals[mid];
+      share[mid] = tot ? vals[mid] / tot : 0;
+      if (mid === "xG" || mid === "xGC") vals[mid] = Math.round(vals[mid] * 1000) / 1000;
+      else vals[mid] = Math.round(vals[mid] * 100) / 100;
+    }
+  }
+  for (const mid of Object.keys(TIMING_METRIC_NAMES)) {
+    if (mid === "xG" || mid === "xGC") out.totals[mid] = Math.round(out.totals[mid] * 1000) / 1000;
+    else out.totals[mid] = Math.round(out.totals[mid] * 100) / 100;
+  }
+  return out;
+}
+
+function timingSortValue(t) {
+  const m = state.timingMetric;
+  const agg = aggregateTimingTeam(t);
+  if (TIMING_INTERVALS.includes(state.timingSort)) {
+    return Number(agg.intervals?.[state.timingSort]?.values?.[m]) || 0;
+  }
+  return Number(agg.totals?.[m]) || 0;
+}
+
+function fmtTimingVal(v, metric) {
+  if (v == null || Number.isNaN(Number(v))) return "—";
+  if (metric === "xG" || metric === "xGC") return Number(v).toFixed(1);
+  return String(Math.round(Number(v)));
+}
+
+function fmtTimingPct(share) {
+  return `${Math.round((Number(share) || 0) * 100)}%`;
+}
+
+function timingDevFill(share) {
+  const dev = (Number(share) || 0) - TIMING_UNIFORM;
+  const mag = Math.min(1, Math.abs(dev) / TIMING_DEV_SCALE);
+  if (mag < 0.04) return { dir: "flat", fill: 0, dev };
+  return { dir: dev >= 0 ? "above" : "below", fill: mag, dev };
+}
+
+function timingCellHtml(interval, cell, metric, opts = {}) {
+  const { rowPeak = false } = opts;
+  const val = cell?.values?.[metric];
+  const share = Number(cell?.share?.[metric]) || 0;
+  const { dir, fill } = timingDevFill(share);
+  const cls = ["timing-cell", `is-${dir}`];
+  if (rowPeak) cls.push("is-row-peak");
+  const tipBits = [
+    `${interval}: ${fmtTimingVal(val, metric)} ${metric}`,
+    `${fmtTimingPct(share)} of selected GWs`,
+    dir === "flat" ? "near uniform (~16.7%)" : `${devLabel(share)} vs uniform`,
+  ];
+  if (rowPeak) tipBits.push("peak interval for team");
+  return `<div class="${cls.join(" ")}" style="--fill:${fill.toFixed(4)}" title="${tipBits.join(" · ")}">
+    <div class="rail" aria-hidden="true"></div>
+    <div class="pulse" aria-hidden="true"></div>
+    <div class="nums"><span class="v">${fmtTimingVal(val, metric)}</span><span class="p">${fmtTimingPct(share)}</span></div>
+  </div>`;
+}
+
+function devLabel(share) {
+  const pp = ((Number(share) || 0) - TIMING_UNIFORM) * 100;
+  const sign = pp >= 0 ? "+" : "";
+  return `${sign}${pp.toFixed(1)}pp`;
+}
+
+function timingRibbonHtml(intervalsMap, metric, opts = {}) {
+  const { showTicks = false, rowPeakIv = null } = opts;
+  const parts = [];
+  TIMING_INTERVALS.forEach((iv, i) => {
+    if (i === 3) parts.push(`<div class="timing-ht" title="Half-time" aria-hidden="true"></div>`);
+    if (showTicks) {
+      const on = state.timingSort === iv ? "on" : "";
+      parts.push(
+        `<button type="button" class="timing-tick ${on}" data-timing-sort="${iv}" title="Sort by ${iv}">${iv}</button>`
+      );
+    } else {
+      const cell = intervalsMap?.[iv];
+      const share = Number(cell?.share?.[metric]) || 0;
+      const rowPeak = rowPeakIv != null && iv === rowPeakIv && share > 0;
+      parts.push(timingCellHtml(iv, cell, metric, { rowPeak }));
+    }
+  });
+  return `<div class="timing-ribbon">${parts.join("")}</div>`;
+}
+
+function timingRowPeakInterval(intervalsMap, metric) {
+  let bestIv = null;
+  let bestShare = -1;
+  for (const iv of TIMING_INTERVALS) {
+    const share = Number(intervalsMap?.[iv]?.share?.[metric]) || 0;
+    if (share > bestShare) {
+      bestShare = share;
+      bestIv = iv;
+    }
+  }
+  return bestShare > 0 ? bestIv : null;
+}
+
+function setTimingSort(sort) {
+  if (!sort || state.timingSort === sort) return;
+  state.timingSort = sort;
+  if (state.view === "timing") renderTiming();
+}
+
+function bindTimingBoardEvents() {
+  if (!els.timing || els.timing.dataset.bound === "1") return;
+  els.timing.dataset.bound = "1";
+  els.timing.addEventListener("click", (e) => {
+    const tick = e.target.closest("[data-timing-sort]");
+    if (!tick || !els.timing.contains(tick)) return;
+    setTimingSort(tick.dataset.timingSort);
+  });
+}
+
+function renderTiming() {
+  const host = els.timing;
+  if (!host) return;
+  bindTimingBoardEvents();
+  syncTimingGwRange();
+  const metric = state.timingMetric;
+  const metricName = TIMING_METRIC_NAMES[metric] || metric;
+  if (!state.timingData?.teams?.length) {
+    host.innerHTML = `<p class="status">Timing data missing. Rebuild with <code>build_understat.py --serving-only</code>.</p>`;
+    els.status.textContent = "Timing serving JSON not loaded";
+    return;
+  }
+
+  if (els.timingMetric && els.timingMetric.value !== state.timingMetric) {
+    els.timingMetric.value = state.timingMetric;
+  }
+
+  const selected = new Set(state.teams.size ? [...state.teams] : presetTeamCodes());
+  let teams = timingTeamsAll()
+    .filter((t) => selected.has(String(t.team_code)))
+    .map((t) => ({ ...t, ...aggregateTimingTeam(t) }));
+  teams.sort((a, b) => {
+    const av = TIMING_INTERVALS.includes(state.timingSort)
+      ? Number(a.intervals?.[state.timingSort]?.values?.[metric]) || 0
+      : Number(a.totals?.[metric]) || 0;
+    const bv = TIMING_INTERVALS.includes(state.timingSort)
+      ? Number(b.intervals?.[state.timingSort]?.values?.[metric]) || 0
+      : Number(b.totals?.[metric]) || 0;
+    return bv - av || String(a.team_short).localeCompare(String(b.team_short));
+  });
+
+  const nAll = timingTeamsAll().length;
+  const sortLab =
+    state.timingSort === "total" ? `GW ${state.gwFrom}–${state.gwTo} total` : `${state.timingSort} ${metric}`;
+  els.status.textContent = `Match clock · GW ${state.gwFrom}–${state.gwTo} · ${teams.length} of ${nAll} teams · ${metric} (${metricName}) · sorted by ${sortLab}`;
+  els.footnote.textContent = `Shot minutes × FPL PL gameweeks. Fill = deviation from uniform (~${fmtTimingPct(TIMING_UNIFORM)}). Gold = peak interval (share). Click clock headers / Total to sort. Source: Understat · ${state.timingData.built_at_utc || ""}`;
+
+  const leagueIntervals = {};
+  for (const iv of TIMING_INTERVALS) {
+    let shareSum = 0;
+    let valSum = 0;
+    let n = 0;
+    for (const t of teams) {
+      const cell = t.intervals?.[iv];
+      if (!cell) continue;
+      shareSum += Number(cell.share?.[metric]) || 0;
+      valSum += Number(cell.values?.[metric]) || 0;
+      n += 1;
+    }
+    leagueIntervals[iv] = {
+      values: { [metric]: n ? valSum / n : 0 },
+      share: { [metric]: n ? shareSum / n : 0 },
+    };
+  }
+
+  const totalOn = state.timingSort === "total" ? "on" : "";
+  const axis = `
+    <div class="timing-axis">
+      <div class="timing-label">Clock</div>
+      ${timingRibbonHtml(null, metric, { showTicks: true })}
+      <button type="button" class="timing-total timing-total-btn ${totalOn}" data-timing-sort="total" title="Sort by selected GW total">
+        <span>Total</span>${metric}
+      </button>
+    </div>`;
+
+  const leagueRow = `
+    <div class="timing-row is-league">
+      <div class="timing-team" title="Average share across shown teams">League</div>
+      ${timingRibbonHtml(leagueIntervals, metric, {
+        rowPeakIv: timingRowPeakInterval(leagueIntervals, metric),
+      })}
+      <div class="timing-total"><span>avg</span>—</div>
+    </div>`;
+
+  const rows = teams
+    .map((t) => {
+      const total = t.totals?.[metric];
+      return `<div class="timing-row" data-team="${t.team_code}">
+        <div class="timing-team" title="${t.team || t.team_short}">${t.team_short}</div>
+        ${timingRibbonHtml(t.intervals, metric, {
+          rowPeakIv: timingRowPeakInterval(t.intervals, metric),
+        })}
+        <div class="timing-total"><span>${metric}</span>${fmtTimingVal(total, metric)}</div>
+      </div>`;
+    })
+    .join("");
+
+  host.innerHTML = `
+    <div class="timing-legend">
+      <span class="timing-swatch timing-swatch-above"><i></i> Above uniform</span>
+      <span class="timing-swatch timing-swatch-below"><i></i> Below uniform</span>
+      <span class="timing-swatch timing-swatch-row"><i></i> Peak interval (team)</span>
+      <span>GW ${state.gwFrom}–${state.gwTo}</span>
+    </div>
+    <div class="timing-grid">
+      ${axis}
+      ${leagueRow}
+      ${rows || `<div class="timing-row"><div class="timing-team">—</div><div>No teams selected</div><div></div></div>`}
+    </div>`;
+}
+
+function setTempoSort(sort) {
+  if (!sort || state.tempoSort === sort) return;
+  state.tempoSort = sort;
+  if (state.view === "tempo") renderTempo();
+}
+
+function bindTempoBoardEvents() {
+  if (!els.tempo || els.tempo.dataset.bound === "1") return;
+  els.tempo.dataset.bound = "1";
+  els.tempo.addEventListener("click", (e) => {
+    const tick = e.target.closest("[data-tempo-sort]");
+    if (!tick || !els.tempo.contains(tick)) return;
+    setTempoSort(tick.dataset.tempoSort);
+  });
+}
+
+function tempoPeakSpeed(speedsMap, metric) {
+  let best = null;
+  let bestShare = -1;
+  for (const sp of TEMPO_SPEEDS) {
+    const share = Number(speedsMap?.[sp]?.share?.[metric]) || 0;
+    if (share > bestShare) {
+      bestShare = share;
+      best = sp;
+    }
+  }
+  return bestShare > 0 ? best : null;
+}
+
+function tempoCellHtml(speed, cell, metric, rowPeak) {
+  const val = cell?.values?.[metric];
+  const share = Number(cell?.share?.[metric]) || 0;
+  const cls = ["timing-cell"];
+  if (rowPeak) cls.push("is-row-peak");
+  const tip = `${speed}: ${fmtTimingVal(val, metric)} ${metric} · ${fmtTimingPct(share)} of season${rowPeak ? " · peak tempo" : ""}`;
+  return `<div class="${cls.join(" ")}" style="--share:${Math.max(0, Math.min(1, share)).toFixed(4)}" title="${tip}">
+    <div class="pulse" aria-hidden="true"></div>
+    <div class="nums"><span class="v">${fmtTimingVal(val, metric)}</span><span class="p">${fmtTimingPct(share)}</span></div>
+  </div>`;
+}
+
+function tempoRibbonHtml(speedsMap, metric, opts = {}) {
+  const { showTicks = false, peakSpeed = null } = opts;
+  const parts = [];
+  for (const sp of TEMPO_SPEEDS) {
+    if (showTicks) {
+      const on = state.tempoSort === sp ? "on" : "";
+      parts.push(
+        `<button type="button" class="timing-tick ${on}" data-tempo-sort="${sp}" title="Sort by ${sp}">${sp}</button>`
+      );
+    } else {
+      const cell = speedsMap?.[sp];
+      const share = Number(cell?.share?.[metric]) || 0;
+      const rowPeak = peakSpeed != null && sp === peakSpeed && share > 0;
+      parts.push(tempoCellHtml(sp, cell, metric, rowPeak));
+    }
+  }
+  return `<div class="timing-ribbon">${parts.join("")}</div>`;
+}
+
+function renderTempo() {
+  const host = els.tempo;
+  if (!host) return;
+  bindTempoBoardEvents();
+  const metric = state.timingMetric;
+  const metricName = TIMING_METRIC_NAMES[metric] || metric;
+  if (!state.tempoData?.teams?.length) {
+    host.innerHTML = `<p class="status">Attack tempo data missing. Rebuild with <code>build_understat.py --serving-only</code>.</p>`;
+    els.status.textContent = "Attack speed serving JSON not loaded";
+    return;
+  }
+  if (els.timingMetric && els.timingMetric.value !== state.timingMetric) {
+    els.timingMetric.value = state.timingMetric;
+  }
+
+  const selected = new Set(state.teams.size ? [...state.teams] : presetTeamCodes());
+  let teams = tempoTeamsAll().filter((t) => selected.has(String(t.team_code)));
+  teams.sort((a, b) => {
+    const av = TEMPO_SPEEDS.includes(state.tempoSort)
+      ? Number(a.speeds?.[state.tempoSort]?.values?.[metric]) || 0
+      : Number(a.totals?.[metric]) || 0;
+    const bv = TEMPO_SPEEDS.includes(state.tempoSort)
+      ? Number(b.speeds?.[state.tempoSort]?.values?.[metric]) || 0
+      : Number(b.totals?.[metric]) || 0;
+    return bv - av || String(a.team_short).localeCompare(String(b.team_short));
+  });
+
+  const nAll = tempoTeamsAll().length;
+  const sortLab =
+    state.tempoSort === "total" ? "season total" : `${state.tempoSort} ${metric}`;
+  els.status.textContent = `Attack tempo · ${teams.length} of ${nAll} teams · ${metric} (${metricName}) · sorted by ${sortLab}`;
+  els.footnote.textContent = `Understat attackSpeed (season-only). Fill = share of season ${metric}. Fast≈direct/transition · Slow≈build-up. Gold = dominant tempo. Source: Understat · ${state.tempoData.built_at_utc || ""}`;
+
+  const leagueSpeeds = {};
+  for (const sp of TEMPO_SPEEDS) {
+    let shareSum = 0;
+    let valSum = 0;
+    let n = 0;
+    for (const t of teams) {
+      const cell = t.speeds?.[sp];
+      if (!cell) continue;
+      shareSum += Number(cell.share?.[metric]) || 0;
+      valSum += Number(cell.values?.[metric]) || 0;
+      n += 1;
+    }
+    leagueSpeeds[sp] = {
+      values: { [metric]: n ? valSum / n : 0 },
+      share: { [metric]: n ? shareSum / n : 0 },
+    };
+  }
+
+  const totalOn = state.tempoSort === "total" ? "on" : "";
+  const axis = `
+    <div class="timing-axis">
+      <div class="timing-label">Tempo</div>
+      ${tempoRibbonHtml(null, metric, { showTicks: true })}
+      <button type="button" class="timing-total timing-total-btn ${totalOn}" data-tempo-sort="total" title="Sort by season total">
+        <span>Total</span>${metric}
+      </button>
+    </div>`;
+
+  const leagueRow = `
+    <div class="timing-row is-league">
+      <div class="timing-team" title="Average share across shown teams">League</div>
+      ${tempoRibbonHtml(leagueSpeeds, metric, { peakSpeed: tempoPeakSpeed(leagueSpeeds, metric) })}
+      <div class="timing-total"><span>avg</span>—</div>
+    </div>`;
+
+  const rows = teams
+    .map((t) => {
+      const total = t.totals?.[metric];
+      return `<div class="timing-row" data-team="${t.team_code}">
+        <div class="timing-team" title="${t.team || t.team_short}">${t.team_short}</div>
+        ${tempoRibbonHtml(t.speeds, metric, { peakSpeed: tempoPeakSpeed(t.speeds, metric) })}
+        <div class="timing-total"><span>${metric}</span>${fmtTimingVal(total, metric)}</div>
+      </div>`;
+    })
+    .join("");
+
+  host.innerHTML = `
+    <div class="timing-legend">
+      <span class="timing-swatch timing-swatch-above"><i></i> Higher fill = larger share</span>
+      <span class="timing-swatch timing-swatch-row"><i></i> Peak tempo (team)</span>
+      <span>Fast → Slow · season profile (no GW filter)</span>
+    </div>
+    <div class="timing-grid">
+      ${axis}
+      ${leagueRow}
+      ${rows || `<div class="timing-row"><div class="timing-team">—</div><div>No teams selected</div><div></div></div>`}
+    </div>`;
 }
 
 function pct(part, whole) {

@@ -40,6 +40,8 @@ This dataset powers **Insights → Understat only**. Do not mix it into Attacker
 | `master/understat/team_situation_*` | For / against / rolling situation |
 | `master/understat/player_*_situation_*` | Player taker/creator by situation |
 | `serving/us_team_situation.json` | Team pilot (FPL team_code keys) |
+| `serving/us_team_timing.json` | Season timing intervals (match clock, GW-filterable) |
+| `serving/us_team_attack_speed.json` | Season attackSpeed mix (tempo ribbons) |
 | `serving/us_player_situation.json` | Player samples (understat ids until map) |
 | `docs/understat_data_dictionary.md` | Headers + grain + sample rows |
 
@@ -54,6 +56,10 @@ Reusable modules: `pipeline/understat/` (`client`, `cache`, `ingest`, `derive`, 
 # standalone: http://127.0.0.1:8765/understat-shots.html
 ```
 
-Page: Insights → Understat (`web/index.html#insights-understat`) plus standalone `web/understat-shots.html`. Data: `serving/us_shot_treemap.json` (mirrored to `web/data/`).
+Page: Insights → Understat (`web/index.html#insights-understat`) plus standalone `web/understat-shots.html`. Data: `serving/us_shot_treemap.json` and `serving/us_team_timing.json` (mirrored to `web/data/`).
+
+**Match timing** view: Understat intervals `1-15` … `76+` as equal-width clock ribbons, rebuilt from **shot minutes** and filtered by FPL Premier League gameweeks (From/To slider). Metrics G / xG / Sh / ShC / GC / xGC. Fill = deviation from uniform share; gold = peak interval for the team.
+
+**Attack tempo** view: Understat `attackSpeed` (Fast → Standard → Normal → Slow) as season ribbons. Same metrics. Not GW-filterable. Fill = share of season total; gold = dominant tempo.
 
 Each shipped player includes `matches`, `minutes`, `mins_per90` (`minutes / matches`), `by_situation`, and `by_last_action_group`. The drawer looks those up from serving data. Against (shots faced) is team-only. Player minutes are Understat `league_player.time` / `games`, not FPL.

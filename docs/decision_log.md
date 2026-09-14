@@ -19,7 +19,7 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Site dimensions | FPL owns player, team, price, minutes on FPL pages. Understat pages use Understat ids and `league_player.time` until a curated `player_map` exists. |
 | Team identity | Understat teams join FPL `team_code` via `data/understat/maps/team_map.csv` only (no fuzzy team match). |
 | Player map | **Not built.** No FPL ↔ Understat player join. |
-| Insights → Understat | Same shell as other Insights pages (`#insights-understat`). Standalone `web/understat-shots.html` remains. |
+| Insights → Understat | Same shell (`#insights-understat`). Match timing = shots × FPL GW. Attack tempo = season `attackSpeed` ribbons (`us_team_attack_speed.json`). Standalone `web/understat-shots.html` remains. |
 | Understat CSS | Scoped under `.us-shots`. Site-wide accent green (`#3ddc97`) lives in `web/styles.css`. |
 | Refresh | `scripts/refresh.sh` / schedule: FPL dataset then Understat. D3 is vendored at `web/vendor/d3.min.js`. |
 | Attackers npxG | FPL-Core only. Prefer shot-joined `np_xg`; else `xG − 0.79 × penalties_scored` (`PENALTY_XG` in `build_serving.py`). Does not fix SPxG. |
@@ -28,12 +28,44 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Player drawer | Situation + last-action mixes are **that player’s shots**. Against (conceded) is team-only and hidden on a player drawer. |
 | Understat player playing time | `matches` = Understat `games` when present, else unique shot `match_id`s. `avg mins/90` = `minutes / matches` (average minutes per appearance). |
 | Treemap tooltip | Column grid. First row: matches + avg mins/90. No “% of shown teams”. Do not repeat the selected metric in the volume row. |
-| Asset cache | Bump `?v=` on `understat-shots.js/css` and `us_shot_treemap.json` when serving shape or UI changes. |
+| Asset cache | Bump `?v=` on `understat-shots.js/css`, `us_shot_treemap.json`, `us_team_timing.json`, and `us_team_attack_speed.json` when serving shape or UI changes. |
 | `now_cost` | Already £m. Do not divide by 10. |
 | FPL points | Authoritative on `player_gw`. `player_match` can repeat GW points on DGW rows (`is_dgw`). |
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-09-07 — Attack tempo ribbons
+
+**Choice:** Ship Understat `attackSpeed` as Attack tempo ribbons (Fast → Standard → Normal → Slow) under Insights → Understat. Same metrics as timing. Season-only (no GW slider) — not on shot rows. Serving: `us_team_attack_speed.json`.
+
+**Why:** Best public lever for transition vs build-up style; GW grain does not exist in the Understat API.
+
+**Where:** `pipeline/understat/team_attack_speed.py`, `web/understat-shots.{js,css,html}`, `web/index.html`.
+
+### 2026-09-07 — Timing GW slider + shot grain
+
+**Choice:** Match timing is rebuilt from Understat **shots** (minute bins) joined to FPL Premier League `team_match` gameweeks. UI From/To dual slider filters GW range; shares recompute for the window. Removed column-peak (cyan) marks — sort by bucket instead. Season `team_context_season` timing remains in master but is not the serving source for this view.
+
+**Why:** Season context has no GW filter; shot minutes do. Dual slider matches Attackers/Teams.
+
+**Where:** `pipeline/understat/team_timing.py`, `serving/us_team_timing.json`, `web/understat-shots.{js,css,html}`, `web/index.html`.
+
+### 2026-09-07 — Match timing fill + column peaks
+
+**Choice:** Timing cell fill encodes **deviation from uniform** (~16.7%/bucket), not raw share. Gold = peak interval by share (row). Sky-blue outline = peak team by absolute value (column). Sort by season total or any clock bucket (dropdown + clickable headers).
+
+**Why:** Full-season shares cluster near 1/6 so share-as-fill looked flat. Diverging fill shows front-/back-loading; separate colours keep row vs column peaks readable.
+
+**Where:** `web/understat-shots.js`, `web/understat-shots.css`, sort options in `web/index.html` / `web/understat-shots.html`.
+
+### 2026-09-07 — Match timing (clock ribbons)
+
+**Choice:** Ship Understat `context_family=timing` as match-clock ribbons under Insights → Understat → Match timing. Metric filter uses short labels G / xG / Sh / ShC / GC / xGC. Cell fill = share of that team’s season total; label shows absolute value + %. League row averages shares across shown teams. Serving: `us_team_timing.json`.
+
+**Why:** Timing is already in master but was not on the site; a true 90-minute axis beats a generic heatmap for “when it happens.”
+
+**Where:** `pipeline/understat/team_timing.py`, `pipeline/understat/serve.py`, `web/understat-shots.{html,css,js}`, `web/index.html`, `serving/us_team_timing.json`.
 
 ### 2026-09-05 — Player drawer mixes + readable tooltip
 

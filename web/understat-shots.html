@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./understat-shots.css?v=10" />
+  <link rel="stylesheet" href="./understat-shots.css?v=15" />
 </head>
 <body class="us-shots-standalone">
   <div class="us-shots page" data-name="shots.page" data-shots-standalone>
@@ -17,7 +17,7 @@
         <h1>How teams create (and concede) shots</h1>
         <p class="lede">
           Start with the player treemap, then open the matrices for situation and last-action mix —
-          including a defensive (against) view. Metrics from Understat.
+          including a defensive (against) view and match-clock timing.
         </p>
       </div>
       <a class="back" href="./index.html#insights-understat" data-name="shots.back">← Main site</a>
@@ -28,6 +28,8 @@
       <button type="button" class="view" data-view="situation" data-name="shots.views.situation">Situation matrix</button>
       <button type="button" class="view" data-view="last_action" data-name="shots.views.last_action">Last-action matrix</button>
       <button type="button" class="view" data-view="against" data-name="shots.views.against">Against (defence)</button>
+      <button type="button" class="view" data-view="timing" data-name="shots.views.timing">Match timing</button>
+      <button type="button" class="view" data-view="tempo" data-name="shots.views.tempo">Attack tempo</button>
     </nav>
 
     <section class="controls" aria-label="Filters" data-name="shots.controls">
@@ -39,16 +41,16 @@
                 <span>Season</span>
                 <select id="us-season"></select>
               </label>
-              <label class="check" data-name="shots.controls.per90">
+              <label class="check shot-only" data-name="shots.controls.per90">
                 <input type="checkbox" id="us-per90" />
                 <span>Per 90</span>
               </label>
-              <label class="check" data-name="shots.controls.min45">
+              <label class="check shot-only" data-name="shots.controls.min45">
                 <input type="checkbox" id="us-min45" />
                 <span>45+ mins</span>
               </label>
             </div>
-            <label class="field field-eq" data-name="shots.controls.metric">
+            <label class="field field-eq shot-only" data-name="shots.controls.metric">
               <span id="us-metric-label">Metric</span>
               <select id="us-metric">
                 <option value="xg">xG</option>
@@ -58,20 +60,41 @@
                 <option value="cc_xg">xG assisted</option>
               </select>
             </label>
-            <div class="field field-eq" data-name="shots.controls.situations">
+            <div class="field field-eq shot-only" data-name="shots.controls.situations">
               <span>Situations</span>
               <div class="ms-drop" id="us-situations-drop">
                 <button type="button" class="ms-toggle" id="us-situations-toggle" aria-expanded="false">All situations</button>
                 <div class="ms-menu" id="us-situations-menu" hidden></div>
               </div>
             </div>
-            <label class="field field-eq" id="us-against-dim-wrap" data-name="shots.controls.against_split" hidden>
+            <label class="field field-eq shot-only" id="us-against-dim-wrap" data-name="shots.controls.against_split" hidden>
               <span>Against split</span>
               <select id="us-against-dim">
                 <option value="situation">Situation</option>
                 <option value="last_action">Last-action group</option>
               </select>
             </label>
+            <label class="field field-eq context-metric" id="us-timing-metric-wrap" data-name="shots.controls.timing_metric">
+              <span>Metric</span>
+              <select id="us-timing-metric">
+                <option value="G">G — Goals scored</option>
+                <option value="xG">xG — Expected goals</option>
+                <option value="Sh">Sh — Shots taken</option>
+                <option value="ShC">ShC — Shots conceded</option>
+                <option value="GC">GC — Goals conceded</option>
+                <option value="xGC">xGC — Expected goals against</option>
+              </select>
+            </label>
+            <div class="field timing-gw-only" id="us-timing-gw-wrap" data-name="shots.controls.timing_gw">
+              <span>Gameweeks</span>
+              <div class="timing-gw" id="us-timing-gw">
+                <span class="timing-gw-label" id="us-timing-gw-label">GW 1–38</span>
+                <span class="dual-range">
+                  <label class="range-leg">From<input id="us-gw-from" type="range" min="1" max="38" value="1" /></label>
+                  <label class="range-leg">To<input id="us-gw-to" type="range" min="1" max="38" value="38" /></label>
+                </span>
+              </div>
+            </div>
             <div class="field field-teams" data-name="shots.controls.teams">
               <span>Teams</span>
               <div id="us-team-pills" class="pills pills-teams"></div>
@@ -90,6 +113,8 @@
     <p class="status" id="us-status" data-name="shots.status"></p>
     <div id="us-chart" class="chart" role="img" aria-label="Shot creation visualization" data-name="shots.chart.treemap"></div>
     <div id="us-matrix" class="matrix" hidden data-name="shots.chart.matrix"></div>
+    <div id="us-timing" class="timing-board" hidden data-name="shots.chart.timing"></div>
+    <div id="us-tempo" class="timing-board tempo-board" hidden data-name="shots.chart.tempo"></div>
     <p class="footnote" id="us-footnote" data-name="shots.footnote"></p>
 
     <aside id="us-drawer" class="drawer" hidden data-name="shots.drawer">
@@ -114,6 +139,6 @@
   </div>
 
   <script src="./vendor/d3.min.js"></script>
-  <script src="./understat-shots.js?v=10"></script>
+  <script src="./understat-shots.js?v=15"></script>
 </body>
 </html>

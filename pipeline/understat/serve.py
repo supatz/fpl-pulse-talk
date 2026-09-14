@@ -204,13 +204,22 @@ def build_all_serving(derived: dict[str, pl.DataFrame] | None = None) -> dict[st
     _write_json(SERVING_DIR / "us_player_situation.json", player_payload)
 
     from pipeline.understat.shot_treemap import build_shot_treemap_serving
+    from pipeline.understat.team_timing import build_team_timing_serving
+    from pipeline.understat.team_attack_speed import build_team_attack_speed_serving
 
-    treemap_payload = build_shot_treemap_serving(fpl_seasons=meta.get("seasons") or list(SEASONS.values()))
+    fpl_seasons = meta.get("seasons") or list(SEASONS.values())
+    treemap_payload = build_shot_treemap_serving(fpl_seasons=fpl_seasons)
+    timing_payload = build_team_timing_serving(shots=shots, matches=matches, fpl_seasons=fpl_seasons)
+    _write_json(SERVING_DIR / "us_team_timing.json", timing_payload)
+    attack_speed_payload = build_team_attack_speed_serving(context, fpl_seasons=fpl_seasons)
+    _write_json(SERVING_DIR / "us_team_attack_speed.json", attack_speed_payload)
 
     return {
         "us_team_situation": team_payload,
         "us_player_situation": player_payload,
         "us_shot_treemap": treemap_payload,
+        "us_team_timing": timing_payload,
+        "us_team_attack_speed": attack_speed_payload,
     }
 
 

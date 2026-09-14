@@ -523,3 +523,301 @@ body.us-shots-standalone .us-shots {
 
 .us-shots .drawer { z-index: 50; }
 .us-shots .tip { z-index: 60; }
+
+/* Shot vs timing/tempo control visibility */
+.us-shots[data-mode="timing"] .shot-only,
+.us-shots[data-mode="tempo"] .shot-only { display: none !important; }
+.us-shots:not([data-mode="timing"]):not([data-mode="tempo"]) .context-metric { display: none !important; }
+.us-shots:not([data-mode="timing"]) .timing-gw-only { display: none !important; }
+
+.us-shots .seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.us-shots .seg-btn {
+  min-width: 40px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.us-shots .seg-btn:hover { color: var(--ink); border-color: var(--accent-dim); }
+.us-shots .seg-btn.on {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+/* Match-clock ribbons */
+.us-shots .timing-board {
+  width: 100%;
+  border-radius: calc(var(--radius) + 4px);
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%),
+    var(--bg-2);
+  padding: 14px 14px 18px;
+  overflow-x: auto;
+}
+.us-shots .timing-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.us-shots .timing-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.us-shots .timing-swatch i {
+  width: 28px;
+  height: 10px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(61,220,151,0.12), rgba(61,220,151,0.85));
+}
+.us-shots .timing-swatch-below i {
+  background: linear-gradient(90deg, rgba(120,150,180,0.15), rgba(120,150,180,0.7));
+}
+.us-shots .timing-swatch-row i {
+  background: linear-gradient(90deg, rgba(240,193,74,0.25), #f0c14a);
+}
+.us-shots .timing-gw {
+  display: grid;
+  gap: 6px;
+  min-width: 180px;
+}
+.us-shots .timing-gw-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.us-shots .dual-range { display: grid; gap: 8px; }
+.us-shots .dual-range input { width: 168px; accent-color: var(--accent); }
+.us-shots .range-leg {
+  display: grid;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.us-shots .timing-grid {
+  display: grid;
+  grid-template-columns: 52px minmax(420px, 1fr) 64px;
+  gap: 6px 10px;
+  align-items: center;
+  min-width: 640px;
+}
+.us-shots .timing-axis,
+.us-shots .timing-row {
+  display: contents;
+}
+.us-shots .timing-axis .timing-label,
+.us-shots .timing-row .timing-team {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.us-shots .timing-row .timing-team {
+  color: var(--ink);
+  font-size: 12px;
+}
+.us-shots .timing-ribbon {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) 2px repeat(3, 1fr);
+  gap: 4px;
+  align-items: stretch;
+  height: 48px;
+}
+.us-shots .tempo-board .timing-ribbon {
+  grid-template-columns: repeat(4, 1fr);
+}
+.us-shots .timing-ht {
+  width: 2px;
+  background: color-mix(in srgb, var(--ink) 28%, transparent);
+  border-radius: 1px;
+  align-self: stretch;
+}
+.us-shots .timing-cell {
+  position: relative;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  background: rgba(255,255,255,0.03);
+  overflow: hidden;
+  min-width: 0;
+  cursor: default;
+}
+.us-shots .timing-cell .rail {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 1px;
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+  z-index: 0;
+}
+.us-shots .timing-cell .pulse {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(var(--fill, 0) * 50%);
+  opacity: 0.95;
+  transition: height 160ms ease, background 160ms ease;
+  z-index: 0;
+}
+.us-shots .timing-cell.is-above .pulse {
+  bottom: 50%;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 80%, white),
+    color-mix(in srgb, var(--accent) 30%, transparent)
+  );
+}
+.us-shots .timing-cell.is-below .pulse {
+  top: 50%;
+  background: linear-gradient(
+    0deg,
+    color-mix(in srgb, #7a96b0 75%, white),
+    color-mix(in srgb, #7a96b0 25%, transparent)
+  );
+}
+.us-shots .timing-cell.is-flat .pulse {
+  display: none;
+}
+.us-shots .timing-cell.is-row-peak .pulse {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #f0c14a 85%, white),
+    color-mix(in srgb, #f0c14a 35%, transparent)
+  );
+}
+.us-shots .timing-cell.is-row-peak.is-below .pulse {
+  background: linear-gradient(
+    0deg,
+    color-mix(in srgb, #f0c14a 75%, white),
+    color-mix(in srgb, #f0c14a 28%, transparent)
+  );
+}
+.us-shots .timing-cell .nums {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  gap: 1px;
+  padding: 2px;
+  text-align: center;
+  line-height: 1.1;
+}
+.us-shots .timing-cell .v {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.us-shots .timing-cell .p {
+  font-size: 10px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--ink) 70%, var(--muted));
+  font-variant-numeric: tabular-nums;
+}
+.us-shots .timing-axis .timing-ribbon {
+  height: auto;
+  min-height: 22px;
+}
+.us-shots .timing-tick {
+  appearance: none;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-align: center;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+.us-shots .timing-tick:hover {
+  color: var(--ink);
+  border-color: var(--line);
+}
+.us-shots .timing-tick.on {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.us-shots .timing-total {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.us-shots .timing-total span {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.us-shots .timing-total-btn {
+  appearance: none;
+  font: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 2px 4px;
+  cursor: pointer;
+  justify-self: end;
+}
+.us-shots .timing-total-btn:hover {
+  border-color: var(--line);
+}
+.us-shots .timing-total-btn.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.us-shots .timing-row.is-league .timing-team { color: var(--accent); }
+.us-shots .timing-row.is-league .timing-cell {
+  border-style: dashed;
+}
+.tempo-board .timing-cell .rail { display: none; }
+.tempo-board .timing-cell .pulse {
+  top: auto;
+  bottom: 0;
+  height: calc(var(--share, 0) * 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 80%, white),
+    color-mix(in srgb, var(--accent) 28%, transparent)
+  );
+}
+.tempo-board .timing-cell.is-row-peak .pulse {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #f0c14a 85%, white),
+    color-mix(in srgb, #f0c14a 35%, transparent)
+  );
+}
+@media (max-width: 720px) {
+  .us-shots .timing-ribbon { height: 54px; }
+  .us-shots .timing-cell .v { font-size: 11px; }
+}
+
