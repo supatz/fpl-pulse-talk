@@ -1,8 +1,8 @@
 # Understat pipeline (EPL)
 
-Separate Understat masters joined to FPL **`team_code`** at serving time. Player rows stay on Understat `player_id` until a curated `player_map` exists. Raw API JSON is cached under `.cache/understat/` so iteration does not re-scrape.
+Separate Understat masters joined to FPL **`team_code`** and curated FPL **`player_code`** at serving time. The original Understat ids remain for traceability. The player map lives under `data/pl_merge/maps/`; see [`pl_merge.md`](./pl_merge.md). Raw API JSON is cached under `.cache/understat/` so iteration does not re-scrape.
 
-This dataset powers **Insights → Understat only**. Do not mix it into Attackers or other FPL-Core tables. Decisions: [`decision_log.md`](./decision_log.md).
+This dataset powers **Insights → Understat** and separately labeled `US …` columns on the player pages through `master/pl_merge/player_match`. Decisions: [`decision_log.md`](./decision_log.md).
 
 ## Commands
 
@@ -24,7 +24,7 @@ This dataset powers **Insights → Understat only**. Do not mix it into Attacker
 .venv/bin/python build_understat.py --force
 ```
 
-`./scripts/refresh.sh` / `refresh.command` now run FPL then Understat on the dataset path (including the Mon/Thu schedule). Use `./scripts/refresh_understat.sh` to refresh Understat alone.
+`refresh.command` opens the menu (1 dataset, 2 git push, 3 both); dataset runs FPL → Understat → PL merge/roster → both serving layers. `./scripts/refresh.sh --dataset` skips the menu. `./scripts/refresh_understat.sh` refreshes Understat, then the merge and site serving.
 
 ## Layout
 
@@ -37,12 +37,13 @@ This dataset powers **Insights → Understat only**. Do not mix it into Attacker
 | `master/understat/team_match_style/` | PPDA / deep / match xG per team-match |
 | `master/understat/team_context_season/` | Season context incl. attackSpeed |
 | `master/understat/league_player/` | Season player totals (xg_chain, …) |
+| `master/understat/roster/` | Player × finished match lines used by the PL merge |
 | `master/understat/team_situation_*` | For / against / rolling situation |
 | `master/understat/player_*_situation_*` | Player taker/creator by situation |
 | `serving/us_team_situation.json` | Team pilot (FPL team_code keys) |
 | `serving/us_team_timing.json` | Season timing intervals (match clock, GW-filterable) |
 | `serving/us_team_attack_speed.json` | Season attackSpeed mix (tempo ribbons) |
-| `serving/us_player_situation.json` | Player samples (understat ids until map) |
+| `serving/us_player_situation.json` | Player samples with FPL `player_code` plus Understat id |
 | `docs/understat_data_dictionary.md` | Headers + grain + sample rows |
 
 Reusable modules: `pipeline/understat/` (`client`, `cache`, `ingest`, `derive`, `serve`, `zones`, `maps`, `dictionary`, `last_action_groups`, `shot_treemap`).
@@ -62,4 +63,4 @@ Page: Insights → Understat (`web/index.html#insights-understat`) plus standalo
 
 **Attack tempo** view: Understat `attackSpeed` (Fast → Standard → Normal → Slow) as season ribbons. Same metrics. Not GW-filterable. Fill = share of season total; gold = dominant tempo.
 
-Each shipped player includes `matches`, `minutes`, `mins_per90` (`minutes / matches`), `by_situation`, and `by_last_action_group`. The drawer looks those up from serving data. Against (shots faced) is team-only. Player minutes are Understat `league_player.time` / `games`, not FPL.
+Each shipped player includes FPL `player_code` / display name, original Understat identity, `matches`, FPL/Opta PL `minutes`, `mins_per90` (`minutes / matches`), `by_situation`, and `by_last_action_group`. The drawer looks those up from serving data. Against (shots faced) is team-only.

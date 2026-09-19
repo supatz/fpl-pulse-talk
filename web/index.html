@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FPL Pulse Talk</title>
-  <link rel="stylesheet" href="./styles.css?v=8" />
-  <link rel="stylesheet" href="./understat-shots.css?v=15" />
+  <link rel="stylesheet" href="./styles.css?v=16" />
+  <link rel="stylesheet" href="./understat-shots.css?v=16" />
 </head>
 <body>
   <div id="tooltip" hidden></div>
@@ -15,9 +15,14 @@
     <aside class="sidebar" id="sidebar" data-name="nav.shell">
       <div class="sidebar-head">
         <div class="brand" data-name="nav.brand">
-          <span class="mark" aria-hidden="true"></span>
+          <img class="brand-logo" src="./assets/fpl-pulse-logo.png" alt="FPL Pulse Talk microphone logo" />
           <div class="brand-copy">
-            <strong>FPL Pulse Talk</strong>
+            <div class="brand-line">
+              <strong>FPL Pulse Talk</strong>
+              <a class="social-x" href="https://x.com/fpl_pulse_talk" target="_blank" rel="noopener" aria-label="FPL Pulse Talk on X">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l6.3 8.4L4.4 20H7l4.5-5.8L15.8 20H20l-6.5-8.7L19.1 4h-2.6l-4.2 5.5L8.2 4H4zm3.1 1.5h1.8l8 13h-1.8l-8-13z" fill="currentColor"/></svg>
+              </a>
+            </div>
             <small>Match facts first</small>
           </div>
         </div>
@@ -74,6 +79,14 @@
             <a class="nav-link" href="#insights-understat" data-page="insights-understat" data-name="nav.insights.understat">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="4" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="10" width="7" height="10" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
               <span>Understat</span>
+            </a>
+            <a class="nav-link" href="#insights-fpl-treemap" data-page="insights-fpl-treemap" data-name="nav.insights.fpl_treemap">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="9" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="15" y="4" width="5" height="12" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="9" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="15" y="18" width="5" height="2" rx="1" fill="currentColor"/></svg>
+              <span>FPL treemap</span>
+            </a>
+            <a class="nav-link" href="#insights-player-performance" data-page="insights-player-performance" data-name="nav.insights.player_performance">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4M4 20h16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 18.5L19 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 2"/><circle cx="9" cy="14" r="1.7" fill="currentColor"/><circle cx="13" cy="8.5" r="1.7" fill="currentColor"/><circle cx="16.5" cy="13" r="1.7" fill="currentColor"/></svg>
+              <span>Player performances</span>
             </a>
           </div>
         </div>
@@ -141,7 +154,7 @@
         <section class="page" id="page-defenders" hidden>
           <div class="page-head">
             <div class="name-row" data-name="defenders.title"><h1>Defenders</h1></div>
-            <p class="lede">Tkl, CBI and DefCon stay per 90. Use More metrics for aerials and volume defending.</p>
+            <p class="lede">Tkl, CBI and DefCon stay per 90. Use the metric-group buttons for aerials and volume defending.</p>
           </div>
           <div id="defenders-root"></div>
         </section>
@@ -335,6 +348,100 @@
           </div>
         </section>
 
+        <section class="page" id="page-insights-fpl-treemap" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="insights.fpl_treemap.title"><h1>FPL player treemap</h1></div>
+            <p class="lede">FPL-Core player-match metrics, grouped by team. Tile area follows the selected primary metric; every tile also shows its paired supporting metric.</p>
+          </div>
+          <div class="fpl-map" id="fpl-map-root">
+            <section class="fpl-map-controls" aria-label="FPL treemap filters" data-name="fpl_treemap.controls">
+              <label class="fpl-map-field" data-name="fpl_treemap.controls.season">
+                <span>Season</span>
+                <select id="fpl-map-season"></select>
+              </label>
+              <label class="fpl-map-field" data-name="fpl_treemap.controls.metric">
+                <span>Metric</span>
+                <select id="fpl-map-metric">
+                  <option value="G">Goals (G · xG)</option>
+                  <option value="A">Assists (A · CC)</option>
+                  <option value="xGI">Expected involvement (xGI · xG)</option>
+                  <option value="DefCon">Defensive contributions (DC · CS)</option>
+                </select>
+              </label>
+              <label class="fpl-map-field" data-name="fpl_treemap.controls.sort">
+                <span>Size / sort by</span>
+                <select id="fpl-map-sort"></select>
+              </label>
+              <div class="fpl-map-field fpl-map-gw" data-name="fpl_treemap.controls.gw">
+                <span id="fpl-map-gw-label">GW 1–38</span>
+                <div class="dual-range">
+                  <label class="range-leg">From<input id="fpl-map-gw-from" type="range" min="1" max="38" value="1" /></label>
+                  <label class="range-leg">To<input id="fpl-map-gw-to" type="range" min="1" max="38" value="38" /></label>
+                </div>
+              </div>
+              <div class="fpl-map-team-filter" data-name="fpl_treemap.controls.teams">
+                <span>Teams</span>
+                <div class="fpl-map-pills" id="fpl-map-team-pills"></div>
+                <div class="fpl-map-team-actions">
+                  <button type="button" id="fpl-map-top-teams">Top 10</button>
+                  <button type="button" id="fpl-map-all-teams">All teams</button>
+                </div>
+              </div>
+            </section>
+            <p class="fpl-map-status" id="fpl-map-status" data-name="fpl_treemap.status"></p>
+            <div class="fpl-map-chart" id="fpl-map-chart" role="img" aria-label="FPL player treemap" data-name="fpl_treemap.chart"></div>
+            <div class="fpl-map-tip" id="fpl-map-tip" hidden></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-insights-player-performance" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="insights.player_performance.title"><h1>Player performances</h1></div>
+            <p class="lede">FPL-Core output against the matching expected model. Dots above the diagonal are overperforming, below it are underperforming. Default is the top 20 by the actual measure; widen to 30 or 40 from the filter.</p>
+          </div>
+          <div class="perf" id="perf-root">
+            <section class="perf-controls" aria-label="Player performance filters" data-name="player_performance.controls">
+              <label class="perf-field" data-name="player_performance.controls.season">
+                <span>Season</span>
+                <select id="perf-season"></select>
+              </label>
+              <label class="perf-field" data-name="player_performance.controls.metric">
+                <span>Metric</span>
+                <select id="perf-metric">
+                  <option value="G">Goals vs xG</option>
+                  <option value="A">Assists vs xA</option>
+                </select>
+              </label>
+              <label class="perf-field" data-name="player_performance.controls.top">
+                <span>Players</span>
+                <select id="perf-top">
+                  <option value="20" selected>Top 20</option>
+                  <option value="30">Top 30</option>
+                  <option value="40">Top 40</option>
+                </select>
+              </label>
+              <div class="perf-field perf-gw" data-name="player_performance.controls.gw">
+                <span id="perf-gw-label">GW 1–38</span>
+                <div class="dual-range">
+                  <label class="range-leg">From<input id="perf-gw-from" type="range" min="1" max="38" value="1" /></label>
+                  <label class="range-leg">To<input id="perf-gw-to" type="range" min="1" max="38" value="38" /></label>
+                </div>
+              </div>
+              <label class="perf-field perf-check" data-name="player_performance.controls.per90">
+                <input id="perf-per90" type="checkbox" />
+                <span>Per 90</span>
+              </label>
+              <label class="perf-field perf-check" data-name="player_performance.controls.min45">
+                <input id="perf-min45" type="checkbox" />
+                <span>45+ mins per appearance</span>
+              </label>
+            </section>
+            <p class="perf-status" id="perf-status" data-name="player_performance.status"></p>
+            <div class="perf-chart" id="perf-chart" role="img" aria-label="Player output against expected" data-name="player_performance.chart"></div>
+            <div class="fpl-map-tip" id="perf-tip" hidden></div>
+          </div>
+        </section>
+
         <section class="page" id="page-teams" hidden>
           <div class="page-head">
             <div class="name-row" data-name="teams.title"><h1>Teams</h1></div>
@@ -366,7 +473,10 @@
     <button type="button" class="nav-scrim" id="nav-scrim" hidden aria-label="Close menu"></button>
   </div>
   <script src="./vendor/d3.min.js"></script>
-  <script src="./understat-shots.js?v=15"></script>
-  <script type="module" src="./app.js?v=7"></script>
+  <script src="./team-colors.js?v=1"></script>
+  <script src="./understat-shots.js?v=17"></script>
+  <script src="./fpl-treemap.js?v=7"></script>
+  <script src="./player-performance.js?v=8"></script>
+  <script type="module" src="./app.js?v=10"></script>
 </body>
 </html>

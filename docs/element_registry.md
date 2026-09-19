@@ -6,7 +6,7 @@ The italic **i** appears only when you hover a named label (not on changing valu
 |---|---|
 | `nav.*` | Sidebar and page links |
 | `nav.collapse` / `nav.topbar` | Collapse control and workspace bar |
-| `nav.insights.players` / `.matches` / `.teams` / `.understat` | Insights subpages |
+| `nav.insights.players` / `.matches` / `.teams` / `.understat` / `.fpl_treemap` | Insights subpages |
 | `home.title` / `home.meta` / `home.jumps` | Home |
 | `fixtures.title` / `fixtures.gwlabel` / `fixtures.controls` | Fixtures heading and GW note |
 | `fixtures.filter.competition` | Fixtures competition (multi-select) |
@@ -24,7 +24,7 @@ The italic **i** appears only when you hover a named label (not on changing valu
 | `{view}.filter.cost` | FPL price range (£m) |
 | `{view}.filter.search` | Search |
 | `{view}.filter.per90` | Per-90 toggle |
-| `{view}.filter.detail` | More metrics |
+| `{view}.filter.detail` | Always-visible metric-group buttons |
 | `{view}.table` / `{view}.grid` / `{view}.showing` | Table chrome |
 | `{view}.col.{metric}` | A column header |
 | `insights.players.*` / `insights.matches.*` / `insights.teams.*` | Insight filters and titles |
@@ -33,3 +33,6 @@ The italic **i** appears only when you hover a named label (not on changing valu
 | `shots.*` | Understat explore chrome (views, filters, chart) |
 | `shots.drawer` | Player/team shot-mix drawer |
 | `us-tip` / `.tip` | Treemap hover (moved to `document.body` for positioning) |
+| `insights.fpl_treemap.title` | FPL player treemap heading |
+| `fpl_treemap.controls.metric` / `.sort` / `.gw` / `.teams` | FPL treemap metric, tile-size, gameweek, and team filters |
+| `fpl_treemap.status` / `.chart` | FPL treemap status and visualization |

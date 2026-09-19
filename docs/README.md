@@ -8,6 +8,7 @@
 | [element_registry.md](./element_registry.md) | `data-name` labels for the italic **i** copier. |
 | [understat_pipeline.md](./understat_pipeline.md) | Understat commands, layout, Insights page. |
 | [understat_data_dictionary.md](./understat_data_dictionary.md) | Understat master columns (generated on Understat build). |
+| [pl_merge.md](./pl_merge.md) | Premier League FPL × Understat maps + player-match merge (not on the site). |
 | [understat_dataset_plan.md](./understat_dataset_plan.md) | Original plan + current build status. |
 | [understat_api_endpoints.md](./understat_api_endpoints.md) | Public Understat API notes. |
 | [../Instruction Files/FPL_MasterDataset_Build_Spec.md](../Instruction%20Files/FPL_MasterDataset_Build_Spec.md) | Original FPL master spec. |

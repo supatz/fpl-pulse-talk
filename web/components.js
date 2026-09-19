@@ -227,7 +227,10 @@ const SUM_FIELDS = [
   "G", "A", "PenG", "xG", "xA", "xGI", "Sh", "SoT", "CC", "TiB", "BCM", "xGOT",
   "Sv", "GC", "xGOTf", "xGP", "Tkl", "CBI", "DefCon", "npxG", "F3", "Dr", "YC",
   "Aer", "Clr", "Int", "Blk", "Rec", "SiB", "HC", "SW", "Cr", "SPxG", "PS",
+  "USMin", "USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP",
 ];
+
+const UNDERSTAT_RATE_FIELDS = new Set(["USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP"]);
 
 function inList(list, value) {
   if (list == null) return true;
@@ -755,7 +758,6 @@ export function makeTable(cfg) {
     costMin: persisted.costMin ?? 4,
     costMax: persisted.costMax ?? 15,
     currentOnly: true,
-    moreMetrics: persisted.moreMetrics ?? false,
     groups: persisted.groups || [],
     positions: cfg.positions,
     roster: cfg.roster,
@@ -868,7 +870,7 @@ export function makeTable(cfg) {
 
   function columns() {
     const cols = [...(cfg.columns || [])];
-    if (!state.moreMetrics || !cfg.metricGroups) return cols;
+    if (!cfg.metricGroups) return cols;
     for (const key of state.groups || []) {
       const extra = cfg.metricGroups[key];
       if (extra) cols.push(...extra.filter((c) => !cols.includes(c)));
@@ -971,7 +973,8 @@ function cellValue(row, key, state, cfg) {
   if (key === "Saves") return rate(row.Saves ?? row.Sv, row.mins, (cfg.per90Keys || []).includes("Saves") && state.per90);
   const always = (cfg.always90Keys || []).includes(key);
   const per90 = state.per90 && (cfg.per90Keys || []).includes(key);
-  return rate(row[key], row.mins, always || per90);
+  const denominator = UNDERSTAT_RATE_FIELDS.has(key) ? row.USMin : row.mins;
+  return rate(row[key], denominator, always || per90);
 }
 
 function rate(raw, mins, as90) {
@@ -1092,30 +1095,18 @@ function metricGroupControl(state, cfg, name, render) {
   const box = document.createElement("div");
   box.className = "ctrl metric-groups";
   box.dataset.name = name;
-  box.dataset.tip = "Turn on More metrics, then pick Creativity, Threat, Defending, or FPL.";
+  box.dataset.tip = "Add or remove metric groups from the table.";
   box.appendChild(nameDot(name));
   const copy = document.createElement("div");
   copy.className = "ctrl-copy";
-  const sw = document.createElement("label");
-  sw.className = "switch-row";
-  sw.innerHTML = `<span class="switch"><input type="checkbox" ${state.moreMetrics ? "checked" : ""} /><i></i></span><span>More metrics</span>`;
-  sw.querySelector("input").addEventListener("change", (e) => {
-    state.moreMetrics = e.target.checked;
-    if (!state.moreMetrics) state.groups = [];
-    chips.hidden = !state.moreMetrics;
-    chips.querySelectorAll(".group-chip").forEach((c) => c.classList.remove("on"));
-    render();
-  });
   const chips = document.createElement("div");
   chips.className = "group-chips";
-  chips.hidden = !state.moreMetrics;
   groups.forEach((key) => {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = `group-chip${(state.groups || []).includes(key) ? " on" : ""}`;
     chip.textContent = METRIC_GROUP_LABELS[key] || key;
     chip.addEventListener("click", () => {
-      if (!state.moreMetrics) return;
       const set = new Set(state.groups || []);
       if (set.has(key)) set.delete(key);
       else set.add(key);
@@ -1125,7 +1116,7 @@ function metricGroupControl(state, cfg, name, render) {
     });
     chips.appendChild(chip);
   });
-  copy.append(sw, chips);
+  copy.appendChild(chips);
   box.appendChild(copy);
   return box;
 }

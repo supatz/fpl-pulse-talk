@@ -2,7 +2,7 @@
 
 Living record of **locked product and data decisions**. Update this file in the **same change** as the code or serving JSON that implements the decision. Newest entries at the top of the chronological list.
 
-Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [FPL dictionary](./data_dictionary.md) · [Understat pipeline](./understat_pipeline.md) · [Understat plan](./understat_dataset_plan.md)
+Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [FPL dictionary](./data_dictionary.md) · [Understat pipeline](./understat_pipeline.md) · [PL merge](./pl_merge.md) · [Understat plan](./understat_dataset_plan.md)
 
 ## How to add an entry
 
@@ -15,18 +15,28 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 
 | Topic | Choice |
 |---|---|
-| Two datasets | **FPL-Core** and **Understat** stay separate. Do not join player minutes or mix metrics across them on Attackers / other FPL pages. |
-| Site dimensions | FPL owns player, team, price, minutes on FPL pages. Understat pages use Understat ids and `league_player.time` until a curated `player_map` exists. |
+| Merged site | Player pages read Premier League `master/pl_merge/player_match`. FPL/Opta and Understat measures remain separately labeled; never average or silently coalesce them. |
+| Metric precedence | When FPL-Core has the same player metric, the site shows FPL-Core only. Hide duplicate US minutes/xG/xA/npxG/shots/key passes; retain Understat-only xGChain/xGBuildup and Understat-native insight views. |
+| Site dimensions | FPL owns player identity, team, position, price, GW, and default minutes. Understat player views use curated FPL `player_code` / names; Understat metrics carry `US` / `us_*` labels. |
 | Team identity | Understat teams join FPL `team_code` via `data/understat/maps/team_map.csv` only (no fuzzy team match). |
-| Player map | **Not built.** No FPL ↔ Understat player join. |
+| PL merge | Premier League-only identity maps + `master/pl_merge/player_match` in `pipeline/pl_merge/`. This is the player-match source for site serving. |
+| Player map | Curated under `data/pl_merge/maps/player_map.csv`. Fuzzy is a proposal; overrides win. Do not join on season-scoped FPL `player_id`. |
 | Insights → Understat | Same shell (`#insights-understat`). Match timing = shots × FPL GW. Attack tempo = season `attackSpeed` ribbons (`us_team_attack_speed.json`). Standalone `web/understat-shots.html` remains. |
+| FPL treemap | Separate `#insights-fpl-treemap` page below Understat. One nested treemap like Understat: club blocks sized by the club total of the Size / sort measure, player tiles nested inside. Top 10 / All / custom teams. Goals shows G and xG on tiles/headers; SoT and npxG stay in the tooltip. A shows A, CC; xGI shows xGI, xG; DC shows DC, CS. No drawer. Shares `web/team-colors.js`. |
+| Player performances | `#insights-player-performance`. FPL-Core scatter of actual vs expected: G vs xG and A vs xA only. Default top 20 by the actual measure; filter also offers 30 and 40. Dashed parity line, green over / red under / grey within the band. Per 90 and 45+ mins-per-appearance are checkboxes. Both axes share one zero-based scale. Bubble area = SoT for goals, CC for assists, always raw totals. Tooltip always lists SoT and CC. |
+| Sidebar | Children of a nav parent are indented with a left guide rule (`.nav-kids`). Collapsed rail still hides them entirely. |
+| Local preview | `scripts/serve.command` (double-click) or `.venv/bin/python serve.py --port N`. Port defaults to 8765; `serve.py` has no persistent port setting. |
+| DefCon | `defcon` prefers upstream match-level `defensive_contributions`; when blank (2026-27 on) it derives CBIT for defenders, CBIT + recoveries for MID/FWD, and 0 for GK, using `coalesce(tackles, tackles_won)`. Derivation reproduces FPL gameweek totals exactly. |
+| Branding | Sidebar uses the supplied transparent-background logo and links the X icon to `https://x.com/fpl_pulse_talk`. |
+| Metric controls | Metric-group chips are always visible; there is no redundant “More metrics” toggle. |
 | Understat CSS | Scoped under `.us-shots`. Site-wide accent green (`#3ddc97`) lives in `web/styles.css`. |
-| Refresh | `scripts/refresh.sh` / schedule: FPL dataset then Understat. D3 is vendored at `web/vendor/d3.min.js`. |
+| Refresh | `refresh.command` opens the menu: 1 dataset, 2 git push, 3 both. Dataset = FPL → Understat → PL merge/roster → both serving layers. Publish is `git add -A` + commit + push so Netlify redeploys. Non-tty runs (launchd) still fall through to dataset only. |
+| Runtime / cloud | Keep data refresh local on the personal Mac. Cloud compute is optional only for unattended refresh while the Mac is off; Netlify remains the third-party static-site host. |
 | Attackers npxG | FPL-Core only. Prefer shot-joined `np_xg`; else `xG − 0.79 × penalties_scored` (`PENALTY_XG` in `build_serving.py`). Does not fix SPxG. |
 | Understat Top / Bottom 10 | Rank **selected season + selected metric** (and Per 90). Against = bottom 10 by that metric **conceded**. Changing metric resets the preset unless “All teams”. |
-| 45+ mins (Understat) | Filter on Understat `league_player.time` as minutes. Not FPL minutes. |
+| 45+ mins (Understat) | Uses FPL/Opta Premier League minutes from the merged player-match table. |
 | Player drawer | Situation + last-action mixes are **that player’s shots**. Against (conceded) is team-only and hidden on a player drawer. |
-| Understat player playing time | `matches` = Understat `games` when present, else unique shot `match_id`s. `avg mins/90` = `minutes / matches` (average minutes per appearance). |
+| Understat player playing time | Player per-90 and average minutes use FPL/Opta PL minutes/appearances from the merged table; shot metrics remain Understat. |
 | Treemap tooltip | Column grid. First row: matches + avg mins/90. No “% of shown teams”. Do not repeat the selected metric in the volume row. |
 | Asset cache | Bump `?v=` on `understat-shots.js/css`, `us_shot_treemap.json`, `us_team_timing.json`, and `us_team_attack_speed.json` when serving shape or UI changes. |
 | `now_cost` | Already £m. Do not divide by 10. |
@@ -34,6 +44,118 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-09-20 — Refresh menu restored on the Finder button
+
+**Choice:** `refresh.command` runs `refresh.sh` with no flags again, so double-clicking shows the 1 dataset / 2 git push / 3 both menu. This reverses the 2026-09-15 prompt-free choice. Publish keeps `git add -A`.
+
+**Why:** Publishing to Netlify is part of the routine, and reaching it only through Terminal was the wrong trade. One button that asks beats two buttons or a silent push.
+
+**Where:** `scripts/refresh.command`, `scripts/refresh.sh` (unchanged; already handled all three modes).
+
+**Drawbacks:** The refresh button is no longer one click — it always asks first. `git add -A` on publish commits every uncommitted change in the folder, including in-progress code edits; the commit-message prompt is the only gate.
+
+### 2026-09-20 — Player performances top-N and volume tooltip
+
+**Choice:** Default the scatter to the top 20 by the actual measure, with a Players filter for 30 and 40. Always show SoT and CC in the tooltip, independent of which metric sizes the bubble.
+
+**Why:** Fifteen was too tight once bubbles and names were in play; 20 is readable, 30/40 are opt-in. Volume belongs in the hover even when it is not the bubble measure.
+
+**Where:** `web/player-performance.js`, `web/index.html`.
+
+**Drawbacks:** Top 40 still crowds names; hover remains the reliable read for overlapping labels.
+
+### 2026-09-20 — Nav indentation and scatter bubbles
+
+**Choice:** Indent `.nav-kids` behind a left guide rule so Players and Insights children read as sub-pages. Drop CC vs xA from Player performances. Size each bubble by volume — `SoT` on goals, `CC` on assists — using a sqrt scale so area, not radius, carries the value, and keep bubbles on raw totals even under Per 90. Keep both axes on one zero-based scale.
+
+**Why:** The flat nav gave no visual hierarchy. CC vs xA compared a raw count against an assist-weighted model, which made the parity line meaningless. Volume bubbles say whether an overperformer is doing it on high or low chance volume. Axes fitted to their own range were tried and rejected: starting away from zero made the plot hard to read.
+
+**Where:** `web/styles.css`, `web/player-performance.js`, `web/index.html`.
+
+**Drawbacks:** A zero-based shared scale still crowds tight clusters — per-90 assists bunch near the origin because xA per 90 is small. Bubbles staying on totals under Per 90 mixes a rate position with a volume size, which the status line spells out.
+
+### 2026-09-19 — Player performances scatter and a serve launcher
+
+**Choice:** Add `#insights-player-performance`: an FPL-Core actual-vs-expected scatter with a metric dropdown (G vs xG, A vs xA, CC vs xA), season and GW range, Per 90 and 45+ mins-per-appearance checkboxes, capped at the top 15 by the actual measure. Add `scripts/serve.command` so the local preview can be started without a terminal.
+
+**Why:** Over/under performance is the question the scatter answers directly, and the top-15 cap plus the minutes filter keep it readable — without the filter, per-90 leaderboards fill with cameo appearances. The launcher exists because the preview server only lives as long as the shell that started it.
+
+**Where:** `web/player-performance.js`, `web/index.html`, `web/app.js`, `web/styles.css`, `scripts/serve.command`.
+
+**Drawbacks:** CC vs xA compares chance volume with an assist-weighted model, so the parity line is a reference rather than a like-for-like benchmark. The top-15 cap hides the long tail, and label anti-overlap is greedy, so dense clusters can still push a name off its ideal slot.
+
+### 2026-09-19 — FPL treemap is one nested map, not a card grid
+
+**Choice:** Render the FPL treemap as a single nested treemap in one SVG, matching `#insights-understat`: clubs are leaves of an outer treemap sized by their total of the Size / sort measure, and each club's players are laid out by a second treemap inside that block under a 42px header band.
+
+**Why:** The CSS grid of fixed-height club cards gave every team identical area regardless of output, so the page read as equal boxes rather than a treemap.
+
+**Where:** `web/fpl-treemap.js` (`drawTreemap`, `drawTile`), `web/index.html` (`#fpl-map-chart`), `web/styles.css`.
+
+**Drawbacks:** Club blocks must share one fixed-height canvas (`min(74vh, 860px)`), so All teams squeezes smaller clubs and drops some tile labels; the card grid could scroll instead.
+
+### 2026-09-19 — FPL Goals treemap labels
+
+**Choice:** Goals tiles and team headers show only G and xG. SoT and npxG remain available in Size / sort and in the tooltip.
+
+**Why:** Four numbers crowded the tiles and headers; G vs xG is the comparison that belongs on the map.
+
+**Where:** `web/fpl-treemap.js`, `web/index.html`.
+
+**Drawbacks:** SoT and npxG are no longer visible without hovering.
+
+### 2026-09-19 — FPL treemap sort and team controls
+
+**Choice:** Add Top 10, All teams, and individual team pills. Add a dynamic Size / sort selector limited to the active metric group. Goals exposes G, SoT, xG, and npxG; the other groups expose their two displayed measures. Use medium-bold player names.
+
+**Why:** Users need to control both the clubs shown and which related measure determines tile area/ranking without switching the metric context.
+
+**Where:** `web/index.html`, `web/fpl-treemap.js`, `web/styles.css`.
+
+**Drawbacks:** Team ranking changes when Size / sort changes, and cards remain capped at six positive players so labels stay readable.
+
+### 2026-09-19 — DefCon derivation and shared treemap palette
+
+**Choice:** Derive `defcon` from components when upstream leaves match-level `defensive_contributions` blank: 0 for goalkeepers, clearances + blocks + interceptions + tackles for defenders, plus recoveries for MID/FWD, with `tackles` falling back to `tackles_won`. Move the club pastel palette into `web/team-colors.js` so both treemaps use identical colours.
+
+**Why:** FPL-Core stopped populating per-match `defensive_contributions` in 2026-27 (the column exists but is empty), so DC was blank on the site for the current season. The derivation matches FPL's own gameweek `defensive_contribution` exactly for all 1,236 played 2026-27 player-gameweeks, and reaches 99.4% exact agreement in 2025-26.
+
+**Where:** `_defcon_expr` in `build_serving.py`, `web/team-colors.js`, `web/fpl-treemap.js`, `web/understat-shots.js`.
+
+**Drawbacks:** DC now mixes a reported and a derived measure across seasons. Rows with no defensive components at all stay null rather than 0, so matches with missing upstream stats are excluded rather than counted as zero.
+
+### 2026-09-19 — FPL metric precedence, branding, and FPL treemap
+
+**Choice:** Prefer FPL-Core whenever a player metric overlaps Understat. Keep only Understat-only xGChain/xGBuildup in player table extras. Add a separate team-grouped FPL treemap with primary/secondary pairs G/SoT, A/CC, xGI/xG, and DC/CS; no Understat drawer. Remove the More metrics gate and show group chips directly. Add the supplied logo and X profile link.
+
+**Why:** One visible value per common metric keeps site comparisons consistent; source-specific Understat concepts remain available without duplicating xG/minutes. The FPL treemap gives a source-consistent visual counterpart to Understat analysis.
+
+**Where:** `web/{index,styles,app,components,registry,fpl-treemap}.js`, `web/assets/fpl-pulse-logo.png`.
+
+**Drawbacks:** Player tables no longer expose side-by-side provider comparisons for overlapping metrics, though both remain in merged parquet/serving JSON. Treemaps show the top six positive players per team so labels remain readable.
+
+### 2026-09-19 — Site switched to the Premier League merge
+
+**Choice:** Player pages now read `master/pl_merge/player_match`; Understat player serving resolves curated FPL `player_code` / names and uses FPL/Opta PL minutes. Understat roster metrics remain separately labeled `US …` / `us_*`, with US per-90 values divided by `us_minutes`. Team and fixture dimensions remain FPL-owned.
+
+**Why:** One reusable player-match connection gives the site stable identities and both providers’ measures without pretending their models or minutes are interchangeable.
+
+**Where:** `build_serving.py`, `pipeline/understat/{serve,shot_treemap}.py`, `web/{registry,components}.js`, serving JSON.
+
+**Refresh:** Finder `scripts/refresh.command` now runs FPL → Understat → PL merge/roster → FPL and Understat serving automatically. Local execution is the default; cloud is optional.
+
+**Drawbacks:** The merged player feed is Premier League only, so cup/European competition choices disappear from player pages. Both providers’ similarly named measures remain visible and must be selected deliberately.
+
+### 2026-09-19 — Premier League FPL × Understat merge (off-site)
+
+**Choice:** Build reusable PL identity maps and a player-match merge in a separate folder. Ingest Understat match roster. Match join = date + home/away `team_code` (±1 day unique fallback). Player join = `player_id` → `player_code` with unique exact / last+initial / fuzzy ≥ 95 on the same club; review the rest. FPL minutes/xG stay FPL; Understat metrics are `us_*`. Live site unchanged.
+
+**Why:** One PL table for future site work without silently mixing models or GW labels. Roster is required for player-match grain (shots miss non-shooters). Transfer-window re-run is maps + overrides, not a new matcher.
+
+**Where:** `pipeline/pl_merge/`, `build_pl_merge.py`, `data/pl_merge/`, `master/pl_merge/player_match/`, `master/understat/roster/`, `docs/pl_merge.md`.
+
+**Drawbacks:** First roster ingest is per finished EPL match. Name collisions and timezone date splits need a human review CSV. Two xG/minutes series remain on the row by design.
 
 ### 2026-09-07 — Attack tempo ribbons
 

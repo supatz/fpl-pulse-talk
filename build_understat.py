@@ -25,6 +25,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--skip-shots", action="store_true")
     p.add_argument("--derive-only", action="store_true")
+    p.add_argument(
+        "--ingest-only",
+        action="store_true",
+        help="Refresh Understat masters but defer derive/serving until after the PL merge.",
+    )
     p.add_argument("--serving-only", action="store_true")
     p.add_argument("--dict-only", action="store_true", help="Only regenerate data dictionary")
     args = p.parse_args(argv)
@@ -59,6 +64,9 @@ def main(argv: list[str] | None = None) -> int:
                 shots=not args.skip_shots,
                 refresh_index=args.refresh or args.force,
             )
+            if args.ingest_only:
+                print(f"Understat ingest OK | seasons={args.seasons} | serving deferred")
+                return 0
             derived = build_derived()
             payloads = build_all_serving(derived)
 

@@ -242,9 +242,71 @@ def normalize_league_player(raw: dict, *, understat_season: str) -> dict:
     }
 
 
+def _iter_roster_side(raw_side: Any) -> list[dict]:
+    if not raw_side:
+        return []
+    if isinstance(raw_side, dict):
+        return [v for v in raw_side.values() if isinstance(v, dict)]
+    if isinstance(raw_side, list):
+        return [v for v in raw_side if isinstance(v, dict)]
+    return []
+
+
+def normalize_match_roster(
+    raw_roster: dict,
+    *,
+    match_row: dict,
+) -> list[dict]:
+    """Flatten Understat match roster (home + away) into player-match rows."""
+    rows: list[dict] = []
+    sides = (
+        ("h", True, match_row.get("home_team_id"), match_row.get("away_team_id")),
+        ("a", False, match_row.get("away_team_id"), match_row.get("home_team_id")),
+    )
+    understat_season = str(match_row.get("understat_season") or "")
+    for side, is_home, team_id, opponent_id in sides:
+        for p in _iter_roster_side((raw_roster or {}).get(side)):
+            rows.append(
+                {
+                    "roster_id": _i_str(p.get("id") or p.get("roster_id")),
+                    "match_id": _i_str(match_row.get("match_id") or p.get("match_id")),
+                    "understat_season": understat_season,
+                    "season": fpl_season(understat_season),
+                    "side": side,
+                    "is_home": is_home,
+                    "team_id": _i_str(p.get("team_id") or team_id),
+                    "opponent_id": _i_str(opponent_id),
+                    "player_id": _i_str(p.get("player_id")),
+                    "player_name": p.get("player") or p.get("player_name"),
+                    "position": p.get("position"),
+                    "position_order": _f(p.get("positionOrder")),
+                    "time": _f(p.get("time")),
+                    "goals": _f(p.get("goals")),
+                    "own_goals": _f(p.get("own_goals")),
+                    "assists": _f(p.get("assists")),
+                    "shots": _f(p.get("shots")),
+                    "key_passes": _f(p.get("key_passes")),
+                    "xg": _f(p.get("xG")),
+                    "xa": _f(p.get("xA")),
+                    "npxg": _f(p.get("npxG") or p.get("npgX") or p.get("npxg")),
+                    "xg_chain": _f(p.get("xGChain")),
+                    "xg_buildup": _f(p.get("xGBuildup")),
+                    "yellow_cards": _f(p.get("yellow_card") or p.get("yellow_cards")),
+                    "red_cards": _f(p.get("red_card") or p.get("red_cards")),
+                    "roster_in": _i_str(p.get("roster_in")),
+                    "roster_out": _i_str(p.get("roster_out")),
+                }
+            )
+    return rows
+
+
 def matches_frame(rows: list[dict]) -> pl.DataFrame:
     return pl.DataFrame(rows) if rows else pl.DataFrame()
 
 
 def shots_frame(rows: list[dict]) -> pl.DataFrame:
+    return pl.DataFrame(rows) if rows else pl.DataFrame()
+
+
+def roster_frame(rows: list[dict]) -> pl.DataFrame:
     return pl.DataFrame(rows) if rows else pl.DataFrame()

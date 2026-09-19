@@ -13,8 +13,8 @@
 | Shot fact + situation / last-action / against | Shipped |
 | Insights → Understat treemap + matrices | Shipped |
 | Per-player situation / last-action in `us_shot_treemap.json` | Shipped |
-| Curated `player_map` (FPL `player_code`) | **Not built** — serving player JSON still uses Understat ids |
-| Match join to FPL `match_id` | Planned; not required for the explore page |
+| Curated `player_map` (FPL `player_code`) | **Shipped** in `data/pl_merge/maps/player_map.csv` and applied to player serving; original Understat ids remain for traceability |
+| Match join to FPL `match_id` | **Built off-site** in `data/pl_merge/maps/match_map.csv`. Not required for the explore page |
 
 ### Locked decisions
 

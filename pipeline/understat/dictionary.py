@@ -25,6 +25,7 @@ TABLES: list[tuple[str, str, str]] = [
         "Season splits incl. attackSpeed (for + against)",
     ),
     ("league_player", "1 row per player per season", "Understat season totals (xg_chain, etc.)"),
+    ("roster", "1 row per player × finished match", "Understat match roster used by the PL merge"),
     (
         "team_situation_match",
         "1 row per team × match × situation",
@@ -49,12 +50,12 @@ TABLES: list[tuple[str, str, str]] = [
     (
         "player_situation_season",
         "1 row per understat player × season × situation",
-        "Taker volume/quality by situation (player_code map TBD)",
+        "Taker volume/quality by situation (player_code applied at serving)",
     ),
     (
         "player_create_situation_season",
         "1 row per creator name × season × situation",
-        "Assisted-shot xG by situation (player_code map TBD)",
+        "Assisted-shot xG by situation (player_code applied at serving)",
     ),
 ]
 
@@ -130,7 +131,7 @@ def write_data_dictionary() -> Path:
         "",
         "FPL dimensions on the **site** come from FPL sources. These tables hold Understat metrics.",
         "Team-facing derived tables are joined to FPL `team_code` via `data/understat/maps/team_map.csv`.",
-        "Player tables still key on Understat `player_id` until a curated `player_map` exists.",
+        "Understat masters retain `player_id`; serving applies `data/pl_merge/maps/player_map.csv` to expose FPL `player_code`.",
         "",
         f"Seasons in scope: {', '.join(SEASONS.values())} (Understat {', '.join(SEASONS.keys())}).",
         "",

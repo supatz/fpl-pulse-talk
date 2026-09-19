@@ -16,9 +16,11 @@ from pipeline.understat.normalize import (
     matches_frame,
     normalize_league_player,
     normalize_match,
+    normalize_match_roster,
     normalize_match_shots,
     normalize_team_history_row,
     now_utc,
+    roster_frame,
     shots_frame,
 )
 
@@ -96,6 +98,35 @@ def ingest_season_shots(
     df = _stamp(shots_frame(all_rows))
     path = _write_partition("shot", SEASONS[understat_season], df)
     log.info("shot season=%s rows=%s → %s", understat_season, df.height, path)
+    return df
+
+
+def ingest_season_roster(
+    fetcher: UnderstatFetcher,
+    understat_season: str,
+    matches: pl.DataFrame,
+) -> pl.DataFrame:
+    finished = matches.filter(pl.col("is_result"))
+    all_rows: list[dict] = []
+    total = finished.height
+    for i, row in enumerate(finished.iter_rows(named=True), start=1):
+        mid = row["match_id"]
+        if not mid:
+            continue
+        raw = fetcher.match_roster(mid)
+        all_rows.extend(normalize_match_roster(raw, match_row=row))
+        if i % 50 == 0 or i == total:
+            log.info(
+                "roster %s %s/%s matches (live=%s cache_hits=%s)",
+                understat_season,
+                i,
+                total,
+                fetcher.live_calls,
+                fetcher.cache_hits,
+            )
+    df = _stamp(roster_frame(all_rows))
+    path = _write_partition("roster", SEASONS[understat_season], df)
+    log.info("roster season=%s rows=%s → %s", understat_season, df.height, path)
     return df
 
 
@@ -245,6 +276,7 @@ def ingest_seasons(
     style: bool = True,
     context: bool = True,
     players: bool = True,
+    roster: bool = False,
     refresh_index: bool = False,
 ) -> dict[str, pl.DataFrame]:
     """
@@ -263,6 +295,8 @@ def ingest_seasons(
             out[f"match:{us}"] = matches
             if shots:
                 out[f"shot:{us}"] = ingest_season_shots(fetcher, us, matches)
+            if roster:
+                out[f"roster:{us}"] = ingest_season_roster(fetcher, us, matches)
             if style:
                 out[f"team_match_style:{us}"] = ingest_season_team_match_style(
                     fetcher, us, matches, force_index=force_idx

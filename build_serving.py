@@ -17,6 +17,7 @@ SERVING = ROOT / "serving"
 WEB_DATA = ROOT / "web" / "data"
 CACHE = ROOT / ".cache" / "FPL-Core-Insights" / "data"
 SOURCE = "olbauday/FPL-Core-Insights"
+PLAYER_MATCH_SOURCE = "master/pl_merge/player_match"
 # Typical Opta penalty xG. Used only when FPL-Core shots.csv left player_id null.
 PENALTY_XG = 0.79
 FDR_URL = "https://premierfantasytools.com/fpl-fixture-difficulty/"
@@ -56,6 +57,20 @@ def _load(table: str) -> pl.DataFrame:
     if not files:
         return pl.DataFrame()
     return pl.concat([pl.read_parquet(p) for p in files], how="diagonal_relaxed")
+
+
+def _load_site_player_match() -> pl.DataFrame:
+    """The site player grain is the curated Premier League merge."""
+    pm = _load("pl_merge/player_match")
+    if pm.is_empty():
+        raise RuntimeError(
+            "Missing master/pl_merge/player_match. Run build_pl_merge.py before build_serving.py."
+        )
+    required = {"understat_match_id", "understat_player_id", "us_minutes", "us_xg"}
+    missing = required - set(pm.columns)
+    if missing:
+        raise RuntimeError(f"Merged player_match missing columns: {sorted(missing)}")
+    return pm
 
 
 def _f(df: pl.DataFrame, cols: list[str]) -> pl.DataFrame:
@@ -250,6 +265,14 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         "bon": "Bon",
         "bps": "BPS",
         "PS": "PS",
+        "us_minutes": "USMin",
+        "us_xg": "USxG",
+        "us_xa": "USxA",
+        "us_npxg": "USnpxG",
+        "us_xg_chain": "USxGC",
+        "us_xg_buildup": "USxGB",
+        "us_shots": "USSh",
+        "us_key_passes": "USKP",
     }
     exprs = []
     for src, dest in keep.items():
@@ -259,6 +282,38 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
             exprs.append(pl.lit(None).alias(dest))
     slim = pm.select(exprs).filter(pl.col("m").is_not_null())
     return [_clean(r) for r in slim.to_dicts()]
+
+
+def _defcon_expr(
+    pm: pl.DataFrame,
+    cbi: pl.Expr,
+    tackles: pl.Expr,
+    cbi_all_null: pl.Expr,
+) -> pl.Expr:
+    """FPL defensive contributions: CBIT for defenders, plus recoveries for MID/FWD, 0 for GK.
+
+    Upstream leaves match-level `defensive_contributions` blank from 2026-27 on, so derive it
+    from components; the derivation reproduces FPL gameweek totals exactly.
+    """
+    recoveries = pl.col("recoveries").cast(pl.Float64, strict=False) if "recoveries" in pm.columns else pl.lit(None, pl.Float64)
+    cbit = cbi + tackles.fill_null(0)
+    position = pl.col("position") if "position" in pm.columns else pl.lit(None, pl.Utf8)
+    derived = (
+        pl.when(position == "Goalkeeper")
+        .then(pl.lit(0.0))
+        .when(position == "Defender")
+        .then(cbit)
+        .otherwise(cbit + recoveries.fill_null(0))
+    )
+    # Without any defensive component the row has no stats at all; keep it null rather than 0.
+    no_components = cbi_all_null & tackles.is_null() & recoveries.is_null()
+    derived = pl.when(no_components).then(None).otherwise(derived)
+    reported = (
+        pl.col("defensive_contributions").cast(pl.Float64, strict=False)
+        if "defensive_contributions" in pm.columns
+        else pl.lit(None, pl.Float64)
+    )
+    return pl.coalesce([reported, derived])
 
 
 def prepare_player_match(pm: pl.DataFrame) -> pl.DataFrame:
@@ -288,6 +343,7 @@ def prepare_player_match(pm: pl.DataFrame) -> pl.DataFrame:
             "clearances",
             "blocks",
             "interceptions",
+            "recoveries",
             "defensive_contributions",
             "fpl_points",
         ],
@@ -305,9 +361,7 @@ def prepare_player_match(pm: pl.DataFrame) -> pl.DataFrame:
     return pm.with_columns(
         tackles.alias("tackles_num"),
         pl.when(all_null).then(None).otherwise(cbi).alias("cbi"),
-        pl.col("defensive_contributions").alias("defcon")
-        if "defensive_contributions" in pm.columns
-        else pl.lit(None).alias("defcon"),
+        _defcon_expr(pm, cbi, tackles, all_null).alias("defcon"),
         (pl.col("xg").fill_null(0) + pl.col("xa").fill_null(0)).alias("xgi_raw"),
         pl.when(pl.col("xg").is_null() & pl.col("xa").is_null())
         .then(None)
@@ -764,7 +818,7 @@ def pick_seasons(pm: pl.DataFrame, fx: pl.DataFrame) -> tuple[str, str]:
 
 
 def build_from_disk() -> dict:
-    pm = _load("player_match")
+    pm = _load_site_player_match()
     gw = _load("player_gw")
     tm = _load("team_match")
     fx = _load("fixtures")
@@ -786,7 +840,8 @@ def build_from_disk() -> dict:
     meta = {
         "schema_version": SCHEMA_VERSION + 1,
         "built_at_utc": _now(),
-        "source": SOURCE,
+        "source": f"{SOURCE} + understat.com",
+        "player_match_source": PLAYER_MATCH_SOURCE,
         "source_url": "https://github.com/olbauday/FPL-Core-Insights",
         "current_season": current,
         "analysis_season": prior,
@@ -805,7 +860,9 @@ def build_from_disk() -> dict:
             "roster": len(roster),
         },
         "notes": [
-            "Football tables use player_match (Opta). FPL Pts/CS come from player_gw and are Premier League only.",
+            "Player pages use master/pl_merge/player_match (Premier League only). FPL/Opta fields keep their existing labels; Understat roster fields are labeled US.",
+            "FPL minutes and Understat minutes are separate. US per-90 metrics use US minutes.",
+            "FPL Pts/CS come from player_gw and are Premier League only.",
             "Big chances created is not available; CC, xA and TiB are creation proxies.",
             "now_cost is already in £m. Price column is the current-season FPL price.",
             "Predicted xG blends a team's recent xG-for with the opponent's xG-against, with a small home nudge.",

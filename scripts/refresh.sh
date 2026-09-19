@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Manual trigger — refresh datasets and/or push to GitHub (Netlify).
+# Manual trigger — refresh merged dataset/site and/or push to GitHub (Netlify).
 # Non-interactive (launchd): dataset only. Interactive Terminal: asks what to run.
 set -euo pipefail
 
@@ -14,10 +14,15 @@ refresh_dataset() {
   fi
   mkdir -p "$ROOT/logs"
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] refresh start" | tee -a "$ROOT/logs/refresh.log"
-  "$ROOT/.venv/bin/python" "$ROOT/build.py" --refresh
+  "$ROOT/.venv/bin/python" "$ROOT/build.py" --refresh --skip-serving
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] understat refresh start" | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/understat_refresh.log"
-  "$ROOT/.venv/bin/python" "$ROOT/build_understat.py" --refresh
+  "$ROOT/.venv/bin/python" "$ROOT/build_understat.py" --refresh --ingest-only
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] understat refresh done" | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/understat_refresh.log"
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] PL merge start" | tee -a "$ROOT/logs/refresh.log"
+  "$ROOT/.venv/bin/python" "$ROOT/build_pl_merge.py"
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] site serving rebuild start" | tee -a "$ROOT/logs/refresh.log"
+  "$ROOT/.venv/bin/python" "$ROOT/build_serving.py"
+  "$ROOT/.venv/bin/python" "$ROOT/build_understat.py" --serving-only
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] refresh done" | tee -a "$ROOT/logs/refresh.log"
 }
 
@@ -51,8 +56,8 @@ publish_git() {
   git push
 }
 
-MODE="dataset"
-if [[ -t 0 ]]; then
+MODE="${1:---interactive}"
+if [[ "$MODE" == "--interactive" && -t 0 ]]; then
   echo
   echo "FPL Pulse Talk — what do you want to update?"
   echo "  1) Dataset only   (FPL + Understat masters + serving JSON for the site)"
@@ -68,6 +73,17 @@ if [[ -t 0 ]]; then
     q|Q|"") echo "Cancelled."; exit 0 ;;
     *) echo "Unknown choice."; exit 1 ;;
   esac
+elif [[ "$MODE" == "--interactive" ]]; then
+  MODE="dataset"
+elif [[ "$MODE" == "--dataset" ]]; then
+  MODE="dataset"
+elif [[ "$MODE" == "--git" ]]; then
+  MODE="git"
+elif [[ "$MODE" == "--both" ]]; then
+  MODE="both"
+else
+  echo "Usage: $0 [--dataset|--git|--both]"
+  exit 1
 fi
 
 case "$MODE" in

@@ -9,6 +9,8 @@ from pathlib import Path
 
 import polars as pl
 
+from pipeline.pl_merge.config import MAPS_DIR as PL_MERGE_MAPS_DIR
+from pipeline.pl_merge.config import MASTER_DIR as PL_MERGE_MASTER_DIR
 from pipeline.understat.config import SERVING_DIR, SEASONS, WEB_DATA_DIR
 from pipeline.understat.ingest import read_master
 from pipeline.understat.last_action_groups import (
@@ -49,6 +51,51 @@ def _p90(metric: str, minutes_col: str = "minutes") -> pl.Expr:
     )
 
 
+def _fpl_player_identity_and_minutes(
+    fpl_seasons: list[str],
+) -> tuple[pl.DataFrame, pl.DataFrame]:
+    map_path = PL_MERGE_MAPS_DIR / "player_map.csv"
+    if not map_path.exists():
+        raise RuntimeError("Missing data/pl_merge/maps/player_map.csv — run build_pl_merge.py")
+    identity = (
+        pl.read_csv(map_path)
+        .filter(pl.col("status") == "accepted")
+        .select(
+            pl.col("understat_player_id").cast(pl.Utf8).alias("player_id"),
+            pl.col("player_code").cast(pl.Int64),
+            pl.col("web_name").alias("fpl_web_name"),
+            pl.col("fpl_full_name"),
+        )
+        .unique(subset=["player_id"])
+    )
+
+    parts = []
+    for season in fpl_seasons:
+        path = PL_MERGE_MASTER_DIR / "player_match" / f"season={season}" / "part.parquet"
+        if path.exists():
+            parts.append(pl.read_parquet(path))
+    if not parts:
+        raise RuntimeError("Missing master/pl_merge/player_match — run build_pl_merge.py")
+    merged = pl.concat(parts, how="diagonal_relaxed").filter(
+        pl.col("understat_player_id").is_not_null()
+    )
+    minutes = (
+        merged.group_by(
+            "season",
+            "team_code",
+            pl.col("understat_player_id").cast(pl.Utf8).alias("player_id"),
+        )
+        .agg(
+            pl.col("minutes").sum().alias("minutes"),
+            pl.col("match_id")
+            .filter(pl.col("minutes").fill_null(0) > 0)
+            .n_unique()
+            .alias("games"),
+        )
+    )
+    return identity, minutes
+
+
 def build_shot_treemap_serving(
     *,
     fpl_seasons: list[str] | None = None,
@@ -57,7 +104,6 @@ def build_shot_treemap_serving(
     fpl_seasons = fpl_seasons or list(SEASONS.values())
     shots = read_master("shot", fpl_seasons)
     matches = read_master("match", fpl_seasons)
-    league_player = read_master("league_player", fpl_seasons)
     if shots.is_empty():
         raise RuntimeError("No understat shots — run ingest first")
 
@@ -92,12 +138,7 @@ def build_shot_treemap_serving(
             .agg(pl.col("match_id").n_unique().alias("matches"))
         )
 
-    minutes = pl.DataFrame()
-    if league_player.height:
-        keep = ["season", "player_id", pl.col("time").alias("minutes")]
-        if "games" in league_player.columns:
-            keep.append(pl.col("games").alias("games"))
-        minutes = league_player.select(keep)
+    player_identity, minutes = _fpl_player_identity_and_minutes(fpl_seasons)
 
     player_matches = (
         s.group_by(["season", "team_code", "player_id"])
@@ -139,7 +180,7 @@ def build_shot_treemap_serving(
             pl.col("is_sot").sum().alias("sot"),
             pl.col("is_goal").fill_null(False).sum().alias("goals"),
         )
-        .join(minutes, on=["season", "player_id"], how="left")
+        .join(minutes, on=["season", "team_code", "player_id"], how="left")
         .join(player_matches, on=["season", "team_code", "player_id"], how="left")
         .with_columns(_p90("xg"), _p90("shots"), _p90("sot"), _p90("goals"))
     )
@@ -155,7 +196,7 @@ def build_shot_treemap_serving(
             pl.col("is_goal").fill_null(False).sum().alias("cc_goals"),
         )
         .join(name_id.select("season", "player_name", "player_id"), on=["season", "player_name"], how="left")
-        .join(minutes, on=["season", "player_id"], how="left")
+        .join(minutes, on=["season", "team_code", "player_id"], how="left")
         .with_columns(_p90("cc"), _p90("cc_xg"), _p90("cc_sot"))
     )
 
@@ -216,6 +257,7 @@ def build_shot_treemap_serving(
         pl.lit(None).alias("goals_p90"),
     )
     player_agg = pl.concat([player_agg, only_creators], how="diagonal_relaxed")
+    player_agg = player_agg.join(player_identity, on="player_id", how="left")
 
     team_agg = (
         s.group_by(["season", "team_code", "team", "team_short"])
@@ -302,7 +344,12 @@ def build_shot_treemap_serving(
             mins_per90 = mins / matches
         return {
             "player_id": p.get("player_id"),
-            "player_name": html.unescape(p.get("player_name") or "") or None,
+            "player_code": p.get("player_code"),
+            "understat_player_id": p.get("player_id"),
+            "player_name": p.get("fpl_web_name")
+            or html.unescape(p.get("player_name") or "")
+            or None,
+            "understat_player_name": html.unescape(p.get("player_name") or "") or None,
             "xg": _round(p.get("xg") or 0),
             "shots": int(p.get("shots") or 0),
             "sot": int(p.get("sot") or 0),
@@ -455,7 +502,7 @@ def build_shot_treemap_serving(
             "sot": "On target = Goal + SavedShot + ShotOnPost. Blocked shots are excluded.",
             "cc": "Chances created = shot preceded by this player as player_assisted (passer before the shot).",
             "per90_team": "Team per-90 uses finished matches (metric ÷ matches).",
-            "per90_player": "Player per-90 uses Understat season minutes when available.",
+            "per90_player": "Player per-90 uses FPL/Opta Premier League minutes from the merged player-match table.",
             "display": "Team header shows metric plus S (shots) and SoT (on target).",
             "views": "Treemap = players in team. Matrices = situation / last-action creation and defensive concede.",
         },

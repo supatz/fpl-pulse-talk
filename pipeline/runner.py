@@ -43,6 +43,7 @@ def run_pipeline(
     refresh: bool = True,
     full: bool = False,
     serving_only: bool = False,
+    skip_serving: bool = False,
     source_dir: Path | None = None,
 ) -> dict:
     ingested_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -188,7 +189,7 @@ def run_pipeline(
     write_data_dictionary({k: v for k, v in tables.items() if v is not None})
     from build_serving import build_from_disk
 
-    serving = build_from_disk()
+    serving = {} if skip_serving else build_from_disk()
 
     schema_hashes = _collect_schema_hashes(validation)
     competitions = sorted({s.competition for s in discovery.slices})

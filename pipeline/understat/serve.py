@@ -8,6 +8,7 @@ from pathlib import Path
 
 import polars as pl
 
+from pipeline.pl_merge.config import MAPS_DIR as PL_MERGE_MAPS_DIR
 from pipeline.understat.config import ROLLING_WINDOWS, SERVING_DIR, WEB_DATA_DIR, SEASONS
 from pipeline.understat.derive import build_derived
 from pipeline.understat.normalize import now_utc
@@ -39,6 +40,28 @@ def _write_json(path: Path, payload) -> None:
         (WEB_DATA_DIR / path.name).write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
 
 
+def _attach_fpl_player_identity(df: pl.DataFrame) -> pl.DataFrame:
+    if df.is_empty():
+        return df
+    path = PL_MERGE_MAPS_DIR / "player_map.csv"
+    if not path.exists():
+        raise RuntimeError("Missing data/pl_merge/maps/player_map.csv — run build_pl_merge.py")
+    player_map = (
+        pl.read_csv(path)
+        .filter(pl.col("status") == "accepted")
+        .select(
+            pl.col("understat_player_id").cast(pl.Utf8).alias("player_id"),
+            pl.col("player_code").cast(pl.Int64),
+            pl.col("web_name").alias("fpl_web_name"),
+            pl.col("fpl_full_name"),
+        )
+        .unique(subset=["player_id"])
+    )
+    return df.with_columns(pl.col("player_id").cast(pl.Utf8)).join(
+        player_map, on="player_id", how="left"
+    )
+
+
 def _latest_rolling(roll: pl.DataFrame, metric_cols: list[str]) -> pl.DataFrame:
     if roll.is_empty():
         return roll
@@ -65,6 +88,8 @@ def build_all_serving(derived: dict[str, pl.DataFrame] | None = None) -> dict[st
     context = d.get("team_context_season", pl.DataFrame())
     player_sit = d.get("player_situation_season", pl.DataFrame())
     player_create = d.get("player_create_situation_season", pl.DataFrame())
+    player_sit = _attach_fpl_player_identity(player_sit)
+    player_create = _attach_fpl_player_identity(player_create)
     shots = d["shot"]
     matches = d["match"]
 
@@ -150,7 +175,7 @@ def build_all_serving(derived: dict[str, pl.DataFrame] | None = None) -> dict[st
         else None,
         "shots": shots.height,
         "seasons": sorted(matches["season"].unique().to_list()) if matches.height else [],
-        "note": "Understat metrics only. Team keys = FPL team_code. Player tables use understat player_id until player_map exists.",
+        "note": "Understat metrics keyed to FPL team_code and curated FPL player_code; original Understat player_id is retained.",
     }
 
     team_payload = {
@@ -181,16 +206,15 @@ def build_all_serving(derived: dict[str, pl.DataFrame] | None = None) -> dict[st
     }
     _write_json(SERVING_DIR / "us_team_situation.json", team_payload)
 
-    # Player serving: understat ids for inspection (not FPL-joined yet)
     player_payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "source": "understat.com",
         "built_at_utc": now_utc(),
         "meta": {
             **meta,
             "player_rows": player_sit.height,
             "create_rows": player_create.height,
-            "join_status": "understat player_id only — FPL player_code map not applied yet",
+            "join_status": "FPL player_code applied from data/pl_merge/maps/player_map.csv",
         },
         "taker_situation_sample": _rows(
             player_sit.sort("us_xg", descending=True).head(40) if player_sit.height else player_sit

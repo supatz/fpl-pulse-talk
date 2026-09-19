@@ -1,7 +1,7 @@
 PYTHON := .venv/bin/python
 PIP := .venv/bin/pip
 
-.PHONY: venv install test refresh full serving schedule-install schedule-uninstall understat understat-refresh
+.PHONY: venv install test refresh full serving schedule-install schedule-uninstall understat understat-refresh pl-merge
 
 venv:
 	/opt/homebrew/bin/python3.13 -m venv .venv
@@ -20,6 +20,9 @@ understat:
 
 understat-refresh:
 	./scripts/refresh_understat.sh
+
+pl-merge:
+	$(PYTHON) build_pl_merge.py
 
 full:
 	$(PYTHON) build.py --full

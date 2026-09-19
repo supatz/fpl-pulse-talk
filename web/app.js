@@ -1,4 +1,4 @@
-import { FDR_URL, INSIGHT_WINDOWS, VIEWS } from "./registry.js";
+import { FDR_URL, INSIGHT_WINDOWS, VIEWS } from "./registry.js?v=9";
 import {
   aggregatePlayers,
   aggregateTeamRows,
@@ -18,7 +18,7 @@ import {
   renderMatchBoard,
   renderTicker,
   saveState,
-} from "./components.js";
+} from "./components.js?v=9";
 
 const DATA = {};
 const FILES = ["meta.json", "players_matches.json", "fixtures.json", "teams_gw.json"];
@@ -32,11 +32,20 @@ const PAGES = [
   "insights-matches",
   "insights-teams",
   "insights-understat",
+  "insights-fpl-treemap",
+  "insights-player-performance",
   "teams",
   "chips",
   "data",
 ];
-const INSIGHT_PAGES = ["insights-players", "insights-matches", "insights-teams", "insights-understat"];
+const INSIGHT_PAGES = [
+  "insights-players",
+  "insights-matches",
+  "insights-teams",
+  "insights-understat",
+  "insights-fpl-treemap",
+  "insights-player-performance",
+];
 
 async function loadData() {
   const results = await Promise.all(
@@ -61,6 +70,8 @@ const PAGE_TITLES = {
   "insights-matches": "Insights · Matches",
   "insights-teams": "Insights · Teams",
   "insights-understat": "Insights · Understat",
+  "insights-fpl-treemap": "Insights · FPL treemap",
+  "insights-player-performance": "Insights · Player performances",
   teams: "Teams",
   chips: "Chips",
   data: "Data",
@@ -105,6 +116,26 @@ function showPage(id) {
       } catch (err) {
         const status = document.getElementById("us-status");
         if (status) status.textContent = `Understat view failed to start: ${err.message}`;
+      }
+    });
+  }
+  if (page === "insights-fpl-treemap") {
+    requestAnimationFrame(() => {
+      try {
+        window.initFplTreemap?.();
+      } catch (err) {
+        const status = document.getElementById("fpl-map-status");
+        if (status) status.textContent = `FPL treemap failed to start: ${err.message}`;
+      }
+    });
+  }
+  if (page === "insights-player-performance") {
+    requestAnimationFrame(() => {
+      try {
+        window.initPlayerPerformance?.();
+      } catch (err) {
+        const status = document.getElementById("perf-status");
+        if (status) status.textContent = `Player performances failed to start: ${err.message}`;
       }
     });
   }

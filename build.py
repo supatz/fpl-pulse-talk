@@ -30,6 +30,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Rebuild dashboard JSON from existing Parquet masters (no network).",
     )
     parser.add_argument(
+        "--skip-serving",
+        action="store_true",
+        help="Build FPL masters but defer site JSON until after the PL merge.",
+    )
+    parser.add_argument(
         "--source-dir",
         type=Path,
         default=None,
@@ -55,6 +60,7 @@ def main(argv: list[str] | None = None) -> int:
             refresh=args.refresh,
             full=args.full,
             serving_only=args.serving_only,
+            skip_serving=args.skip_serving,
             source_dir=args.source_dir,
         )
     except Exception:

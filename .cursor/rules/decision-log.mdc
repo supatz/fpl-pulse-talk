@@ -9,7 +9,7 @@ When the user locks a product/data choice, accepts a compromise, or we ship a fi
 
 1. Add or replace a row in **Locked now** and a dated **Chronology** entry in `docs/decision_log.md` in the **same change**.
 2. Update the matching how-to doc (`docs/dashboard_readme.md`, `docs/understat_pipeline.md`, README) if commands or page behaviour changed.
-3. Do not mix FPL-Core and Understat player metrics or minutes. There is no `player_map`.
+3. Site player serving reads `master/pl_merge/player_match`. Prefer FPL-Core when a player metric overlaps; show Understat-only measures with `US` / `us_*` labels. Never average or silently coalesce metrics or minutes.
 4. If the user asks to put work on git, include the decision log with the implementing files.
 
 Example chronology line: choice, why, path, drawbacks if the choice is a fallback.

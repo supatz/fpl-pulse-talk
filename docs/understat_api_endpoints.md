@@ -335,7 +335,7 @@ Webpage analog: single match centre. Ids from `league.get_match_data` / team mat
 | Shot | `id` | Understat-only |
 | Roster line | `roster_id` / roster `id` | Links player ↔ match |
 
-Until a mapping table exists, keep Understat as a **parallel master** keyed by understat ids; join into serving JSON only where mapping confidence is high.
+Understat remains a **parallel master** keyed by Understat ids. The curated `data/pl_merge/maps/player_map.csv` now resolves high-confidence identities to FPL `player_code` in merged and serving outputs; original ids remain for traceability.
 
 ---
 

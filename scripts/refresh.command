@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-# Double-click in Finder. Asks: dataset only, git push, or both.
+# Double-click in Finder: menu to refresh data, push to GitHub (Netlify), or both.
 cd "$(dirname "$0")"
 exec "./refresh.sh"
