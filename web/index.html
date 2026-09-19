@@ -372,6 +372,15 @@
                 <span>Size / sort by</span>
                 <select id="fpl-map-sort"></select>
               </label>
+              <label class="fpl-map-field" data-name="fpl_treemap.controls.position">
+                <span>Position</span>
+                <select id="fpl-map-position">
+                  <option value="ALL">All</option>
+                  <option value="MID">MID</option>
+                  <option value="ATT">ATT</option>
+                  <option value="DEF">DEF + GK</option>
+                </select>
+              </label>
               <div class="fpl-map-field fpl-map-gw" data-name="fpl_treemap.controls.gw">
                 <span id="fpl-map-gw-label">GW 1–38</span>
                 <div class="dual-range">
@@ -418,6 +427,15 @@
                   <option value="20" selected>Top 20</option>
                   <option value="30">Top 30</option>
                   <option value="40">Top 40</option>
+                </select>
+              </label>
+              <label class="perf-field" data-name="player_performance.controls.position">
+                <span>Position</span>
+                <select id="perf-position">
+                  <option value="ALL">All</option>
+                  <option value="MID">MID</option>
+                  <option value="ATT">ATT</option>
+                  <option value="DEF">DEF + GK</option>
                 </select>
               </label>
               <div class="perf-field perf-gw" data-name="player_performance.controls.gw">
@@ -475,8 +493,8 @@
   <script src="./vendor/d3.min.js"></script>
   <script src="./team-colors.js?v=1"></script>
   <script src="./understat-shots.js?v=17"></script>
-  <script src="./fpl-treemap.js?v=7"></script>
-  <script src="./player-performance.js?v=8"></script>
+  <script src="./fpl-treemap.js?v=8"></script>
+  <script src="./player-performance.js?v=9"></script>
   <script type="module" src="./app.js?v=10"></script>
 </body>
 </html>

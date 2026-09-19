@@ -30,6 +30,7 @@
     season: null,
     metric: "G",
     topN: 20,
+    position: "ALL",
     gwFrom: 1,
     gwTo: 38,
     per90: false,
@@ -69,6 +70,7 @@
     els.season = $("perf-season");
     els.metric = $("perf-metric");
     els.top = $("perf-top");
+    els.position = $("perf-position");
     els.gwFrom = $("perf-gw-from");
     els.gwTo = $("perf-gw-to");
     els.gwLabel = $("perf-gw-label");
@@ -91,6 +93,10 @@
     });
     els.top.addEventListener("change", () => {
       state.topN = Number(els.top.value) || 20;
+      render();
+    });
+    els.position.addEventListener("change", () => {
+      state.position = els.position.value;
       render();
     });
     const syncGw = () => {
@@ -164,9 +170,20 @@
     return Number.isFinite(n) ? n : 0;
   }
 
+  function positionMatches(position) {
+    if (state.position === "ALL") return true;
+    if (state.position === "MID") return position === "Midfielder";
+    if (state.position === "ATT") return position === "Forward";
+    return position === "Defender" || position === "Goalkeeper";
+  }
+
   function aggregate(metric) {
     const rows = seasonRows().filter(
-      (r) => Number(r.gw) >= state.gwFrom && Number(r.gw) <= state.gwTo && num(r.m) > 0
+      (r) =>
+        Number(r.gw) >= state.gwFrom &&
+        Number(r.gw) <= state.gwTo &&
+        num(r.m) > 0 &&
+        positionMatches(r.pos)
     );
     const players = new Map();
     for (const r of rows) {
@@ -222,7 +239,8 @@
     const minsNote = state.min45 ? ` · 45+ mins per appearance` : "";
     // Bubbles stay on raw volume; a per-90 rate would inflate cameo appearances.
     const sizeNote = `${metric.sizeName.toLowerCase()}${state.per90 ? " (total, not per 90)" : ""}`;
-    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · top ${players.length} by ${metric.actualName.toLowerCase()}${unit}${minsNote} · above the line = overperforming · bubble size = ${sizeNote} · FPL-Core`;
+    const position = els.position.options[els.position.selectedIndex]?.textContent || "All positions";
+    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · top ${players.length} by ${metric.actualName.toLowerCase()}${unit}${minsNote} · above the line = overperforming · bubble size = ${sizeNote} · FPL-Core`;
 
     const width = els.chart.clientWidth || 900;
     const height = els.chart.clientHeight || 600;

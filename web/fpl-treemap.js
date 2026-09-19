@@ -29,6 +29,7 @@
     season: null,
     metric: "G",
     sortMetric: "G",
+    position: "ALL",
     gwFrom: 1,
     gwTo: 38,
     teams: new Set(),
@@ -69,6 +70,7 @@
     els.season = $("fpl-map-season");
     els.metric = $("fpl-map-metric");
     els.sort = $("fpl-map-sort");
+    els.position = $("fpl-map-position");
     els.gwFrom = $("fpl-map-gw-from");
     els.gwTo = $("fpl-map-gw-to");
     els.gwLabel = $("fpl-map-gw-label");
@@ -102,6 +104,11 @@
         state.teamMode = "preset";
         applyTeamMode();
       }
+    });
+    els.position.addEventListener("change", () => {
+      state.position = els.position.value;
+      state.teamMode = "preset";
+      applyTeamMode();
     });
     const syncGw = () => {
       let from = Number(els.gwFrom.value);
@@ -149,6 +156,13 @@
 
   function seasonRows() {
     return state.rows.filter((r) => r.s === state.season && r.c === "Premier League");
+  }
+
+  function positionMatches(position) {
+    if (state.position === "ALL") return true;
+    if (state.position === "MID") return position === "Midfielder";
+    if (state.position === "ATT") return position === "Forward";
+    return position === "Defender" || position === "Goalkeeper";
   }
 
   function syncGwBounds(reset) {
@@ -245,7 +259,11 @@
 
   function aggregate() {
     const rows = seasonRows().filter(
-      (r) => Number(r.gw) >= state.gwFrom && Number(r.gw) <= state.gwTo && num(r.m) > 0
+      (r) =>
+        Number(r.gw) >= state.gwFrom &&
+        Number(r.gw) <= state.gwTo &&
+        num(r.m) > 0 &&
+        positionMatches(r.pos)
     );
     const players = new Map();
     for (const r of rows) {
@@ -318,7 +336,8 @@
       .sort((a, b) => b.sortTotal - a.sortTotal);
 
     const mode = state.teamMode === "preset" ? "top 10 teams" : state.teamMode === "all" ? "all teams" : "custom teams";
-    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${teams.length} teams (${mode}) · team and tile area follow ${FIELDS[sortKey].label} · top ${TOP_PLAYERS_PER_TEAM} positive players per team · FPL-Core`;
+    const position = els.position.options[els.position.selectedIndex]?.textContent || "All positions";
+    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · ${teams.length} teams (${mode}) · team and tile area follow ${FIELDS[sortKey].label} · top ${TOP_PLAYERS_PER_TEAM} positive players per team · FPL-Core`;
 
     const width = els.chart.clientWidth || 1000;
     const height = els.chart.clientHeight || 640;

@@ -22,8 +22,8 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | PL merge | Premier League-only identity maps + `master/pl_merge/player_match` in `pipeline/pl_merge/`. This is the player-match source for site serving. |
 | Player map | Curated under `data/pl_merge/maps/player_map.csv`. Fuzzy is a proposal; overrides win. Do not join on season-scoped FPL `player_id`. |
 | Insights → Understat | Same shell (`#insights-understat`). Match timing = shots × FPL GW. Attack tempo = season `attackSpeed` ribbons (`us_team_attack_speed.json`). Standalone `web/understat-shots.html` remains. |
-| FPL treemap | Separate `#insights-fpl-treemap` page below Understat. One nested treemap like Understat: club blocks sized by the club total of the Size / sort measure, player tiles nested inside. Top 10 / All / custom teams. Goals shows G and xG on tiles/headers; SoT and npxG stay in the tooltip. A shows A, CC; xGI shows xGI, xG; DC shows DC, CS. No drawer. Shares `web/team-colors.js`. |
-| Player performances | `#insights-player-performance`. FPL-Core scatter of actual vs expected: G vs xG and A vs xA only. Default top 20 by the actual measure; filter also offers 30 and 40. Dashed parity line, green over / red under / grey within the band. Per 90 and 45+ mins-per-appearance are checkboxes. Both axes share one zero-based scale. Bubble area = SoT for goals, CC for assists, always raw totals. Tooltip always lists SoT and CC. |
+| FPL treemap | Separate `#insights-fpl-treemap` page below Understat. One nested treemap like Understat: club blocks sized by the club total of the Size / sort measure, player tiles nested inside. Top 10 / All / custom teams. Position filter = All / MID / ATT / DEF + GK. Goals shows G and xG on tiles/headers; SoT and npxG stay in the tooltip. A shows A, CC; xGI shows xGI, xG; DC shows DC, CS. No drawer. Shares `web/team-colors.js`. |
+| Player performances | `#insights-player-performance`. FPL-Core scatter of actual vs expected: G vs xG and A vs xA only. Default top 20 by the actual measure; filter also offers 30 and 40. Position filter = All / MID / ATT / DEF + GK. Dashed parity line, green over / red under / grey within the band. Per 90 and 45+ mins-per-appearance are checkboxes. Both axes share one zero-based scale. Bubble area = SoT for goals, CC for assists, always raw totals. Tooltip always lists SoT and CC. |
 | Sidebar | Children of a nav parent are indented with a left guide rule (`.nav-kids`). Collapsed rail still hides them entirely. |
 | Local preview | `scripts/serve.command` (double-click) or `.venv/bin/python serve.py --port N`. Port defaults to 8765; `serve.py` has no persistent port setting. |
 | DefCon | `defcon` prefers upstream match-level `defensive_contributions`; when blank (2026-27 on) it derives CBIT for defenders, CBIT + recoveries for MID/FWD, and 0 for GK, using `coalesce(tackles, tackles_won)`. Derivation reproduces FPL gameweek totals exactly. |
@@ -44,6 +44,16 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-09-20 — Position filters on both FPL insight charts
+
+**Choice:** Add All / MID / ATT / DEF + GK filters to the FPL treemap and Player performances. DEF deliberately includes goalkeepers.
+
+**Why:** The same metric has a different interpretation and useful comparison set by position; combining GK with DEF preserves a compact three-role filter.
+
+**Where:** `web/index.html`, `web/fpl-treemap.js`, `web/player-performance.js`.
+
+**Drawbacks:** On attacking metrics, DEF + GK can contain fewer than the requested number because players with both actual and expected values at zero are excluded.
 
 ### 2026-09-20 — Refresh menu restored on the Finder button
 

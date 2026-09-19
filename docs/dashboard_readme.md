@@ -43,8 +43,8 @@ Hard-refresh after serving-shape changes. Understat JS/CSS/JSON use `?v=` cache 
 | `#teams` | FPL-Core team-match |
 | `#insights-players` / `#insights-matches` | Merged player-match; `#insights-teams` remains FPL team-match |
 | `#insights-understat` | Player treemap + situation / last-action / against. Player drawer = that player’s shot mix; Against is team-only |
-| `#insights-fpl-treemap` | Nested player treemap with Top 10 / All / custom teams: club block area and tile area both follow the Size / sort measure. Goals shows G/xG on tiles (SoT/npxG in tooltip); A shows A/CC; xGI shows xGI/xG; DC shows DC/CS. Top six positive players per team; tooltip only, no drawer. Club colours come from `web/team-colors.js` |
-| `#insights-player-performance` | Actual vs expected scatter: G vs xG and A vs xA. Default top 20 by the actual measure; filter also offers 30 and 40. Dashed parity line — above it is overperforming. Per 90 and 45+ mins-per-appearance are checkboxes; the minutes filter uses total minutes ÷ appearances. Bubble area = SoT (goals) or CC (assists), always totals. Tooltip always lists SoT and CC. Both axes start at zero on a shared scale |
+| `#insights-fpl-treemap` | Nested player treemap with Top 10 / All / custom teams and All / MID / ATT / DEF + GK positions: club block area and tile area both follow the Size / sort measure. Goals shows G/xG on tiles (SoT/npxG in tooltip); A shows A/CC; xGI shows xGI/xG; DC shows DC/CS. Top six positive players per team; tooltip only, no drawer. Club colours come from `web/team-colors.js` |
+| `#insights-player-performance` | Actual vs expected scatter: G vs xG and A vs xA. Default top 20 by the actual measure; filter also offers 30 and 40 plus All / MID / ATT / DEF + GK positions. Dashed parity line — above it is overperforming. Per 90 and 45+ mins-per-appearance are checkboxes; the minutes filter uses total minutes ÷ appearances. Bubble area = SoT (goals) or CC (assists), always totals. Tooltip always lists SoT and CC. Both axes start at zero on a shared scale |
 
 Standalone Understat: `web/understat-shots.html`.
 
