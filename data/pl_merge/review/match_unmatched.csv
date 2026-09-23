@@ -1,0 +1,2 @@
+understat_match_id,season,kickoff_raw,home_team_id,away_team_id,is_result,home_code,home_team,away_code,away_team,kick_date,reason
+31282,2026-2027,2026-11-21 15:00:00,244,72,false,94,Brentford,11,Everton,2026-11-21,no_fpl_fixture
