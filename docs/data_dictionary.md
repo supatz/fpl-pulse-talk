@@ -1,6 +1,6 @@
 # FPL master datasets — data dictionary
 
-Generated `2026-09-23T17:49:28Z`.
+Generated `2026-09-30T14:52:51Z`.
 
 Source: public [`olbauday/FPL-Core-Insights`](https://github.com/olbauday/FPL-Core-Insights).
 
@@ -119,8 +119,8 @@ Rows: **19,135**. Columns: **114**.
 | `selected_by_percent` | `Float64` | 1,040 (5.4%) |  |
 | `form` | `Float64` | 1,040 (5.4%) |  |
 | `penalties_order` | `String` | 17,240 (90.1%) |  |
-| `direct_freekicks_order` | `String` | 17,166 (89.7%) |  |
-| `corners_and_indirect_freekicks_order` | `String` | 16,513 (86.3%) |  |
+| `direct_freekicks_order` | `String` | 17,161 (89.7%) |  |
+| `corners_and_indirect_freekicks_order` | `String` | 16,502 (86.2%) |  |
 | `status` | `String` | 1,040 (5.4%) |  |
 | `gw_match_index` | `Int64` | 0 (0.0%) | 1-based index of this match within the player's GW. |
 | `gw_match_count` | `UInt32` | 0 (0.0%) | Player-match rows for this player in the GW (all competitions). |
@@ -139,7 +139,7 @@ Rows: **33,228**. Columns: **52**.
 | `gw` | `Int64` | 0 (0.0%) | FPL gameweek from the GW folder number (includes 0 for pre-season). |
 | `web_name` | `String` | 0 (0.0%) |  |
 | `status` | `String` | 0 (0.0%) |  |
-| `news` | `String` | 21,542 (64.8%) |  |
+| `news` | `String` | 21,534 (64.8%) |  |
 | `now_cost` | `Float64` | 0 (0.0%) | FPL price in £m as a decimal (e.g. 7.0). Do not divide by 10. |
 | `selected_by_percent` | `Float64` | 0 (0.0%) |  |
 | `form` | `Float64` | 0 (0.0%) |  |
@@ -152,8 +152,8 @@ Rows: **33,228**. Columns: **52**.
 | `ep_this` | `Float64` | 0 (0.0%) |  |
 | `transfers_in_event` | `Int64` | 0 (0.0%) |  |
 | `transfers_out_event` | `Int64` | 0 (0.0%) |  |
-| `corners_and_indirect_freekicks_order` | `String` | 30,598 (92.1%) |  |
-| `direct_freekicks_order` | `String` | 31,206 (93.9%) |  |
+| `corners_and_indirect_freekicks_order` | `String` | 30,591 (92.1%) |  |
+| `direct_freekicks_order` | `String` | 31,203 (93.9%) |  |
 | `penalties_order` | `String` | 31,249 (94.0%) |  |
 | `set_piece_threat` | `String` | 33,228 (100.0%) |  |
 | `minutes` | `Float64` | 0 (0.0%) | Minutes played (Opta/match layer). Missing is unknown, not zero. |

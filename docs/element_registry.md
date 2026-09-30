@@ -26,6 +26,7 @@ The italic **i** appears only when you hover a named label (not on changing valu
 | `{view}.filter.per90` | Per-90 toggle |
 | `{view}.filter.detail` | Always-visible metric-group buttons |
 | `{view}.table` / `{view}.grid` / `{view}.showing` | Table chrome |
+| `players.drawer` / `players.drawer.body` | Gameweek drawer opened from a player name |
 | `{view}.col.{metric}` | A column header |
 | `insights.players.*` / `insights.matches.*` / `insights.teams.*` | Insight filters and titles |
 | `insights.matches.board` / `insights.matches.grid` | Match insight containers |

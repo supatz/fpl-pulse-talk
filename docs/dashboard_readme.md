@@ -39,12 +39,12 @@ Hard-refresh after serving-shape changes. Understat JS/CSS/JSON use `?v=` cache 
 |---|---|
 | `#home` | Jumps into the rest of the site |
 | `#fixtures` | Current GW cards + ticker |
-| `#attackers` / `#defenders` / `#gk` | Merged PL player-match. Metric-group buttons are always visible; Understat-only adds xGChain/xGBuildup |
+| `#attackers` / `#defenders` / `#gk` | Merged PL player-match. Click a player name for a gameweek drawer of the visible metrics (Total + Per 90). Metric-group buttons stay visible; Understat-only adds xGChain/xGBuildup |
 | `#teams` | FPL-Core team-match |
 | `#insights-players` / `#insights-matches` | Merged player-match; `#insights-teams` remains FPL team-match |
 | `#insights-understat` | Player treemap + situation / last-action / against. Player drawer = that player’s shot mix; Against is team-only |
 | `#insights-fpl-treemap` | Nested player treemap with Top 10 / All / custom teams and All / MID / ATT / DEF + GK positions: club block area and tile area both follow the Size / sort measure. Goals shows G/xG on tiles (SoT/npxG in tooltip); A shows A/CC; xGI shows xGI/xG; DC shows DC/CS. Top six positive players per team; tooltip only, no drawer. Club colours come from `web/team-colors.js` |
-| `#insights-player-performance` | Actual vs expected scatter: G vs xG and A vs xA. Default top 20 by the actual measure; filter also offers 30 and 40 plus All / MID / ATT / DEF + GK positions. Dashed parity line — above it is overperforming. Per 90 and 45+ mins-per-appearance are checkboxes; the minutes filter uses total minutes ÷ appearances. Bubble area = SoT (goals) or CC (assists), always totals. Tooltip always lists SoT and CC. Both axes start at zero on a shared scale |
+| `#insights-player-performance` | Tabs: Attack (G vs xG / A vs xA), Defence (DefCon vs xGI, bubble = CS), Finishing (xGOT vs xG, bubble = SoT). Shared filters. Attack/Finishing share one scale and a parity line; Defence uses independent axes |
 
 Standalone Understat: `web/understat-shots.html`.
 

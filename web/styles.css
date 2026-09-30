@@ -64,7 +64,41 @@ a:hover { text-decoration: underline; }
 .brand-line { display: flex; align-items: center; gap: 7px; }
 .brand strong { display: block; font-family: var(--serif); letter-spacing: 0.01em; font-size: 15px; }
 .brand small { color: var(--muted); font-size: 11px; }
-.brand-logo { width: 54px; height: 60px; flex: 0 0 auto; object-fit: contain; }
+.brand-pulse {
+  width: 46px; height: 46px; flex: 0 0 46px;
+  display: grid; place-items: center;
+  animation: pulse-beat 1.2s ease-in-out infinite;
+}
+.pulse-mark { width: 46px; height: 46px; overflow: visible; }
+.pulse-ring {
+  fill: none; stroke: var(--accent); stroke-width: 1.6; opacity: 0.45;
+  transform-origin: 24px 24px;
+  animation: pulse-ring 1.2s ease-in-out infinite;
+}
+.pulse-core { fill: var(--accent); }
+.pulse-ecg {
+  fill: none; stroke: #e9fffa; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 72; stroke-dashoffset: 0;
+  animation: pulse-ecg 1.2s linear infinite;
+}
+@keyframes pulse-beat {
+  0%, 100% { transform: scale(1); }
+  18% { transform: scale(1.12); }
+  32% { transform: scale(0.96); }
+  48% { transform: scale(1.08); }
+  64% { transform: scale(1); }
+}
+@keyframes pulse-ring {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  40% { opacity: 0.2; transform: scale(1.12); }
+}
+@keyframes pulse-ecg {
+  0% { stroke-dashoffset: 72; }
+  55%, 100% { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-pulse, .pulse-ring, .pulse-ecg { animation: none; }
+}
 .social-x {
   width: 22px; height: 22px; flex: 0 0 22px; display: grid; place-items: center;
   color: var(--ink); border: 1px solid var(--line); border-radius: 7px;
@@ -123,7 +157,7 @@ a:hover { text-decoration: underline; }
 .app.is-collapsed .sidebar .name-dot { display: none; }
 .app.is-collapsed .sidebar { padding-inline: 10px; }
 .app.is-collapsed .sidebar-head { justify-content: center; padding: 0; }
-.app.is-collapsed .brand-logo { width: 46px; height: 52px; }
+.app.is-collapsed .brand-pulse, .app.is-collapsed .pulse-mark { width: 38px; height: 38px; }
 .app.is-collapsed .nav-link { justify-content: center; padding-inline: 0; }
 .app.is-collapsed #sidebar-collapse svg { transform: rotate(180deg); }
 
@@ -159,11 +193,45 @@ main { max-width: 1240px; margin: 0 auto; padding: 28px 22px 72px; }
 }
 
 .fpl-map { position: relative; }
+.perf-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.player-link {
+  appearance: none; border: 0; padding: 0; background: none;
+  color: var(--accent-2); font: inherit; cursor: pointer; text-align: left;
+}
+.player-link:hover { color: var(--accent); text-decoration: underline; }
+.ghost {
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+  border-radius: 99px; padding: 6px 12px; font: 13px var(--font); cursor: pointer;
+}
+.ghost:hover { color: var(--ink); border-color: var(--accent); }
+.player-drawer-scrim {
+  position: fixed; inset: 0; border: 0; padding: 0;
+  background: rgba(8, 12, 16, 0.46); z-index: 45; cursor: pointer;
+}
+.player-drawer-scrim[hidden], .player-drawer[hidden] { display: none; }
+.player-drawer {
+  position: fixed; top: 0; right: 0; width: min(760px, 100%); height: 100%;
+  background: var(--paper); border-left: 1px solid var(--line);
+  padding: 20px 22px 28px; overflow: auto; z-index: 46;
+  box-shadow: -20px 0 50px rgba(0, 0, 0, 0.35);
+}
+.player-drawer-head {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  margin-bottom: 14px;
+}
+.player-drawer-head h2 { margin: 0; font-family: var(--serif); font-size: 1.45rem; }
+.player-drawer-meta { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.player-drawer-scroll { overflow: auto; }
+.player-gw-table { font-size: 13px; }
+.player-gw-table tfoot td { font-weight: 700; border-top: 1px solid var(--line); }
+.player-gw-table tr.is-per90 td { color: var(--accent-2); font-weight: 600; }
+.player-drawer-note { margin: 12px 0 0; color: var(--muted); font-size: 12px; }
 .fpl-map-controls, .perf-controls {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
   padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--line);
   border-radius: 12px; background: var(--paper);
 }
+.perf-field[hidden] { display: none !important; }
 .fpl-map-field, .perf-field {
   display: flex; align-items: center; gap: 7px; min-width: 0;
   color: var(--muted); font-size: 12px; white-space: nowrap;

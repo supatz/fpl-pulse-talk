@@ -929,17 +929,29 @@ export function makeTable(cfg) {
     const tb = document.createElement("tbody");
     tb.innerHTML =
       sorted
-        .map(
-          (r) =>
-            `<tr>${cols
-              .map((key) => {
-                const m = METRICS[key] || { fmt: "text" };
-                return `<td class="${key === "player" ? "sticky" : ""}">${fmt(cellValue(r, key, state, cfg), m.fmt)}</td>`;
-              })
-              .join("")}</tr>`
-        )
+        .map((r) => {
+          const id = String(r.pc ?? r.pid ?? "");
+          return `<tr data-pc="${id}">${cols
+            .map((key) => {
+              const m = METRICS[key] || { fmt: "text" };
+              if (key === "player" && cfg.onPlayerClick) {
+                const name = fmt(cellValue(r, key, state, cfg), m.fmt);
+                return `<td class="sticky"><button type="button" class="player-link" data-player-open="${id}">${escapeCell(name)}</button></td>`;
+              }
+              return `<td class="${key === "player" ? "sticky" : ""}">${fmt(cellValue(r, key, state, cfg), m.fmt)}</td>`;
+            })
+            .join("")}</tr>`;
+        })
         .join("") || `<tr><td colspan="${cols.length}">No rows match these filters.</td></tr>`;
     table.appendChild(tb);
+    if (cfg.onPlayerClick) {
+      tb.querySelectorAll("[data-player-open]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const row = sorted.find((r) => String(r.pc ?? r.pid) === btn.dataset.playerOpen);
+          if (row) cfg.onPlayerClick(row, { state, columns: cols, cfg, matches: cfg.matches });
+        });
+      });
+    }
     const from = sorted[0]?.gw_from ?? state.gwFrom;
     const to = sorted[0]?.gw_to ?? state.gwTo;
     if (from && to) {
@@ -975,6 +987,14 @@ function cellValue(row, key, state, cfg) {
   const per90 = state.per90 && (cfg.per90Keys || []).includes(key);
   const denominator = UNDERSTAT_RATE_FIELDS.has(key) ? row.USMin : row.mins;
   return rate(row[key], denominator, always || per90);
+}
+
+function escapeCell(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 function rate(raw, mins, as90) {

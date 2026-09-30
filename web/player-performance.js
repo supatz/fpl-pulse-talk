@@ -12,6 +12,8 @@
       expectedName: "Expected goals",
       sizeName: "Shots on target",
       digits: 0,
+      sharedScale: true,
+      parity: true,
     },
     A: {
       actual: "A",
@@ -22,12 +24,45 @@
       expectedName: "Expected assists",
       sizeName: "Chances created",
       digits: 0,
+      sharedScale: true,
+      parity: true,
     },
+    DEF: {
+      actual: "DefCon",
+      expected: "xGI",
+      size: "CS",
+      label: "DefCon vs xGI",
+      actualName: "Defensive contributions",
+      expectedName: "Expected goal involvements",
+      sizeName: "Clean sheets",
+      digits: 2,
+      sharedScale: false,
+      parity: false,
+    },
+    FIN: {
+      actual: "xGOT",
+      expected: "xG",
+      size: "SoT",
+      label: "xGOT vs xG",
+      actualName: "Expected goals on target",
+      expectedName: "Expected goals",
+      sizeName: "Shots on target",
+      digits: 2,
+      sharedScale: true,
+      parity: true,
+    },
+  };
+
+  const TABS = {
+    attack: { metric: null, defaultMetric: "G" },
+    defence: { metric: "DEF" },
+    finishing: { metric: "FIN" },
   };
 
   const state = {
     rows: [],
     season: null,
+    tab: "attack",
     metric: "G",
     topN: 20,
     position: "ALL",
@@ -69,6 +104,8 @@
     els.root = $("perf-root");
     els.season = $("perf-season");
     els.metric = $("perf-metric");
+    els.metricField = $("perf-metric-field");
+    els.tabs = [...document.querySelectorAll("[data-perf-tab]")];
     els.top = $("perf-top");
     els.position = $("perf-position");
     els.gwFrom = $("perf-gw-from");
@@ -90,6 +127,9 @@
     els.metric.addEventListener("change", () => {
       state.metric = els.metric.value;
       render();
+    });
+    els.tabs.forEach((btn) => {
+      btn.addEventListener("click", () => setTab(btn.dataset.perfTab));
     });
     els.top.addEventListener("change", () => {
       state.topN = Number(els.top.value) || 20;
@@ -165,6 +205,26 @@
     els.gwLabel.textContent = `GW ${state.gwFrom}–${state.gwTo}`;
   }
 
+  function setTab(tab) {
+    state.tab = TABS[tab] ? tab : "attack";
+    if (state.tab === "attack") {
+      if (!["G", "A"].includes(state.metric)) state.metric = "G";
+      if (els.metric) els.metric.value = state.metric;
+    }
+    els.tabs.forEach((btn) => {
+      const on = btn.dataset.perfTab === state.tab;
+      btn.classList.toggle("on", on);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    if (els.metricField) els.metricField.hidden = state.tab !== "attack";
+    render();
+  }
+
+  function activeMetric() {
+    const tab = TABS[state.tab] || TABS.attack;
+    return METRICS[tab.metric || state.metric] || METRICS.G;
+  }
+
   function num(value) {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
@@ -199,6 +259,11 @@
           expected: 0,
           SoT: 0,
           CC: 0,
+          CS: 0,
+          DefCon: 0,
+          xGI: 0,
+          xGOT: 0,
+          xG: 0,
         });
       }
       const p = players.get(key);
@@ -209,6 +274,11 @@
       p.expected += num(r[metric.expected]);
       p.SoT += num(r.SoT);
       p.CC += num(r.CC);
+      p.CS += num(r.cs);
+      p.DefCon += num(r.DefCon);
+      p.xGI += num(r.xGI);
+      p.xGOT += num(r.xGOT);
+      p.xG += num(r.xG);
     }
     return [...players.values()];
   }
@@ -233,14 +303,15 @@
 
   function render() {
     if (!state.rows.length || !els.chart?.clientWidth) return;
-    const metric = METRICS[state.metric];
+    const metric = activeMetric();
     const players = shape(metric);
     const unit = state.per90 ? " per 90" : "";
     const minsNote = state.min45 ? ` · 45+ mins per appearance` : "";
     // Bubbles stay on raw volume; a per-90 rate would inflate cameo appearances.
     const sizeNote = `${metric.sizeName.toLowerCase()}${state.per90 ? " (total, not per 90)" : ""}`;
     const position = els.position.options[els.position.selectedIndex]?.textContent || "All positions";
-    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · top ${players.length} by ${metric.actualName.toLowerCase()}${unit}${minsNote} · above the line = overperforming · bubble size = ${sizeNote} · FPL-Core`;
+    const lineNote = metric.parity ? " · above the line = overperforming" : "";
+    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · top ${players.length} by ${metric.actualName.toLowerCase()}${unit}${minsNote}${lineNote} · bubble size = ${sizeNote} · FPL-Core`;
 
     const width = els.chart.clientWidth || 900;
     const height = els.chart.clientHeight || 600;
@@ -263,10 +334,11 @@
     const margin = { top: 22, right: 28, bottom: 46, left: 58 };
     const plotW = Math.max(10, width - margin.left - margin.right);
     const plotH = Math.max(10, height - margin.top - margin.bottom);
-    // Both axes start at zero and share one scale, so the parity line sits at a true 45°.
-    const top = Math.max(...players.flatMap((p) => [p.x, p.y]), 1) * 1.08;
-    const x = d3.scaleLinear().domain([0, top]).nice().range([0, plotW]);
-    const y = d3.scaleLinear().domain([0, top]).nice().range([plotH, 0]);
+    const xTop = Math.max(...players.map((p) => p.x), 0.01) * 1.08;
+    const yTop = Math.max(...players.map((p) => p.y), 0.01) * 1.08;
+    const shared = metric.sharedScale ? Math.max(xTop, yTop) : null;
+    const x = d3.scaleLinear().domain([0, shared ?? xTop]).nice().range([0, plotW]);
+    const y = d3.scaleLinear().domain([0, shared ?? yTop]).nice().range([plotH, 0]);
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
     g.append("g")
@@ -290,14 +362,15 @@
       .attr("text-anchor", "middle")
       .text(`${metric.actualName}${per90}`);
 
-    // Parity line: on it means output matches the model.
-    const parity = Math.min(x.domain()[1], y.domain()[1]);
-    g.append("line")
-      .attr("class", "perf-parity")
-      .attr("x1", x(0))
-      .attr("y1", y(0))
-      .attr("x2", x(parity))
-      .attr("y2", y(parity));
+    if (metric.parity) {
+      const parity = Math.min(x.domain()[1], y.domain()[1]);
+      g.append("line")
+        .attr("class", "perf-parity")
+        .attr("x1", x(0))
+        .attr("y1", y(0))
+        .attr("x2", x(parity))
+        .attr("y2", y(parity));
+    }
 
     // Area, not radius, carries the volume metric.
     const maxSize = Math.max(...players.map((p) => p.size), 1);
@@ -380,6 +453,7 @@
   }
 
   function tone(player) {
+    if (state.tab === "defence") return "#3ddc97";
     const band = Math.max(0.15, player.x * 0.1);
     if (player.delta > band) return "#3ecf8e";
     if (player.delta < -band) return "#ef7a72";
@@ -389,12 +463,18 @@
   function showTip(event, player, metric) {
     const per90 = state.per90 ? " / 90" : "";
     const digits = state.per90 ? 2 : metric.digits;
+    const extra =
+      state.tab === "defence"
+        ? `Clean sheets: ${format(player.CS, 0)}<br>`
+        : `Shots on target: ${format(player.SoT, 0)}<br>Chances created: ${format(player.CC, 0)}<br>`;
+    const delta =
+      metric.parity
+        ? `${player.delta >= 0 ? "Over" : "Under"} by ${format(Math.abs(player.delta), 2)}<br>`
+        : "";
     els.tip.innerHTML = `<strong>${escapeHtml(player.player_name)} · ${escapeHtml(player.team_short)}</strong>
       ${escapeHtml(metric.actualName)}${per90}: ${format(player.y, digits)}<br>
       ${escapeHtml(metric.expectedName)}${per90}: ${format(player.x, 2)}<br>
-      ${player.delta >= 0 ? "Over" : "Under"} by ${format(Math.abs(player.delta), 2)}<br>
-      Shots on target: ${format(player.SoT, 0)}<br>
-      Chances created: ${format(player.CC, 0)}<br>
+      ${delta}${extra}
       <span>${player.apps} apps · ${format(player.minutes, 0)} mins · ${format(player.minutes / player.apps, 0)} mins/app</span>`;
     els.tip.hidden = false;
     els.tip.style.left = `${Math.min(window.innerWidth - 295, event.clientX + 14)}px`;

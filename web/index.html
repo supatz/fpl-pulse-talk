@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FPL Pulse Talk</title>
-  <link rel="stylesheet" href="./styles.css?v=16" />
+  <link rel="stylesheet" href="./styles.css?v=17" />
   <link rel="stylesheet" href="./understat-shots.css?v=16" />
 </head>
 <body>
@@ -15,7 +15,13 @@
     <aside class="sidebar" id="sidebar" data-name="nav.shell">
       <div class="sidebar-head">
         <div class="brand" data-name="nav.brand">
-          <img class="brand-logo" src="./assets/fpl-pulse-logo.png" alt="FPL Pulse Talk microphone logo" />
+          <span class="brand-pulse" aria-hidden="true">
+            <svg viewBox="0 0 48 48" class="pulse-mark">
+              <circle class="pulse-ring" cx="24" cy="24" r="17" />
+              <circle class="pulse-core" cx="24" cy="24" r="6" />
+              <path class="pulse-ecg" d="M7 24h7l3-9 5 18 3-9h16" />
+            </svg>
+          </span>
           <div class="brand-copy">
             <div class="brand-line">
               <strong>FPL Pulse Talk</strong>
@@ -406,15 +412,20 @@
         <section class="page" id="page-insights-player-performance" hidden>
           <div class="page-head">
             <div class="name-row" data-name="insights.player_performance.title"><h1>Player performances</h1></div>
-            <p class="lede">FPL-Core output against the matching expected model. Dots above the diagonal are overperforming, below it are underperforming. Default is the top 20 by the actual measure; widen to 30 or 40 from the filter.</p>
+            <p class="lede">Three scatters from the same FPL-Core window: Attack (output vs model), Defence (DefCon vs xGI), and Finishing (xGOT vs xG). Attack and Finishing use a shared scale and a dashed parity line. Defence uses independent axes. Default is the top 20; widen to 30 or 40 from the filter.</p>
           </div>
           <div class="perf" id="perf-root">
+            <div class="perf-tabs" role="tablist" aria-label="Performance views" data-name="player_performance.tabs">
+              <button type="button" class="group-chip on" data-perf-tab="attack" role="tab" aria-selected="true">Attack</button>
+              <button type="button" class="group-chip" data-perf-tab="defence" role="tab" aria-selected="false">Defence</button>
+              <button type="button" class="group-chip" data-perf-tab="finishing" role="tab" aria-selected="false">Finishing</button>
+            </div>
             <section class="perf-controls" aria-label="Player performance filters" data-name="player_performance.controls">
               <label class="perf-field" data-name="player_performance.controls.season">
                 <span>Season</span>
                 <select id="perf-season"></select>
               </label>
-              <label class="perf-field" data-name="player_performance.controls.metric">
+              <label class="perf-field" id="perf-metric-field" data-name="player_performance.controls.metric">
                 <span>Metric</span>
                 <select id="perf-metric">
                   <option value="G">Goals vs xG</option>
@@ -489,12 +500,23 @@
       </footer>
     </div>
     <button type="button" class="nav-scrim" id="nav-scrim" hidden aria-label="Close menu"></button>
+    <button type="button" class="player-drawer-scrim" id="player-drawer-scrim" hidden aria-label="Close player drawer"></button>
+    <aside id="player-drawer" class="player-drawer" hidden data-name="players.drawer">
+      <div class="player-drawer-head">
+        <div>
+          <h2 id="player-drawer-title">Player</h2>
+          <p id="player-drawer-meta" class="player-drawer-meta"></p>
+        </div>
+        <button type="button" class="ghost" id="player-drawer-close">Close</button>
+      </div>
+      <div id="player-drawer-body" data-name="players.drawer.body"></div>
+    </aside>
   </div>
   <script src="./vendor/d3.min.js"></script>
   <script src="./team-colors.js?v=1"></script>
   <script src="./understat-shots.js?v=17"></script>
   <script src="./fpl-treemap.js?v=8"></script>
-  <script src="./player-performance.js?v=9"></script>
-  <script type="module" src="./app.js?v=10"></script>
+  <script src="./player-performance.js?v=10"></script>
+  <script type="module" src="./app.js?v=11"></script>
 </body>
 </html>

@@ -23,11 +23,12 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Player map | Curated under `data/pl_merge/maps/player_map.csv`. Fuzzy is a proposal; overrides win. Do not join on season-scoped FPL `player_id`. |
 | Insights → Understat | Same shell (`#insights-understat`). Match timing = shots × FPL GW. Attack tempo = season `attackSpeed` ribbons (`us_team_attack_speed.json`). Standalone `web/understat-shots.html` remains. |
 | FPL treemap | Separate `#insights-fpl-treemap` page below Understat. One nested treemap like Understat: club blocks sized by the club total of the Size / sort measure, player tiles nested inside. Top 10 / All / custom teams. Position filter = All / MID / ATT / DEF + GK. Goals shows G and xG on tiles/headers; SoT and npxG stay in the tooltip. A shows A, CC; xGI shows xGI, xG; DC shows DC, CS. No drawer. Shares `web/team-colors.js`. |
-| Player performances | `#insights-player-performance`. FPL-Core scatter of actual vs expected: G vs xG and A vs xA only. Default top 20 by the actual measure; filter also offers 30 and 40. Position filter = All / MID / ATT / DEF + GK. Dashed parity line, green over / red under / grey within the band. Per 90 and 45+ mins-per-appearance are checkboxes. Both axes share one zero-based scale. Bubble area = SoT for goals, CC for assists, always raw totals. Tooltip always lists SoT and CC. |
+| Player performances | `#insights-player-performance`. Tabs: **Attack** (G vs xG / A vs xA, shared scale, parity line, SoT/CC bubbles), **Defence** (DefCon vs xGI, independent axes, bubble = clean sheets), **Finishing** (xGOT vs xG, shared scale, parity line, bubble = SoT). Same season / position / GW / Per 90 / 45+ filters. Default top 20. |
 | Sidebar | Children of a nav parent are indented with a left guide rule (`.nav-kids`). Collapsed rail still hides them entirely. |
 | Local preview | `scripts/serve.command` (double-click) or `.venv/bin/python serve.py --port N`. Port defaults to 8765; `serve.py` has no persistent port setting. |
 | DefCon | `defcon` prefers upstream match-level `defensive_contributions`; when blank (2026-27 on) it derives CBIT for defenders, CBIT + recoveries for MID/FWD, and 0 for GK, using `coalesce(tackles, tackles_won)`. Derivation reproduces FPL gameweek totals exactly. |
-| Branding | Sidebar uses the supplied transparent-background logo and links the X icon to `https://x.com/fpl_pulse_talk`. |
+| Branding | Sidebar mark is an animated pulse (ECG + beating ring), not the PNG logo. The X icon still links to `https://x.com/fpl_pulse_talk`. |
+| Players table drawer | Clicking a name on Attackers / Defenders / GK opens a side drawer of that player’s gameweeks for the **currently visible** metric columns, plus Total and Per 90 footer rows. Points/CS are one figure per GW. |
 | Metric controls | Metric-group chips are always visible; there is no redundant “More metrics” toggle. |
 | Understat CSS | Scoped under `.us-shots`. Site-wide accent green (`#3ddc97`) lives in `web/styles.css`. |
 | Refresh | `refresh.command` opens the menu: 1 dataset, 2 git push, 3 both. Dataset = FPL → Understat → PL merge/roster → both serving layers. Publish is `git add -A` + commit + push so Netlify redeploys. Non-tty runs (launchd) still fall through to dataset only. |
@@ -44,6 +45,14 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-09-30 — Player GW drawer, performance tabs, pulse mark
+
+**Choice:** Player names on Attackers / Defenders / GK open a drawer of gameweek rows for the visible metrics, with Total and Per 90 at the foot. Player performances splits into Attack / Defence / Finishing. Sidebar logo is replaced by a beating pulse.
+
+**Why:** GW detail belongs on the player row, not a separate page. Defence and finishing need their own scatters without cloning the filter bar. The pulse is the brand mark.
+
+**Where:** `web/player-drawer.js`, `web/components.js`, `web/player-performance.js`, `web/index.html`, `web/styles.css`.
 
 ### 2026-09-20 — Position filters on both FPL insight charts
 
