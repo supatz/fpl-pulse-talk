@@ -1,6 +1,6 @@
 # Understat masters — data dictionary (samples)
 
-Generated `2026-09-30T14:53:19Z`.
+Generated `2026-10-12T08:28:05Z`.
 
 FPL dimensions on the **site** come from FPL sources. These tables hold Understat metrics.
 Team-facing derived tables are joined to FPL `team_code` via `data/understat/maps/team_map.csv`.
@@ -45,72 +45,72 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 ```json
 [
   {
-    "match_id": "31229",
+    "match_id": "31238",
     "understat_season": "2026",
     "season": "2026-2027",
     "league": "EPL",
     "is_result": true,
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "home_team_id": "228",
-    "away_team_id": "89",
-    "home_team": "Fulham",
-    "away_team": "Manchester United",
-    "home_short": "FLH",
-    "away_short": "MUN",
-    "home_goals": 1.0,
-    "away_goals": 1.0,
-    "home_xg": 1.7172,
-    "away_xg": 2.1245,
-    "forecast_w": 0.2919,
-    "forecast_d": 0.2282,
-    "forecast_l": 0.4799,
-    "ingested_at_utc": "2026-09-30T14:53:17Z",
-    "source": "understat.com"
-  },
-  {
-    "match_id": "31222",
-    "understat_season": "2026",
-    "season": "2026-2027",
-    "league": "EPL",
-    "is_result": true,
-    "kickoff_raw": "2026-09-20 13:00:00",
-    "home_team_id": "88",
-    "away_team_id": "77",
-    "home_team": "Manchester City",
-    "away_team": "Sunderland",
-    "home_short": "MCI",
-    "away_short": "SUN",
-    "home_goals": 5.0,
-    "away_goals": 3.0,
-    "home_xg": 2.6686,
-    "away_xg": 3.1066,
-    "forecast_w": 0.3014,
-    "forecast_d": 0.2268,
-    "forecast_l": 0.4718,
-    "ingested_at_utc": "2026-09-30T14:53:17Z",
-    "source": "understat.com"
-  },
-  {
-    "match_id": "31225",
-    "understat_season": "2026",
-    "season": "2026-2027",
-    "league": "EPL",
-    "is_result": true,
-    "kickoff_raw": "2026-09-20 13:00:00",
-    "home_team_id": "245",
-    "away_team_id": "78",
-    "home_team": "Leeds",
-    "away_team": "Crystal Palace",
-    "home_short": "LED",
-    "away_short": "CRY",
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "home_team_id": "87",
+    "away_team_id": "88",
+    "home_team": "Liverpool",
+    "away_team": "Manchester City",
+    "home_short": "LIV",
+    "away_short": "MCI",
     "home_goals": 0.0,
-    "away_goals": 0.0,
-    "home_xg": 1.0855,
-    "away_xg": 1.1291,
-    "forecast_w": 0.3359,
-    "forecast_d": 0.3093,
-    "forecast_l": 0.3548,
-    "ingested_at_utc": "2026-09-30T14:53:17Z",
+    "away_goals": 3.0,
+    "home_xg": 0.7592,
+    "away_xg": 1.587,
+    "forecast_w": 0.1275,
+    "forecast_d": 0.2459,
+    "forecast_l": 0.6266,
+    "ingested_at_utc": "2026-10-12T08:27:58Z",
+    "source": "understat.com"
+  },
+  {
+    "match_id": "31236",
+    "understat_season": "2026",
+    "season": "2026-2027",
+    "league": "EPL",
+    "is_result": true,
+    "kickoff_raw": "2026-10-11 13:00:00",
+    "home_team_id": "78",
+    "away_team_id": "249",
+    "home_team": "Crystal Palace",
+    "away_team": "Nottingham Forest",
+    "home_short": "CRY",
+    "away_short": "NOT",
+    "home_goals": 3.0,
+    "away_goals": 1.0,
+    "home_xg": 2.2481,
+    "away_xg": 3.7638,
+    "forecast_w": 0.1433,
+    "forecast_d": 0.1562,
+    "forecast_l": 0.7005,
+    "ingested_at_utc": "2026-10-12T08:27:58Z",
+    "source": "understat.com"
+  },
+  {
+    "match_id": "31237",
+    "understat_season": "2026",
+    "season": "2026-2027",
+    "league": "EPL",
+    "is_result": true,
+    "kickoff_raw": "2026-10-11 13:00:00",
+    "home_team_id": "91",
+    "away_team_id": "72",
+    "home_team": "Hull",
+    "away_team": "Everton",
+    "home_short": "HUL",
+    "away_short": "EVE",
+    "home_goals": 2.0,
+    "away_goals": 2.0,
+    "home_xg": 1.5325,
+    "away_xg": 2.7959,
+    "forecast_w": 0.134,
+    "forecast_d": 0.1825,
+    "forecast_l": 0.6835,
+    "ingested_at_utc": "2026-10-12T08:27:58Z",
     "source": "understat.com"
   }
 ]
@@ -121,7 +121,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per shot  
 **What:** Atomic fact: situation, last_action, coords, zone, player  
-**Rows:** 10,922
+**Rows:** 11,161
 
 ### Headers
 
@@ -187,7 +187,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "y": 0.699,
     "shot_zone": "outside_box",
     "is_goal": false,
-    "ingested_at_utc": "2026-09-30T14:52:54Z",
+    "ingested_at_utc": "2026-10-12T08:27:09Z",
     "source": "understat.com"
   },
   {
@@ -217,7 +217,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "y": 0.313,
     "shot_zone": "penalty_area",
     "is_goal": false,
-    "ingested_at_utc": "2026-09-30T14:52:54Z",
+    "ingested_at_utc": "2026-10-12T08:27:09Z",
     "source": "understat.com"
   },
   {
@@ -247,7 +247,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "y": 0.505,
     "shot_zone": "penalty_area",
     "is_goal": false,
-    "ingested_at_utc": "2026-09-30T14:52:54Z",
+    "ingested_at_utc": "2026-10-12T08:27:09Z",
     "source": "understat.com"
   }
 ]
@@ -258,7 +258,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team per match  
 **What:** PPDA, deep completions, match xG/xGA from team history  
-**Rows:** 860
+**Rows:** 878
 
 ### Headers
 
@@ -310,121 +310,121 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
   {
     "understat_season": "2026",
     "season": "2026-2027",
-    "team_id": "89",
-    "team_title": "Manchester United",
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "is_home": false,
-    "h_a": "a",
-    "result": "d",
-    "scored": 1.0,
-    "conceded": 1.0,
-    "xg": 2.1245,
-    "xga": 1.7172,
-    "npxg": 2.1245,
-    "npxga": 1.7172,
-    "npxgd": 0.4073,
-    "xpts": 1.6679,
-    "deep": 15.0,
-    "deep_allowed": 5.0,
-    "ppda_att": 281.0,
-    "ppda_def": 14.0,
-    "ppda": 20.0714,
-    "ppda_allowed_att": 281.0,
-    "ppda_allowed_def": 18.0,
-    "ppda_allowed": 15.6111,
-    "wins_cum": 0.0,
-    "draws_cum": 1.0,
-    "losses_cum": 0.0,
-    "pts_cum": 1.0,
-    "match_id": "31229",
-    "opponent_id": "228",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
-    "ingested_at_utc": "2026-09-30T14:53:07Z",
-    "source": "understat.com"
-  },
-  {
-    "understat_season": "2026",
-    "season": "2026-2027",
-    "team_id": "228",
-    "team_title": "Fulham",
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "is_home": true,
-    "h_a": "h",
-    "result": "d",
-    "scored": 1.0,
-    "conceded": 1.0,
-    "xg": 1.7172,
-    "xga": 2.1245,
-    "npxg": 1.7172,
-    "npxga": 2.1245,
-    "npxgd": -0.4073,
-    "xpts": 1.1039,
-    "deep": 5.0,
-    "deep_allowed": 15.0,
-    "ppda_att": 281.0,
-    "ppda_def": 18.0,
-    "ppda": 15.6111,
-    "ppda_allowed_att": 281.0,
-    "ppda_allowed_def": 14.0,
-    "ppda_allowed": 20.0714,
-    "wins_cum": 0.0,
-    "draws_cum": 1.0,
-    "losses_cum": 0.0,
-    "pts_cum": 1.0,
-    "match_id": "31229",
-    "opponent_id": "89",
-    "team_code": 54,
-    "team": "Fulham",
-    "team_short": "FUL",
-    "opponent_code": 1,
-    "opponent": "Man Utd",
-    "opponent_short": "MUN",
-    "ingested_at_utc": "2026-09-30T14:53:07Z",
-    "source": "understat.com"
-  },
-  {
-    "understat_season": "2026",
-    "season": "2026-2027",
-    "team_id": "73",
-    "team_title": "Bournemouth",
-    "kickoff_raw": "2026-09-20 13:00:00",
+    "team_id": "87",
+    "team_title": "Liverpool",
+    "kickoff_raw": "2026-10-11 15:30:00",
     "is_home": true,
     "h_a": "h",
     "result": "l",
     "scored": 0.0,
-    "conceded": 1.0,
-    "xg": 0.9447,
-    "xga": 1.2912,
-    "npxg": 0.9447,
-    "npxga": 1.2912,
-    "npxgd": -0.3465,
-    "xpts": 1.0417,
-    "deep": 8.0,
-    "deep_allowed": 8.0,
-    "ppda_att": 237.0,
-    "ppda_def": 21.0,
-    "ppda": 11.2857,
-    "ppda_allowed_att": 174.0,
+    "conceded": 3.0,
+    "xg": 0.7592,
+    "xga": 1.587,
+    "npxg": 0.7592,
+    "npxga": 1.587,
+    "npxgd": -0.8279,
+    "xpts": 0.6284,
+    "deep": 3.0,
+    "deep_allowed": 11.0,
+    "ppda_att": 322.0,
+    "ppda_def": 32.0,
+    "ppda": 10.0625,
+    "ppda_allowed_att": 158.0,
     "ppda_allowed_def": 18.0,
-    "ppda_allowed": 9.6667,
+    "ppda_allowed": 8.7778,
     "wins_cum": 0.0,
     "draws_cum": 0.0,
     "losses_cum": 1.0,
     "pts_cum": 0.0,
-    "match_id": "31228",
+    "match_id": "31238",
+    "opponent_id": "88",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
+    "ingested_at_utc": "2026-10-12T08:27:47Z",
+    "source": "understat.com"
+  },
+  {
+    "understat_season": "2026",
+    "season": "2026-2027",
+    "team_id": "88",
+    "team_title": "Manchester City",
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "is_home": false,
+    "h_a": "a",
+    "result": "w",
+    "scored": 3.0,
+    "conceded": 0.0,
+    "xg": 1.587,
+    "xga": 0.7592,
+    "npxg": 1.587,
+    "npxga": 0.7592,
+    "npxgd": 0.8279,
+    "xpts": 2.1257,
+    "deep": 11.0,
+    "deep_allowed": 3.0,
+    "ppda_att": 158.0,
+    "ppda_def": 18.0,
+    "ppda": 8.7778,
+    "ppda_allowed_att": 322.0,
+    "ppda_allowed_def": 32.0,
+    "ppda_allowed": 10.0625,
+    "wins_cum": 1.0,
+    "draws_cum": 0.0,
+    "losses_cum": 0.0,
+    "pts_cum": 3.0,
+    "match_id": "31238",
     "opponent_id": "87",
-    "team_code": 91,
-    "team": "Bournemouth",
-    "team_short": "BOU",
+    "team_code": 43,
+    "team": "Man City",
+    "team_short": "MCI",
     "opponent_code": 14,
     "opponent": "Liverpool",
     "opponent_short": "LIV",
-    "ingested_at_utc": "2026-09-30T14:53:07Z",
+    "ingested_at_utc": "2026-10-12T08:27:47Z",
+    "source": "understat.com"
+  },
+  {
+    "understat_season": "2026",
+    "season": "2026-2027",
+    "team_id": "72",
+    "team_title": "Everton",
+    "kickoff_raw": "2026-10-11 13:00:00",
+    "is_home": false,
+    "h_a": "a",
+    "result": "d",
+    "scored": 2.0,
+    "conceded": 2.0,
+    "xg": 2.7959,
+    "xga": 1.5325,
+    "npxg": 2.7959,
+    "npxga": 1.5325,
+    "npxgd": 1.2634,
+    "xpts": 2.233,
+    "deep": 8.0,
+    "deep_allowed": 10.0,
+    "ppda_att": 142.0,
+    "ppda_def": 20.0,
+    "ppda": 7.1,
+    "ppda_allowed_att": 341.0,
+    "ppda_allowed_def": 25.0,
+    "ppda_allowed": 13.64,
+    "wins_cum": 0.0,
+    "draws_cum": 1.0,
+    "losses_cum": 0.0,
+    "pts_cum": 1.0,
+    "match_id": "31237",
+    "opponent_id": "91",
+    "team_code": 11,
+    "team": "Everton",
+    "team_short": "EVE",
+    "opponent_code": 88,
+    "opponent": "Hull City",
+    "opponent_short": "HUL",
+    "ingested_at_utc": "2026-10-12T08:27:47Z",
     "source": "understat.com"
   }
 ]
@@ -435,7 +435,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × season × context_family × context_value  
 **What:** Season splits incl. attackSpeed (for + against)  
-**Rows:** 1,327
+**Rows:** 1,338
 
 ### Headers
 
@@ -485,7 +485,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "team_code": 43,
     "team": "Man City",
     "team_short": "MCI",
-    "ingested_at_utc": "2026-09-30T14:53:05Z",
+    "ingested_at_utc": "2026-10-12T08:27:40Z",
     "source": "understat.com"
   },
   {
@@ -507,7 +507,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "team_code": 91,
     "team": "Bournemouth",
     "team_short": "BOU",
-    "ingested_at_utc": "2026-09-30T14:53:05Z",
+    "ingested_at_utc": "2026-10-12T08:27:40Z",
     "source": "understat.com"
   },
   {
@@ -529,7 +529,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "team_code": 8,
     "team": "Chelsea",
     "team_short": "CHE",
-    "ingested_at_utc": "2026-09-30T14:53:05Z",
+    "ingested_at_utc": "2026-10-12T08:27:40Z",
     "source": "understat.com"
   }
 ]
@@ -540,7 +540,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per player per season  
 **What:** Understat season totals (xg_chain, etc.)  
-**Rows:** 958
+**Rows:** 971
 
 ### Headers
 
@@ -594,7 +594,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "xg_buildup": 5.1635,
     "yellow_cards": 2.0,
     "red_cards": 0.0,
-    "ingested_at_utc": "2026-09-30T14:53:06Z",
+    "ingested_at_utc": "2026-10-12T08:27:41Z",
     "source": "understat.com"
   },
   {
@@ -618,7 +618,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "xg_buildup": 4.9276,
     "yellow_cards": 7.0,
     "red_cards": 0.0,
-    "ingested_at_utc": "2026-09-30T14:53:06Z",
+    "ingested_at_utc": "2026-10-12T08:27:41Z",
     "source": "understat.com"
   },
   {
@@ -642,7 +642,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "xg_buildup": 7.8937,
     "yellow_cards": 7.0,
     "red_cards": 0.0,
-    "ingested_at_utc": "2026-09-30T14:53:06Z",
+    "ingested_at_utc": "2026-10-12T08:27:41Z",
     "source": "understat.com"
   }
 ]
@@ -653,7 +653,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per player × finished match  
 **What:** Understat match roster used by the PL merge  
-**Rows:** 13,028
+**Rows:** 13,311
 
 ### Headers
 
@@ -721,7 +721,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "red_cards": 0.0,
     "roster_in": "0",
     "roster_out": "0",
-    "ingested_at_utc": "2026-09-30T14:53:17Z",
+    "ingested_at_utc": "2026-10-12T08:27:58Z",
     "source": "understat.com"
   },
   {
@@ -752,7 +752,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "red_cards": 0.0,
     "roster_in": "731582",
     "roster_out": "0",
-    "ingested_at_utc": "2026-09-30T14:53:17Z",
+    "ingested_at_utc": "2026-10-12T08:27:58Z",
     "source": "understat.com"
   },
   {
@@ -783,7 +783,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "red_cards": 0.0,
     "roster_in": "0",
     "roster_out": "0",
-    "ingested_at_utc": "2026-09-30T14:53:17Z",
+    "ingested_at_utc": "2026-10-12T08:27:58Z",
     "source": "understat.com"
   }
 ]
@@ -794,7 +794,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × match × situation  
 **What:** Shots/goals/us_xg created (for)  
-**Rows:** 2,313
+**Rows:** 2,364
 
 ### Headers
 
@@ -823,57 +823,57 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 [
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "situation": "FromCorner",
-    "is_home": false,
-    "shots": 11,
-    "goals": 0,
-    "us_xg": 0.3543,
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
-    "us_xg_per_shot": 0.0322,
-    "built_at_utc": "2026-09-30T14:53:19Z"
-  },
-  {
-    "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "situation": "OpenPlay",
-    "is_home": false,
-    "shots": 18,
-    "goals": 1,
-    "us_xg": 1.7862,
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
-    "us_xg_per_shot": 0.0992,
-    "built_at_utc": "2026-09-30T14:53:19Z"
-  },
-  {
-    "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "situation": "SetPiece",
-    "is_home": false,
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "situation": "DirectFreekick",
+    "is_home": true,
     "shots": 1,
     "goals": 0,
-    "us_xg": 0.0448,
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
-    "us_xg_per_shot": 0.0448,
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "us_xg": 0.0742,
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
+    "us_xg_per_shot": 0.0742,
+    "built_at_utc": "2026-10-12T08:28:04Z"
+  },
+  {
+    "season": "2026-2027",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "situation": "FromCorner",
+    "is_home": true,
+    "shots": 2,
+    "goals": 0,
+    "us_xg": 0.2335,
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
+    "us_xg_per_shot": 0.1168,
+    "built_at_utc": "2026-10-12T08:28:04Z"
+  },
+  {
+    "season": "2026-2027",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "situation": "OpenPlay",
+    "is_home": true,
+    "shots": 9,
+    "goals": 0,
+    "us_xg": 0.3641,
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
+    "us_xg_per_shot": 0.0405,
+    "built_at_utc": "2026-10-12T08:28:04Z"
   }
 ]
 ```
@@ -883,7 +883,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × match × situation  
 **What:** Shots/goals/us_xga faced (against)  
-**Rows:** 2,313
+**Rows:** 2,364
 
 ### Headers
 
@@ -912,57 +912,57 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 [
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "situation": "OpenPlay",
-    "is_home": false,
-    "shots_faced": 12,
-    "goals_against": 0,
-    "us_xga": 1.7172,
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
-    "us_xga_per_shot": 0.1431,
-    "built_at_utc": "2026-09-30T14:53:19Z"
-  },
-  {
-    "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 54,
-    "team": "Fulham",
-    "team_short": "FUL",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
     "situation": "FromCorner",
     "is_home": true,
-    "shots_faced": 11,
+    "shots_faced": 2,
     "goals_against": 0,
-    "us_xga": 0.3543,
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "opponent_code": 1,
-    "opponent": "Man Utd",
-    "opponent_short": "MUN",
-    "us_xga_per_shot": 0.0322,
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "us_xga": 0.0469,
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
+    "us_xga_per_shot": 0.0234,
+    "built_at_utc": "2026-10-12T08:28:04Z"
   },
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 54,
-    "team": "Fulham",
-    "team_short": "FUL",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
     "situation": "OpenPlay",
     "is_home": true,
-    "shots_faced": 18,
-    "goals_against": 1,
-    "us_xga": 1.7862,
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "opponent_code": 1,
-    "opponent": "Man Utd",
-    "opponent_short": "MUN",
-    "us_xga_per_shot": 0.0992,
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "shots_faced": 13,
+    "goals_against": 3,
+    "us_xga": 1.5458,
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
+    "us_xga_per_shot": 0.1189,
+    "built_at_utc": "2026-10-12T08:28:04Z"
+  },
+  {
+    "season": "2026-2027",
+    "match_id": "31238",
+    "team_code": 43,
+    "team": "Man City",
+    "team_short": "MCI",
+    "situation": "DirectFreekick",
+    "is_home": false,
+    "shots_faced": 1,
+    "goals_against": 0,
+    "us_xga": 0.0742,
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "opponent_code": 14,
+    "opponent": "Liverpool",
+    "opponent_short": "LIV",
+    "us_xga_per_shot": 0.0742,
+    "built_at_utc": "2026-10-12T08:28:04Z"
   }
 ]
 ```
@@ -972,7 +972,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × match × situation × window  
 **What:** Rolling for-metrics over last 5/10/15 matches  
-**Rows:** 12,900
+**Rows:** 13,170
 
 ### Headers
 
@@ -1002,60 +1002,60 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 [
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "is_home": true,
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
     "situation": "DirectFreekick",
-    "shots": 3,
+    "shots": 5,
     "goals": 0,
-    "us_xg": 0.1237,
+    "us_xg": 0.2711,
     "window": 5,
-    "built_at_utc": "2026-09-30T14:53:19Z",
-    "us_xg_per_shot": 0.0412
+    "built_at_utc": "2026-10-12T08:28:04Z",
+    "us_xg_per_shot": 0.0542
   },
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "is_home": true,
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
     "situation": "FromCorner",
-    "shots": 21,
+    "shots": 6,
     "goals": 0,
-    "us_xg": 0.8621,
+    "us_xg": 0.9617,
     "window": 5,
-    "built_at_utc": "2026-09-30T14:53:19Z",
-    "us_xg_per_shot": 0.0411
+    "built_at_utc": "2026-10-12T08:28:04Z",
+    "us_xg_per_shot": 0.1603
   },
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "is_home": true,
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
     "situation": "OpenPlay",
-    "shots": 86,
-    "goals": 6,
-    "us_xg": 9.0233,
+    "shots": 49,
+    "goals": 5,
+    "us_xg": 4.5915,
     "window": 5,
-    "built_at_utc": "2026-09-30T14:53:19Z",
-    "us_xg_per_shot": 0.1049
+    "built_at_utc": "2026-10-12T08:28:04Z",
+    "us_xg_per_shot": 0.0937
   }
 ]
 ```
@@ -1065,7 +1065,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × match × situation × window  
 **What:** Rolling against-metrics over last 5/10/15 matches  
-**Rows:** 12,900
+**Rows:** 13,170
 
 ### Headers
 
@@ -1095,60 +1095,60 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 [
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "is_home": true,
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
     "situation": "DirectFreekick",
-    "shots_faced": 0,
+    "shots_faced": 1,
     "goals_against": 0,
-    "us_xga": 0.0,
+    "us_xga": 0.0517,
     "window": 5,
-    "built_at_utc": "2026-09-30T14:53:19Z",
-    "us_xga_per_shot": null
+    "built_at_utc": "2026-10-12T08:28:04Z",
+    "us_xga_per_shot": 0.0517
   },
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "is_home": true,
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
     "situation": "FromCorner",
-    "shots_faced": 7,
-    "goals_against": 1,
-    "us_xga": 1.2485,
+    "shots_faced": 8,
+    "goals_against": 0,
+    "us_xga": 0.3228,
     "window": 5,
-    "built_at_utc": "2026-09-30T14:53:19Z",
-    "us_xga_per_shot": 0.1784
+    "built_at_utc": "2026-10-12T08:28:04Z",
+    "us_xga_per_shot": 0.0404
   },
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "is_home": false,
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "opponent_short": "FUL",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "is_home": true,
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "opponent_short": "MCI",
     "situation": "OpenPlay",
-    "shots_faced": 40,
-    "goals_against": 5,
-    "us_xga": 5.2617,
+    "shots_faced": 50,
+    "goals_against": 4,
+    "us_xga": 5.8097,
     "window": 5,
-    "built_at_utc": "2026-09-30T14:53:19Z",
-    "us_xga_per_shot": 0.1315
+    "built_at_utc": "2026-10-12T08:28:04Z",
+    "us_xga_per_shot": 0.1162
   }
 ]
 ```
@@ -1158,7 +1158,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per team × match × shot_zone  
 **What:** Box / six-yard / outside-box  
-**Rows:** 2,348
+**Rows:** 2,399
 
 ### Headers
 
@@ -1185,51 +1185,51 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 [
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
     "shot_zone": "outside_box",
-    "is_home": false,
-    "shots": 12,
-    "goals": 1,
-    "us_xg": 0.3088,
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "is_home": true,
+    "shots": 7,
+    "goals": 0,
+    "us_xg": 0.2481,
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "built_at_utc": "2026-10-12T08:28:04Z"
   },
   {
     "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "shot_zone": "own_goal",
-    "is_home": false,
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "shot_zone": "penalty_area",
+    "is_home": true,
+    "shots": 5,
+    "goals": 0,
+    "us_xg": 0.3828,
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "built_at_utc": "2026-10-12T08:28:04Z"
+  },
+  {
+    "season": "2026-2027",
+    "match_id": "31238",
+    "team_code": 14,
+    "team": "Liverpool",
+    "team_short": "LIV",
+    "shot_zone": "six_yard",
+    "is_home": true,
     "shots": 1,
     "goals": 0,
-    "us_xg": 0.0,
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "built_at_utc": "2026-09-30T14:53:19Z"
-  },
-  {
-    "season": "2026-2027",
-    "match_id": "31229",
-    "team_code": 1,
-    "team": "Man Utd",
-    "team_short": "MUN",
-    "shot_zone": "penalty_area",
-    "is_home": false,
-    "shots": 14,
-    "goals": 0,
-    "us_xg": 1.6635,
-    "kickoff_raw": "2026-09-20 15:30:00",
-    "opponent_code": 54,
-    "opponent": "Fulham",
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "us_xg": 0.1329,
+    "kickoff_raw": "2026-10-11 15:30:00",
+    "opponent_code": 43,
+    "opponent": "Man City",
+    "built_at_utc": "2026-10-12T08:28:04Z"
   }
 ]
 ```
@@ -1239,7 +1239,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per understat player × season × situation  
 **What:** Taker volume/quality by situation (player_code applied at serving)  
-**Rows:** 1,658
+**Rows:** 1,702
 
 ### Headers
 
@@ -1272,7 +1272,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "primary_team_id": "88",
     "sample_last_action": "Cross",
     "us_xg_per_shot": 0.2218,
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "built_at_utc": "2026-10-12T08:28:04Z"
   },
   {
     "season": "2025-2026",
@@ -1285,7 +1285,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "primary_team_id": "244",
     "sample_last_action": "Rebound",
     "us_xg_per_shot": 0.2401,
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "built_at_utc": "2026-10-12T08:28:04Z"
   },
   {
     "season": "2025-2026",
@@ -1298,7 +1298,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "primary_team_id": "71",
     "sample_last_action": "Pass",
     "us_xg_per_shot": 0.2143,
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "built_at_utc": "2026-10-12T08:28:04Z"
   }
 ]
 ```
@@ -1308,7 +1308,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
 
 **Grain:** 1 row per creator name × season × situation  
 **What:** Assisted-shot xG by situation (player_code applied at serving)  
-**Rows:** 1,265
+**Rows:** 1,295
 
 ### Headers
 
@@ -1335,7 +1335,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "assisted_goals": 10,
     "assisted_us_xg": 11.8637,
     "player_id": "1228",
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "built_at_utc": "2026-10-12T08:28:04Z"
   },
   {
     "season": "2025-2026",
@@ -1345,7 +1345,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "assisted_goals": 11,
     "assisted_us_xg": 9.0433,
     "player_id": "8094",
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "built_at_utc": "2026-10-12T08:28:04Z"
   },
   {
     "season": "2025-2026",
@@ -1355,7 +1355,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "assisted_goals": 5,
     "assisted_us_xg": 7.2875,
     "player_id": "8981",
-    "built_at_utc": "2026-09-30T14:53:19Z"
+    "built_at_utc": "2026-10-12T08:28:04Z"
   }
 ]
 ```
