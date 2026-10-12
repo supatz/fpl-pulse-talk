@@ -193,7 +193,6 @@ main { max-width: 1240px; margin: 0 auto; padding: 28px 22px 72px; }
 }
 
 .fpl-map { position: relative; }
-.perf-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
 .player-link {
   appearance: none; border: 0; padding: 0; background: none;
   color: var(--accent-2); font: inherit; cursor: pointer; text-align: left;
@@ -245,6 +244,69 @@ main { max-width: 1240px; margin: 0 auto; padding: 28px 22px 72px; }
 .fpl-map-gw input, .perf-gw input[type="range"] { width: 104px; }
 .perf-check { cursor: pointer; }
 .perf-check input { accent-color: var(--accent); }
+.perf-exclude { align-items: flex-start; }
+.perf-ms {
+  position: relative;
+  min-width: 200px;
+  display: grid;
+  gap: 4px;
+}
+.perf-ms input[type="search"] {
+  width: 100%;
+  height: 32px;
+  box-sizing: border-box;
+  color: var(--ink);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 12px;
+}
+.perf-chips { display: flex; flex-wrap: wrap; gap: 4px; max-width: 280px; }
+.perf-chip {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 3px 8px;
+  font: 600 11px/1.3 var(--font);
+  cursor: pointer;
+}
+.perf-chip:hover { border-color: var(--accent); color: var(--accent); }
+.perf-ms-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  width: min(280px, 80vw);
+  max-height: 220px;
+  overflow: auto;
+  background: var(--panel, var(--paper));
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.perf-ms-menu[hidden] { display: none !important; }
+.perf-ms-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.perf-ms-opt span { color: var(--muted); margin-left: auto; }
+.perf-ms-opt:hover { background: rgba(255,255,255,0.05); }
+.perf-ms-opt input { accent-color: var(--accent); }
+.perf-ms-empty { padding: 8px; color: var(--muted); font-size: 12px; }
 .fpl-map-team-filter {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; flex: 1 1 100%;
   padding-top: 8px; border-top: 1px solid var(--line);

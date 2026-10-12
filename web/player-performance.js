@@ -1,75 +1,43 @@
-/* FPL-Core scatter: actual output against the matching expected model. */
+/* FPL-Core scatter: free X / Y / bubble / sort metrics. */
 (() => {
   const DATA_URL = "./data/players_matches.json";
   const MIN_MINUTES_PER_APP = 45;
-  const METRICS = {
-    G: {
-      actual: "G",
-      expected: "xG",
-      size: "SoT",
-      label: "Goals vs xG",
-      actualName: "Goals",
-      expectedName: "Expected goals",
-      sizeName: "Shots on target",
-      digits: 0,
-      sharedScale: true,
-      parity: true,
-    },
-    A: {
-      actual: "A",
-      expected: "xA",
-      size: "CC",
-      label: "Assists vs xA",
-      actualName: "Assists",
-      expectedName: "Expected assists",
-      sizeName: "Chances created",
-      digits: 0,
-      sharedScale: true,
-      parity: true,
-    },
-    DEF: {
-      actual: "DefCon",
-      expected: "xGI",
-      size: "CS",
-      label: "DefCon vs xGI",
-      actualName: "Defensive contributions",
-      expectedName: "Expected goal involvements",
-      sizeName: "Clean sheets",
-      digits: 2,
-      sharedScale: false,
-      parity: false,
-    },
-    FIN: {
-      actual: "xGOT",
-      expected: "xG",
-      size: "SoT",
-      label: "xGOT vs xG",
-      actualName: "Expected goals on target",
-      expectedName: "Expected goals",
-      sizeName: "Shots on target",
-      digits: 2,
-      sharedScale: true,
-      parity: true,
-    },
-  };
 
-  const TABS = {
-    attack: { metric: null, defaultMetric: "G" },
-    defence: { metric: "DEF" },
-    finishing: { metric: "FIN" },
-  };
+  /** Selectable metrics — field is the players_matches key (or derived). */
+  const METRICS = [
+    { id: "G", field: "G", short: "G", name: "Goals", digits: 0 },
+    { id: "xG", field: "xG", short: "xG", name: "Expected goals", digits: 2 },
+    { id: "A", field: "A", short: "A", name: "Assists", digits: 0 },
+    { id: "xA", field: "xA", short: "xA", name: "Expected assists", digits: 2 },
+    { id: "GI", field: "GI", short: "GI", name: "Goal involvements", digits: 0 },
+    { id: "xGI", field: "xGI", short: "xGI", name: "Expected goal involvements", digits: 2 },
+    { id: "DC", field: "DefCon", short: "DC", name: "Defensive contributions", digits: 0 },
+    { id: "CS", field: "cs", short: "CS", name: "Clean sheets", digits: 0 },
+    { id: "xGOT", field: "xGOT", short: "xGOT", name: "Expected goals on target", digits: 2 },
+    { id: "CC", field: "CC", short: "CC", name: "Chances created", digits: 0 },
+    { id: "npxG", field: "npxG", short: "npxG", name: "Non-penalty xG", digits: 2 },
+    { id: "Sh", field: "Sh", short: "Sh", name: "Shots", digits: 0 },
+    { id: "SoT", field: "SoT", short: "SoT", name: "Shots on target", digits: 0 },
+    { id: "TiB", field: "TiB", short: "TiB", name: "Touches in box", digits: 0 },
+  ];
+  const METRIC_BY_ID = Object.fromEntries(METRICS.map((m) => [m.id, m]));
+  const SUM_FIELDS = ["G", "A", "xG", "xA", "xGI", "DefCon", "cs", "xGOT", "CC", "npxG", "Sh", "SoT", "TiB"];
 
   const state = {
     rows: [],
     season: null,
-    tab: "attack",
-    metric: "G",
+    xMetric: "xG",
+    yMetric: "G",
+    sizeMetric: "SoT",
+    sortMetric: "xGI",
     topN: 20,
     position: "ALL",
     gwFrom: 1,
     gwTo: 38,
     per90: false,
     min45: false,
+    exclude: new Set(), // player keys (pc || pid)
+    excludeQuery: "",
   };
   const els = {};
   let started = false;
@@ -88,6 +56,7 @@
     }
     started = true;
     bindEvents();
+    fillMetricSelects();
     try {
       const res = await fetch(DATA_URL, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -103,9 +72,10 @@
   function bindEls() {
     els.root = $("perf-root");
     els.season = $("perf-season");
-    els.metric = $("perf-metric");
-    els.metricField = $("perf-metric-field");
-    els.tabs = [...document.querySelectorAll("[data-perf-tab]")];
+    els.xMetric = $("perf-x");
+    els.yMetric = $("perf-y");
+    els.sizeMetric = $("perf-size");
+    els.sortMetric = $("perf-sort");
     els.top = $("perf-top");
     els.position = $("perf-position");
     els.gwFrom = $("perf-gw-from");
@@ -113,23 +83,55 @@
     els.gwLabel = $("perf-gw-label");
     els.per90 = $("perf-per90");
     els.min45 = $("perf-min45");
+    els.excludeSearch = $("perf-exclude-search");
+    els.excludeMenu = $("perf-exclude-menu");
+    els.excludeChips = $("perf-exclude-chips");
+    els.excludeDrop = $("perf-exclude-drop");
     els.status = $("perf-status");
     els.chart = $("perf-chart");
     els.tip = $("perf-tip");
   }
 
+  function fillMetricSelects() {
+    const opts = METRICS.map(
+      (m) => `<option value="${m.id}">${m.short} — ${m.name}</option>`
+    ).join("");
+    for (const [el, value] of [
+      [els.xMetric, state.xMetric],
+      [els.yMetric, state.yMetric],
+      [els.sizeMetric, state.sizeMetric],
+      [els.sortMetric, state.sortMetric],
+    ]) {
+      if (!el) continue;
+      el.innerHTML = opts;
+      el.value = value;
+    }
+  }
+
   function bindEvents() {
     els.season.addEventListener("change", () => {
       state.season = els.season.value;
+      state.exclude.clear();
+      state.excludeQuery = "";
+      if (els.excludeSearch) els.excludeSearch.value = "";
       syncGwBounds(true);
       render();
     });
-    els.metric.addEventListener("change", () => {
-      state.metric = els.metric.value;
+    els.xMetric.addEventListener("change", () => {
+      state.xMetric = els.xMetric.value;
       render();
     });
-    els.tabs.forEach((btn) => {
-      btn.addEventListener("click", () => setTab(btn.dataset.perfTab));
+    els.yMetric.addEventListener("change", () => {
+      state.yMetric = els.yMetric.value;
+      render();
+    });
+    els.sizeMetric.addEventListener("change", () => {
+      state.sizeMetric = els.sizeMetric.value;
+      render();
+    });
+    els.sortMetric.addEventListener("change", () => {
+      state.sortMetric = els.sortMetric.value;
+      render();
     });
     els.top.addEventListener("change", () => {
       state.topN = Number(els.top.value) || 20;
@@ -158,6 +160,20 @@
       state.min45 = els.min45.checked;
       render();
     });
+
+    els.excludeSearch?.addEventListener("focus", () => openExcludeMenu());
+    els.excludeSearch?.addEventListener("input", () => {
+      state.excludeQuery = els.excludeSearch.value.trim();
+      openExcludeMenu();
+      paintExcludeMenu(aggregatePool());
+    });
+    els.excludeSearch?.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeExcludeMenu();
+    });
+    document.addEventListener("click", (e) => {
+      if (!els.excludeDrop?.contains(e.target)) closeExcludeMenu();
+    });
+
     window.addEventListener("resize", () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
@@ -205,24 +221,8 @@
     els.gwLabel.textContent = `GW ${state.gwFrom}–${state.gwTo}`;
   }
 
-  function setTab(tab) {
-    state.tab = TABS[tab] ? tab : "attack";
-    if (state.tab === "attack") {
-      if (!["G", "A"].includes(state.metric)) state.metric = "G";
-      if (els.metric) els.metric.value = state.metric;
-    }
-    els.tabs.forEach((btn) => {
-      const on = btn.dataset.perfTab === state.tab;
-      btn.classList.toggle("on", on);
-      btn.setAttribute("aria-selected", on ? "true" : "false");
-    });
-    if (els.metricField) els.metricField.hidden = state.tab !== "attack";
-    render();
-  }
-
-  function activeMetric() {
-    const tab = TABS[state.tab] || TABS.attack;
-    return METRICS[tab.metric || state.metric] || METRICS.G;
+  function metric(id) {
+    return METRIC_BY_ID[id] || METRIC_BY_ID.G;
   }
 
   function num(value) {
@@ -237,7 +237,12 @@
     return position === "Defender" || position === "Goalkeeper";
   }
 
-  function aggregate(metric) {
+  function playerKey(r) {
+    return String(r.pc || r.pid);
+  }
+
+  /** Aggregate every metric for the current window (before top-N / exclude). */
+  function aggregatePool() {
     const rows = seasonRows().filter(
       (r) =>
         Number(r.gw) >= state.gwFrom &&
@@ -247,71 +252,139 @@
     );
     const players = new Map();
     for (const r of rows) {
-      const key = r.pc || r.pid;
+      const key = playerKey(r);
       if (!players.has(key)) {
-        players.set(key, {
+        const base = {
+          key,
           player_name: r.n,
           team_short: r.tm || "—",
           position: r.pos,
           apps: 0,
           minutes: 0,
-          actual: 0,
-          expected: 0,
-          SoT: 0,
-          CC: 0,
-          CS: 0,
-          DefCon: 0,
-          xGI: 0,
-          xGOT: 0,
-          xG: 0,
-        });
+        };
+        for (const f of SUM_FIELDS) base[f] = 0;
+        base.GI = 0;
+        players.set(key, base);
       }
       const p = players.get(key);
       p.apps += 1;
       p.minutes += num(r.m);
       p.team_short = r.tm || p.team_short;
-      p.actual += num(r[metric.actual]);
-      p.expected += num(r[metric.expected]);
-      p.SoT += num(r.SoT);
-      p.CC += num(r.CC);
-      p.CS += num(r.cs);
-      p.DefCon += num(r.DefCon);
-      p.xGI += num(r.xGI);
-      p.xGOT += num(r.xGOT);
-      p.xG += num(r.xG);
+      p.player_name = r.n || p.player_name;
+      for (const f of SUM_FIELDS) p[f] += num(r[f]);
+      p.GI += num(r.G) + num(r.A);
     }
-    return [...players.values()];
+    let list = [...players.values()].filter((p) => p.minutes > 0);
+    if (state.min45) {
+      list = list.filter((p) => p.minutes / p.apps >= MIN_MINUTES_PER_APP);
+    }
+    return list;
   }
 
-  function shape(metric) {
-    let players = aggregate(metric).filter((p) => p.minutes > 0);
-    if (state.min45) {
-      players = players.filter((p) => p.minutes / p.apps >= MIN_MINUTES_PER_APP);
-    }
+  function metricTotal(player, m) {
+    return num(player[m.field]);
+  }
+
+  function shape() {
+    const xM = metric(state.xMetric);
+    const yM = metric(state.yMetric);
+    const sizeM = metric(state.sizeMetric);
+    const sortM = metric(state.sortMetric);
+
+    let players = aggregatePool().filter((p) => !state.exclude.has(p.key));
     for (const p of players) {
       const factor = state.per90 ? 90 / p.minutes : 1;
-      p.x = p.expected * factor;
-      p.y = p.actual * factor;
-      p.delta = p.y - p.x;
-      p.size = p[metric.size];
+      p.x = metricTotal(p, xM) * factor;
+      p.y = metricTotal(p, yM) * factor;
+      // Bubble stays on raw totals so cameo rates do not inflate markers.
+      p.size = metricTotal(p, sizeM);
+      p.sortVal = metricTotal(p, sortM) * factor;
     }
     return players
-      .filter((p) => p.x > 0 || p.y > 0)
-      .sort((a, b) => b.y - a.y || b.x - a.x)
+      .filter((p) => p.x > 0 || p.y > 0 || p.size > 0 || p.sortVal > 0)
+      .sort((a, b) => b.sortVal - a.sortVal || b.y - a.y || b.x - a.x)
       .slice(0, state.topN);
+  }
+
+  function openExcludeMenu() {
+    if (els.excludeMenu) els.excludeMenu.hidden = false;
+  }
+
+  function closeExcludeMenu() {
+    if (els.excludeMenu) els.excludeMenu.hidden = true;
+  }
+
+  function paintExcludeChips() {
+    if (!els.excludeChips) return;
+    if (!state.exclude.size) {
+      els.excludeChips.innerHTML = "";
+      return;
+    }
+    const pool = aggregatePool();
+    const byKey = new Map(pool.map((p) => [p.key, p]));
+    els.excludeChips.innerHTML = [...state.exclude]
+      .map((key) => {
+        const p = byKey.get(key);
+        const label = p ? `${shortName(p.player_name)} (${p.team_short})` : key;
+        return `<button type="button" class="perf-chip" data-key="${escapeAttr(key)}" title="Remove">${escapeHtml(label)} ×</button>`;
+      })
+      .join("");
+    els.excludeChips.querySelectorAll(".perf-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.exclude.delete(btn.dataset.key);
+        paintExcludeChips();
+        paintExcludeMenu(aggregatePool());
+        render();
+      });
+    });
+  }
+
+  function paintExcludeMenu(pool) {
+    if (!els.excludeMenu) return;
+    const q = state.excludeQuery.toLowerCase();
+    const matches = pool
+      .filter((p) => {
+        if (!q) return true;
+        const hay = `${p.player_name} ${p.team_short}`.toLowerCase();
+        return hay.includes(q);
+      })
+      .sort((a, b) => a.player_name.localeCompare(b.player_name))
+      .slice(0, 40);
+    if (!matches.length) {
+      els.excludeMenu.innerHTML = `<div class="perf-ms-empty">No players match</div>`;
+      return;
+    }
+    els.excludeMenu.innerHTML = matches
+      .map((p) => {
+        const on = state.exclude.has(p.key);
+        return `<label class="perf-ms-opt"><input type="checkbox" data-key="${escapeAttr(p.key)}" ${on ? "checked" : ""}/> ${escapeHtml(p.player_name)} <span>${escapeHtml(p.team_short)}</span></label>`;
+      })
+      .join("");
+    els.excludeMenu.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("change", () => {
+        if (input.checked) state.exclude.add(input.dataset.key);
+        else state.exclude.delete(input.dataset.key);
+        paintExcludeChips();
+        render();
+      });
+    });
   }
 
   function render() {
     if (!state.rows.length || !els.chart?.clientWidth) return;
-    const metric = activeMetric();
-    const players = shape(metric);
+    paintExcludeChips();
+    if (els.excludeMenu && !els.excludeMenu.hidden) paintExcludeMenu(aggregatePool());
+
+    const xM = metric(state.xMetric);
+    const yM = metric(state.yMetric);
+    const sizeM = metric(state.sizeMetric);
+    const sortM = metric(state.sortMetric);
+    const players = shape();
     const unit = state.per90 ? " per 90" : "";
-    const minsNote = state.min45 ? ` · 45+ mins per appearance` : "";
-    // Bubbles stay on raw volume; a per-90 rate would inflate cameo appearances.
-    const sizeNote = `${metric.sizeName.toLowerCase()}${state.per90 ? " (total, not per 90)" : ""}`;
+    const minsNote = state.min45 ? " · 45+ mins/app" : "";
+    const exclNote = state.exclude.size ? ` · ${state.exclude.size} excluded` : "";
     const position = els.position.options[els.position.selectedIndex]?.textContent || "All positions";
-    const lineNote = metric.parity ? " · above the line = overperforming" : "";
-    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · top ${players.length} by ${metric.actualName.toLowerCase()}${unit}${minsNote}${lineNote} · bubble size = ${sizeNote} · FPL-Core`;
+    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · top ${players.length} by ${sortM.short}${unit}${minsNote}${exclNote} · X ${xM.short} · Y ${yM.short} · bubble ${sizeM.short}${state.per90 ? " (total)" : ""} · FPL-Core`;
 
     const width = els.chart.clientWidth || 900;
     const height = els.chart.clientHeight || 600;
@@ -324,55 +397,44 @@
         .attr("y", height / 2)
         .attr("text-anchor", "middle")
         .attr("fill", "#8fa59a")
-        .text("No players match this season, gameweek range and minutes filter.");
+        .text("No players match these filters.");
       return;
     }
-    draw(svg, players, metric, width, height);
+    draw(svg, players, { xM, yM, sizeM, sortM }, width, height);
   }
 
-  function draw(svg, players, metric, width, height) {
+  function draw(svg, players, metrics, width, height) {
+    const { xM, yM, sizeM } = metrics;
     const margin = { top: 22, right: 28, bottom: 46, left: 58 };
     const plotW = Math.max(10, width - margin.left - margin.right);
     const plotH = Math.max(10, height - margin.top - margin.bottom);
     const xTop = Math.max(...players.map((p) => p.x), 0.01) * 1.08;
     const yTop = Math.max(...players.map((p) => p.y), 0.01) * 1.08;
-    const shared = metric.sharedScale ? Math.max(xTop, yTop) : null;
-    const x = d3.scaleLinear().domain([0, shared ?? xTop]).nice().range([0, plotW]);
-    const y = d3.scaleLinear().domain([0, shared ?? yTop]).nice().range([plotH, 0]);
+    const x = d3.scaleLinear().domain([0, xTop]).nice().range([0, plotW]);
+    const y = d3.scaleLinear().domain([0, yTop]).nice().range([plotH, 0]);
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
     g.append("g")
       .attr("class", "perf-grid")
       .attr("transform", `translate(0,${plotH})`)
-      .call(d3.axisBottom(x).ticks(7).tickSize(-plotH).tickFormat(d3.format("~g")));
+      .call(axisTicks(d3.axisBottom(x).tickSize(-plotH), x, xM));
     g.append("g")
       .attr("class", "perf-grid")
-      .call(axisTicks(d3.axisLeft(y).tickSize(-plotW), y, metric));
+      .call(axisTicks(d3.axisLeft(y).tickSize(-plotW), y, yM));
 
-    const per90 = state.per90 ? " per 90" : "";
+    const per90 = state.per90 ? " /90" : "";
     g.append("text")
       .attr("class", "perf-axis-title")
       .attr("x", plotW / 2)
       .attr("y", plotH + 38)
       .attr("text-anchor", "middle")
-      .text(`${metric.expectedName}${per90}`);
+      .text(`${xM.short}${per90}`);
     g.append("text")
       .attr("class", "perf-axis-title")
       .attr("transform", `translate(-42,${plotH / 2}) rotate(-90)`)
       .attr("text-anchor", "middle")
-      .text(`${metric.actualName}${per90}`);
+      .text(`${yM.short}${per90}`);
 
-    if (metric.parity) {
-      const parity = Math.min(x.domain()[1], y.domain()[1]);
-      g.append("line")
-        .attr("class", "perf-parity")
-        .attr("x1", x(0))
-        .attr("y1", y(0))
-        .attr("x2", x(parity))
-        .attr("y2", y(parity));
-    }
-
-    // Area, not radius, carries the volume metric.
     const maxSize = Math.max(...players.map((p) => p.size), 1);
     const radius = d3.scaleSqrt().domain([0, maxSize]).range([5, 17]);
     const dots = g
@@ -385,17 +447,16 @@
     dots
       .append("circle")
       .attr("r", (d) => radius(d.size))
-      .attr("fill", (d) => tone(d))
+      .attr("fill", "#3ddc97")
       .attr("fill-opacity", 0.85)
-      .on("mousemove", (event, d) => showTip(event, d, metric))
+      .on("mousemove", (event, d) => showTip(event, d, metrics))
       .on("mouseleave", hideTip);
 
     placeLabels(dots, players, x, y, plotW, plotH, radius);
   }
 
-  /** Counts get whole-number ticks; per-90 rates keep d3's defaults. */
-  function axisTicks(axis, scale, metric) {
-    if (state.per90 || metric.digits > 0) return axis.ticks(7).tickFormat(d3.format("~g"));
+  function axisTicks(axis, scale, m) {
+    if (state.per90 || m.digits > 0) return axis.ticks(7).tickFormat(d3.format("~g"));
     const [lo, hi] = scale.domain();
     const steps = Math.max(1, Math.ceil((hi - lo) / 7));
     const ticks = [];
@@ -403,10 +464,8 @@
     return axis.tickValues(ticks).tickFormat(d3.format("d"));
   }
 
-  /** Nudge labels to the first free slot around the dot so names stay readable. */
   function placeLabels(dots, players, x, y, plotW, plotH, radius) {
     const OVERHANG = 26;
-    // Reserve the bubbles first so labels never land on a marker.
     const boxes = players.map((p) => ({
       x0: x(p.x) - radius(p.size) - 2,
       x1: x(p.x) + radius(p.size) + 2,
@@ -452,29 +511,15 @@
     });
   }
 
-  function tone(player) {
-    if (state.tab === "defence") return "#3ddc97";
-    const band = Math.max(0.15, player.x * 0.1);
-    if (player.delta > band) return "#3ecf8e";
-    if (player.delta < -band) return "#ef7a72";
-    return "#9fb0bd";
-  }
-
-  function showTip(event, player, metric) {
-    const per90 = state.per90 ? " / 90" : "";
-    const digits = state.per90 ? 2 : metric.digits;
-    const extra =
-      state.tab === "defence"
-        ? `Clean sheets: ${format(player.CS, 0)}<br>`
-        : `Shots on target: ${format(player.SoT, 0)}<br>Chances created: ${format(player.CC, 0)}<br>`;
-    const delta =
-      metric.parity
-        ? `${player.delta >= 0 ? "Over" : "Under"} by ${format(Math.abs(player.delta), 2)}<br>`
-        : "";
+  function showTip(event, player, metrics) {
+    const { xM, yM, sizeM, sortM } = metrics;
+    const per90 = state.per90 ? " /90" : "";
+    const xDigits = state.per90 ? 2 : xM.digits;
+    const yDigits = state.per90 ? 2 : yM.digits;
+    const sortDigits = state.per90 ? 2 : sortM.digits;
     els.tip.innerHTML = `<strong>${escapeHtml(player.player_name)} · ${escapeHtml(player.team_short)}</strong>
-      ${escapeHtml(metric.actualName)}${per90}: ${format(player.y, digits)}<br>
-      ${escapeHtml(metric.expectedName)}${per90}: ${format(player.x, 2)}<br>
-      ${delta}${extra}
+      ${xM.short}${per90}: ${format(player.x, xDigits)} · ${yM.short}${per90}: ${format(player.y, yDigits)}<br>
+      ${sizeM.short}: ${format(player.size, sizeM.digits)} · ${sortM.short}${per90}: ${format(player.sortVal, sortDigits)}<br>
       <span>${player.apps} apps · ${format(player.minutes, 0)} mins · ${format(player.minutes / player.apps, 0)} mins/app</span>`;
     els.tip.hidden = false;
     els.tip.style.left = `${Math.min(window.innerWidth - 295, event.clientX + 14)}px`;
@@ -492,7 +537,6 @@
   function shortName(name) {
     const full = String(name || "—").trim();
     const last = full.split(/\s+/).at(-1) || "—";
-    // Some FPL names end in an initial ("Rodrigo G."); the surname alone would be meaningless.
     return last.length <= 2 || last.endsWith(".") ? full : last;
   }
 
@@ -502,6 +546,10 @@
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;");
+  }
+
+  function escapeAttr(value) {
+    return escapeHtml(value).replaceAll("'", "&#39;");
   }
 
   window.initPlayerPerformance = init;

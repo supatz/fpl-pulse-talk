@@ -412,29 +412,35 @@
         <section class="page" id="page-insights-player-performance" hidden>
           <div class="page-head">
             <div class="name-row" data-name="insights.player_performance.title"><h1>Player performances</h1></div>
-            <p class="lede">Three scatters from the same FPL-Core window: Attack (output vs model), Defence (DefCon vs xGI), and Finishing (xGOT vs xG). Attack and Finishing use a shared scale and a dashed parity line. Defence uses independent axes. Default is the top 20; widen to 30 or 40 from the filter.</p>
+            <p class="lede" data-name="insights.player_performance.lede">Choose X, Y, bubble size and sort metric, then take the top players in that window. Starting combinations — <strong>Goal threat:</strong> xG vs G · xGI vs GI · xG vs xGOT · TiB vs xG. <strong>Creativity:</strong> xA vs A · xA vs CC. <strong>Defence:</strong> DC vs CS · DC vs xGI.</p>
           </div>
           <div class="perf" id="perf-root">
-            <div class="perf-tabs" role="tablist" aria-label="Performance views" data-name="player_performance.tabs">
-              <button type="button" class="group-chip on" data-perf-tab="attack" role="tab" aria-selected="true">Attack</button>
-              <button type="button" class="group-chip" data-perf-tab="defence" role="tab" aria-selected="false">Defence</button>
-              <button type="button" class="group-chip" data-perf-tab="finishing" role="tab" aria-selected="false">Finishing</button>
-            </div>
             <section class="perf-controls" aria-label="Player performance filters" data-name="player_performance.controls">
               <label class="perf-field" data-name="player_performance.controls.season">
                 <span>Season</span>
                 <select id="perf-season"></select>
               </label>
-              <label class="perf-field" id="perf-metric-field" data-name="player_performance.controls.metric">
-                <span>Metric</span>
-                <select id="perf-metric">
-                  <option value="G">Goals vs xG</option>
-                  <option value="A">Assists vs xA</option>
-                </select>
+              <label class="perf-field" data-name="player_performance.controls.x">
+                <span>X axis</span>
+                <select id="perf-x"></select>
+              </label>
+              <label class="perf-field" data-name="player_performance.controls.y">
+                <span>Y axis</span>
+                <select id="perf-y"></select>
+              </label>
+              <label class="perf-field" data-name="player_performance.controls.bubble">
+                <span>Bubble size</span>
+                <select id="perf-size"></select>
+              </label>
+              <label class="perf-field" data-name="player_performance.controls.sort">
+                <span>Sort by</span>
+                <select id="perf-sort"></select>
               </label>
               <label class="perf-field" data-name="player_performance.controls.top">
                 <span>Players</span>
                 <select id="perf-top">
+                  <option value="10">Top 10</option>
+                  <option value="15">Top 15</option>
                   <option value="20" selected>Top 20</option>
                   <option value="30">Top 30</option>
                   <option value="40">Top 40</option>
@@ -456,6 +462,14 @@
                   <label class="range-leg">To<input id="perf-gw-to" type="range" min="1" max="38" value="38" /></label>
                 </div>
               </div>
+              <div class="perf-field perf-exclude" data-name="player_performance.controls.exclude">
+                <span>Exclude</span>
+                <div class="perf-ms" id="perf-exclude-drop">
+                  <input type="search" id="perf-exclude-search" placeholder="Search players…" autocomplete="off" />
+                  <div class="perf-chips" id="perf-exclude-chips"></div>
+                  <div class="perf-ms-menu" id="perf-exclude-menu" hidden></div>
+                </div>
+              </div>
               <label class="perf-field perf-check" data-name="player_performance.controls.per90">
                 <input id="perf-per90" type="checkbox" />
                 <span>Per 90</span>
@@ -466,7 +480,7 @@
               </label>
             </section>
             <p class="perf-status" id="perf-status" data-name="player_performance.status"></p>
-            <div class="perf-chart" id="perf-chart" role="img" aria-label="Player output against expected" data-name="player_performance.chart"></div>
+            <div class="perf-chart" id="perf-chart" role="img" aria-label="Player performance scatter" data-name="player_performance.chart"></div>
             <div class="fpl-map-tip" id="perf-tip" hidden></div>
           </div>
         </section>
@@ -516,7 +530,7 @@
   <script src="./team-colors.js?v=1"></script>
   <script src="./understat-shots.js?v=17"></script>
   <script src="./fpl-treemap.js?v=8"></script>
-  <script src="./player-performance.js?v=10"></script>
+  <script src="./player-performance.js?v=11"></script>
   <script type="module" src="./app.js?v=11"></script>
 </body>
 </html>

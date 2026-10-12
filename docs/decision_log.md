@@ -23,7 +23,7 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Player map | Curated under `data/pl_merge/maps/player_map.csv`. Fuzzy is a proposal; overrides win. Do not join on season-scoped FPL `player_id`. |
 | Insights → Understat | Same shell (`#insights-understat`). Match timing = shots × FPL GW. Attack tempo = season `attackSpeed` ribbons (`us_team_attack_speed.json`). Standalone `web/understat-shots.html` remains. |
 | FPL treemap | Separate `#insights-fpl-treemap` page below Understat. One nested treemap like Understat: club blocks sized by the club total of the Size / sort measure, player tiles nested inside. Top 10 / All / custom teams. Position filter = All / MID / ATT / DEF + GK. Goals shows G and xG on tiles/headers; SoT and npxG stay in the tooltip. A shows A, CC; xGI shows xGI, xG; DC shows DC, CS. No drawer. Shares `web/team-colors.js`. |
-| Player performances | `#insights-player-performance`. Tabs: **Attack** (G vs xG / A vs xA, shared scale, parity line, SoT/CC bubbles), **Defence** (DefCon vs xGI, independent axes, bubble = clean sheets), **Finishing** (xGOT vs xG, shared scale, parity line, bubble = SoT). Same season / position / GW / Per 90 / 45+ filters. Default top 20. |
+| Player performances | `#insights-player-performance`. Free X / Y / bubble / sort metrics (G, xG, A, xA, GI, xGI, DC, CS, xGOT, CC, npxG, Sh, SoT, TiB). Top 10–40 by sort metric. Exclude multi-search. Season / position / GW / Per 90 / 45+ kept. Axes auto-scale; bubble size stays on raw totals under Per 90. |
 | Sidebar | Children of a nav parent are indented with a left guide rule (`.nav-kids`). Collapsed rail still hides them entirely. |
 | Local preview | `scripts/serve.command` (double-click) or `.venv/bin/python serve.py --port N`. Port defaults to 8765; `serve.py` has no persistent port setting. |
 | DefCon | `defcon` prefers upstream match-level `defensive_contributions`; when blank (2026-27 on) it derives CBIT for defenders, CBIT + recoveries for MID/FWD, and 0 for GK, using `coalesce(tackles, tackles_won)`. Derivation reproduces FPL gameweek totals exactly. |
@@ -45,6 +45,16 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-10-13 — Player performances free axes
+
+**Choice:** Drop Attack / Defence / Finishing tabs. User picks X, Y, bubble size and sort metric from a shared list (G, xG, A, xA, GI, xGI, DC, CS, xGOT, CC, npxG, Sh, SoT, TiB); top-N includes 10 and 15; typeable multi-exclude; axes auto-scale independently. Tooltip shows short names for the four selected metrics plus apps / mins / mins/app. Lede lists Goal threat / Creativity / Defence combinations.
+
+**Why:** Pre-set scatters were too narrow; free axes cover threat, creativity and defence on one page.
+
+**Where:** `web/player-performance.js`, `web/index.html`, `web/styles.css`.
+
+**Drawbacks:** No parity line (axes are independent). Bubble size stays on raw totals under Per 90.
 
 ### 2026-09-30 — Player GW drawer, performance tabs, pulse mark
 

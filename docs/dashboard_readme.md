@@ -44,7 +44,7 @@ Hard-refresh after serving-shape changes. Understat JS/CSS/JSON use `?v=` cache 
 | `#insights-players` / `#insights-matches` | Merged player-match; `#insights-teams` remains FPL team-match |
 | `#insights-understat` | Player treemap + situation / last-action / against. Player drawer = that player’s shot mix; Against is team-only |
 | `#insights-fpl-treemap` | Nested player treemap with Top 10 / All / custom teams and All / MID / ATT / DEF + GK positions: club block area and tile area both follow the Size / sort measure. Goals shows G/xG on tiles (SoT/npxG in tooltip); A shows A/CC; xGI shows xGI/xG; DC shows DC/CS. Top six positive players per team; tooltip only, no drawer. Club colours come from `web/team-colors.js` |
-| `#insights-player-performance` | Tabs: Attack (G vs xG / A vs xA), Defence (DefCon vs xGI, bubble = CS), Finishing (xGOT vs xG, bubble = SoT). Shared filters. Attack/Finishing share one scale and a parity line; Defence uses independent axes |
+| `#insights-player-performance` | Free X / Y / bubble / sort metrics; top 10–40; exclude players; season / position / GW / Per 90 / 45+. Axes auto-scale |
 
 Standalone Understat: `web/understat-shots.html`.
 
