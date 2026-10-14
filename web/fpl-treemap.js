@@ -59,6 +59,7 @@
     BCM: { label: "BCM", name: "Big chances missed", short: "Big chance missed (US)", digits: 0 },
   };
   const { teamFill, textOnTeam } = window.TeamColors;
+  const TILE_FONT = "Roboto, Helvetica Neue, Segoe UI, sans-serif";
 
   const state = {
     rows: [],
@@ -116,6 +117,7 @@
     els.teamPills = $("fpl-map-team-pills");
     els.topTeams = $("fpl-map-top-teams");
     els.allTeams = $("fpl-map-all-teams");
+    els.chartDl = $("fpl-map-chart-dl");
   }
 
   function bindEvents() {
@@ -172,12 +174,56 @@
       state.teamMode = "all";
       applyTeamMode();
     });
+    if (els.chartDl && window.ChartExport && !els.chartDl.dataset.bound) {
+      els.chartDl.dataset.bound = "1";
+      window.ChartExport.bindChartDownload(
+        els.chartDl,
+        () => els.chart,
+        () => `fpl-pulse-talk-treemap-${state.metric || "chart"}`,
+        exportCaption
+      );
+    }
     window.addEventListener("resize", () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
         if (!$("page-insights-fpl-treemap")?.hidden) render();
       }, 120);
     });
+  }
+
+  function exportCaption() {
+    const group = METRICS[state.metric] || METRICS.G;
+    const titles = {
+      G: "Who's scoring — and are the chances deserved?",
+      A: "Who's creating the chances and assists?",
+      xGI: "Who's involved in the best chances?",
+      DefCon: "Who's putting in the defensive work?",
+      BigChance: "Who's taking, scoring, or missing the big chances?",
+    };
+    const gloss = [];
+    for (const key of group.show || []) {
+      const f = FIELDS[key];
+      if (f) gloss.push(`${f.label} = ${f.name}`);
+    }
+    const sortField = FIELDS[state.sortMetric];
+    if (sortField) gloss.push(`Tile size = ${sortField.name}`);
+    const pos =
+      state.position === "ALL"
+        ? "All positions"
+        : state.position === "ATT"
+          ? "Forwards"
+          : state.position === "MID"
+            ? "Midfielders"
+            : state.position === "DEF"
+              ? "Defenders"
+              : state.position === "GK"
+                ? "Goalkeepers"
+                : state.position;
+    return {
+      title: titles[state.metric] || group.name,
+      metrics: gloss.join(" · "),
+      meta: [state.season, `GW ${state.gwFrom}–${state.gwTo}`, pos].filter(Boolean).join(" · "),
+    };
   }
 
   function populateSeasons() {
@@ -463,7 +509,7 @@
       .attr("width", (d) => Math.max(0, d.x1 - d.x0 - 6))
       .attr("height", HEADER_H - 6)
       .attr("rx", 8)
-      .attr("fill", (d) => teamFill(d.data.team_short, 0.35))
+      .attr("fill", (d) => teamFill(d.data.team_short, 0.78))
       .attr("pointer-events", "none");
 
     gTeams
@@ -473,7 +519,9 @@
       .attr("class", "fpl-map-team-label")
       .attr("x", (d) => d.x0 + 12)
       .attr("y", (d) => d.y0 + 18)
-      .attr("font-size", 14)
+      .attr("font-family", TILE_FONT)
+      .attr("font-size", 13)
+      .attr("font-weight", 600)
       .attr("fill", (d) => textOnTeam(d.data.team_short))
       .text((d) => d.data.team_short);
 
@@ -484,13 +532,14 @@
       .attr("class", "fpl-map-team-sub")
       .attr("x", (d) => d.x0 + 12)
       .attr("y", (d) => d.y0 + 34)
+      .attr("font-family", TILE_FONT)
       .attr("font-size", 10)
+      .attr("font-weight", 400)
       .attr("fill", (d) => textOnTeam(d.data.team_short))
-      .attr("opacity", 0.85)
       .text((d) =>
         tipKeys(metric, sortKey)
           .filter((key) => metric.show.includes(key) || key === sortKey)
-          .map((key) => `${FIELDS[key].label} ${format(d.data.totals[key], fieldDigits(key))}`)
+          .map((key) => `${FIELDS[key].label} - ${format(d.data.totals[key], fieldDigits(key))}`)
           .join(" · ")
       );
 
@@ -538,31 +587,36 @@
       .on("mousemove", (event) => showTip(event, tile.data, metric, sortKey))
       .on("mouseleave", hideTip);
 
-    // Font scales with metric share within the team (top player largest).
-    const nameFs = Math.max(MIN_FONT, Math.min(MIN_FONT + ratio * 13, w / 4.6, h / 2.6));
-    const valFs = Math.max(MIN_FONT, Math.min(nameFs * 0.72, nameFs - 1));
+    // Name larger/medium weight; metric lines smaller and regular weight.
+    const nameFs = Math.max(MIN_FONT + 1, Math.min(MIN_FONT + ratio * 12, w / 4.8, h / 2.8));
+    const valFs = Math.max(MIN_FONT, Math.min(nameFs * 0.58, nameFs - 3));
     const cx = tile.x0 + w / 2;
     const showVals = h >= nameFs + valFs * Math.min(lines.length, 2) + 6 && w >= 24;
     g.append("text")
+      .attr("class", "fpl-map-player-name")
       .attr("x", cx)
-      .attr("y", showVals ? tile.y0 + h / 2 - valFs : tile.y0 + h / 2 + nameFs * 0.35)
+      .attr("y", showVals ? tile.y0 + h / 2 - valFs * 0.85 : tile.y0 + h / 2 + nameFs * 0.35)
       .attr("text-anchor", "middle")
+      .attr("font-family", TILE_FONT)
       .attr("font-size", nameFs)
-      .attr("font-weight", 600)
+      .attr("font-weight", 500)
       .attr("fill", ink)
       .text(truncate(shortName(tile.data.player_name), Math.max(2, Math.floor(w / (nameFs * 0.55)))));
     if (!showVals) return;
     lines.slice(0, 3).forEach((keys, index) => {
       g.append("text")
+        .attr("class", "fpl-map-player-val")
         .attr("x", cx)
-        .attr("y", tile.y0 + h / 2 + valFs * (0.4 + index * 1.3))
+        .attr("y", tile.y0 + h / 2 + valFs * (0.55 + index * 1.25))
         .attr("text-anchor", "middle")
+        .attr("font-family", TILE_FONT)
         .attr("font-size", valFs)
+        .attr("font-weight", 400)
         .attr("fill", ink)
-        .attr("opacity", index ? 0.75 : 0.9)
+        .attr("opacity", 0.92)
         .text(
           keys
-            .map((key) => `${FIELDS[key].label} ${format(tile.data[key], fieldDigits(key))}`)
+            .map((key) => `${FIELDS[key].label} - ${format(tile.data[key], fieldDigits(key))}`)
             .join(" · ")
         );
     });

@@ -75,12 +75,21 @@ a:hover { text-decoration: underline; }
   transform-origin: 24px 24px;
   animation: pulse-ring 1.2s ease-in-out infinite;
 }
-.pulse-core { fill: var(--accent); }
 .pulse-ecg {
   fill: none; stroke: #e9fffa; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-  stroke-dasharray: 72; stroke-dashoffset: 0;
+  stroke-dasharray: 86; stroke-dashoffset: 0;
   animation: pulse-ecg 1.2s linear infinite;
 }
+.pulse-yoke-outline {
+  fill: none; stroke: #0a1612; stroke-width: 2.7; stroke-linecap: round;
+}
+.pulse-yoke-fill {
+  fill: none; stroke: #3ddc97; stroke-width: 1.55; stroke-linecap: round;
+}
+.pulse-grille {
+  fill: none; stroke: #0a1612; stroke-width: 1.35; stroke-linecap: round; opacity: 0.92;
+}
+.pulse-mic { transform-origin: 24px 24px; }
 @keyframes pulse-beat {
   0%, 100% { transform: scale(1); }
   18% { transform: scale(1.12); }
@@ -93,7 +102,7 @@ a:hover { text-decoration: underline; }
   40% { opacity: 0.2; transform: scale(1.12); }
 }
 @keyframes pulse-ecg {
-  0% { stroke-dashoffset: 72; }
+  0% { stroke-dashoffset: 86; }
   55%, 100% { stroke-dashoffset: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -336,8 +345,15 @@ main { max-width: 1240px; margin: 0 auto; padding: 28px 22px 72px; }
 .fpl-map-tile rect { stroke: rgba(8, 12, 10, 0.45); stroke-width: 1.5; }
 .fpl-map-tile rect:hover { filter: brightness(1.12); }
 .fpl-map-tile text { pointer-events: none; }
-.fpl-map-team-label { font-family: var(--display); font-weight: 700; pointer-events: none; }
-.fpl-map-team-sub { font-family: var(--mono); font-weight: 700; pointer-events: none; }
+.fpl-map-team-label, .fpl-map-team-sub, .fpl-map-tile text, .perf-label {
+  font-family: "Roboto", "Helvetica Neue", "Segoe UI", sans-serif;
+  pointer-events: none;
+  text-rendering: geometricPrecision;
+}
+.fpl-map-team-label { font-weight: 600; }
+.fpl-map-team-sub, .fpl-map-player-val { font-weight: 400; font-variant-numeric: tabular-nums; }
+.fpl-map-player-name { font-weight: 500; }
+.perf-label { fill: var(--ink); font-weight: 500; }
 .perf-chart {
   width: 100%; min-height: 560px; height: min(70vh, 760px);
   padding: 8px 10px; border-radius: calc(var(--radius) + 4px);
@@ -396,6 +412,30 @@ main { max-width: 1240px; margin: 0 auto; padding: 28px 22px 72px; }
 .dual-range { display: grid; gap: 8px; }
 .dual-range input { width: 168px; }
 .range-leg { display: grid; gap: 2px; color: var(--muted); font-size: 11px; }
+
+.chart-dl-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0 4px;
+}
+.chart-dl {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font: 600 12px/1.2 var(--font);
+  cursor: pointer;
+}
+.chart-dl:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.chart-dl:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
 
 /* Two-thumb range (both ends movable) */
 .range-2 {

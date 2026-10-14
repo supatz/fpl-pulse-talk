@@ -69,8 +69,16 @@
   function textOnTeam(short) {
     const [r, g, b] = hexToRgb(teamColor(short));
     const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return lum > 0.58 ? "#1a2420" : "#f4fff8";
+    // Darker ink on pastels; pale ink on slate clubs (e.g. NEW).
+    return lum > 0.58 ? "#0b0f0e" : "#f4fff8";
   }
 
-  window.TeamColors = { PALETTE, TEAM_COLOR_INDEX, teamColor, hexToRgb, teamFill, textOnTeam };
+  window.TeamColors = {
+    PALETTE,
+    TEAM_COLOR_INDEX,
+    teamColor,
+    hexToRgb,
+    teamFill,
+    textOnTeam,
+  };
 })();

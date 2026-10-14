@@ -22,6 +22,7 @@ const TIMING_METRIC_NAMES = {
 
 /** Soft pastel palette from design swatch (16), shared with the FPL treemap. */
 const { PALETTE, TEAM_COLOR_INDEX, teamColor, hexToRgb, teamFill, textOnTeam } = window.TeamColors;
+const TILE_FONT = "Roboto, Helvetica Neue, Segoe UI, sans-serif";
 
 /** Soft categorical palette for mix slices — higher contrast pastels. */
 const SLICE_COLORS = [
@@ -139,6 +140,7 @@ function bindEls() {
   els.drawerBody = $("us-drawer-body");
   els.tip = $("us-tip");
   els.defs = $("us-defs");
+  els.chartDl = $("us-chart-dl");
   els.tabs = [...root.querySelectorAll("[data-view]")];
 }
 
@@ -213,6 +215,16 @@ function bindEvents() {
         else if (state.view === "tempo") renderTempo();
       },
     });
+  }
+  if (els.chartDl && window.ChartExport && !els.chartDl.dataset.bound) {
+    els.chartDl.dataset.bound = "1";
+    window.ChartExport.bindChartDownload(
+      els.chartDl,
+      () =>
+        window.ChartExport.visiblePanel([els.chart, els.matrix, els.timing, els.tempo]),
+      () => `fpl-pulse-talk-understat-${state.view || "chart"}`,
+      exportCaption
+    );
   }
   els.sitToggle.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -510,6 +522,67 @@ function metricShort() {
   return metricLabel();
 }
 
+function metricFullName(key) {
+  const map = {
+    xg: "Expected goals",
+    shots: "Shots",
+    sot: "Shots on target",
+    cc: "Chances created",
+    cc_xg: "Expected goals from assists",
+  };
+  return map[key] || metricLabel();
+}
+
+function exportCaption() {
+  const rate = state.per90 ? " / 90 mins" : "";
+  const short = metricShort().replace(/\/90$/, "");
+  const shotGloss = `${short} = ${metricFullName(state.metric)}${rate}`;
+  const views = {
+    treemap: {
+      title: "Which players drive each team's shot threat?",
+      metrics: `${shotGloss} · Bigger tile = more of this metric`,
+    },
+    situation: {
+      title: "How each team builds its chances — by situation",
+      metrics: shotGloss,
+    },
+    last_action: {
+      title: "What last action sets up each team's shots?",
+      metrics: shotGloss,
+    },
+    against: {
+      title:
+        state.againstDim === "last_action"
+          ? "How teams concede — by the last action against them"
+          : "How teams concede — by situation",
+      metrics: `${shotGloss} · Lower on the chart is better for defence`,
+    },
+    timing: {
+      title: "When in the match teams score and create",
+      metrics: Object.entries(TIMING_METRIC_NAMES)
+        .map(([k, name]) => `${k} = ${name}`)
+        .join(" · "),
+    },
+    tempo: {
+      title: "How quickly teams attack",
+      metrics: "Share of attacks by speed: Fast · Standard · Normal · Slow",
+    },
+  };
+  const cap = views[state.view] || {
+    title: "Shot creation explorer",
+    metrics: shotGloss,
+  };
+  const metaBits = [state.season];
+  if (state.view === "timing" || state.view === "tempo") {
+    metaBits.push(`GW ${state.gwFrom}–${state.gwTo}`);
+  }
+  if (state.view === "timing") {
+    const tm = state.timingMetric;
+    metaBits.push(`${tm} = ${TIMING_METRIC_NAMES[tm] || tm}`);
+  }
+  return { ...cap, meta: metaBits.filter(Boolean).join(" · ") };
+}
+
 function setView(view) {
   const wasAgainst = state.view === "against";
   const wasTiming = state.view === "timing";
@@ -701,7 +774,7 @@ function renderTreemap() {
     .attr("height", HEADER_H - 6)
     .attr("rx", 8)
     .attr("ry", 8)
-    .attr("fill", (d) => teamFill(d.data.team_short, 0.35))
+    .attr("fill", (d) => teamFill(d.data.team_short, 0.78))
     .attr("pointer-events", "none");
 
   gTeams
@@ -711,11 +784,10 @@ function renderTreemap() {
     .attr("class", "team-label")
     .attr("x", (d) => d.x0 + 12)
     .attr("y", (d) => d.y0 + 18)
-    .attr("font-size", 14)
+    .attr("font-family", TILE_FONT)
+    .attr("font-size", 13)
+    .attr("font-weight", 600)
     .attr("fill", (d) => textOnTeam(d.data.team_short))
-    .attr("paint-order", "stroke")
-    .attr("stroke", (d) => (textOnTeam(d.data.team_short) === "#1a2420" ? "rgba(255,255,255,0.35)" : "rgba(8,12,10,0.35)"))
-    .attr("stroke-width", 2.5)
     .text((d) => d.data.team_short);
 
   gTeams
@@ -725,12 +797,10 @@ function renderTreemap() {
     .attr("class", "team-sub")
     .attr("x", (d) => d.x0 + 12)
     .attr("y", (d) => d.y0 + 34)
+    .attr("font-family", TILE_FONT)
     .attr("font-size", 10)
+    .attr("font-weight", 400)
     .attr("fill", (d) => textOnTeam(d.data.team_short))
-    .attr("opacity", 0.85)
-    .attr("paint-order", "stroke")
-    .attr("stroke", (d) => (textOnTeam(d.data.team_short) === "#1a2420" ? "rgba(255,255,255,0.3)" : "rgba(8,12,10,0.3)"))
-    .attr("stroke-width", 2)
     .text((d) => teamMeta(d.data, key));
 
   const gPlayers = svg.append("g");
@@ -760,21 +830,23 @@ function renderTreemap() {
         .on("mousemove", (event) => showTip(event, playerTip(resolvePlayer(d.teamNode.data, d.data), d.teamNode.data)))
         .on("mouseleave", hideTip);
 
-      // Font scales with metric share within the team (top player largest).
+      // Name medium; value smaller / regular.
       const ratio = d.teamMax > 0 ? d.data.value / d.teamMax : 1;
-      const idealName = MIN_FONT + ratio * 13; // ~5→18
-      const tileCap = Math.min(w / 4.2, h / 2.1);
-      const nameFs = Math.max(MIN_FONT, Math.min(idealName, tileCap));
-      const valFs = Math.max(MIN_FONT, Math.min(nameFs * 0.72, nameFs - 1));
+      const idealName = MIN_FONT + ratio * 12;
+      const tileCap = Math.min(w / 4.6, h / 2.4);
+      const nameFs = Math.max(MIN_FONT + 1, Math.min(idealName, tileCap));
+      const valFs = Math.max(MIN_FONT, Math.min(nameFs * 0.58, nameFs - 3));
       const cx = d.x0 + w / 2;
       const showVal = h >= nameFs + valFs + 3 && w >= 18;
 
       g.append("text")
         .attr("class", "player-name")
         .attr("x", cx)
-        .attr("y", showVal ? d.y0 + h / 2 - 1 : d.y0 + h / 2 + nameFs * 0.35)
+        .attr("y", showVal ? d.y0 + h / 2 - valFs * 0.35 : d.y0 + h / 2 + nameFs * 0.35)
         .attr("text-anchor", "middle")
+        .attr("font-family", TILE_FONT)
         .attr("font-size", nameFs)
+        .attr("font-weight", 500)
         .attr("fill", ink)
         .text(truncate(d.data.name, Math.max(2, Math.floor(w / (nameFs * 0.5)))));
 
@@ -784,9 +856,11 @@ function renderTreemap() {
           .attr("x", cx)
           .attr("y", d.y0 + h / 2 + valFs + 1)
           .attr("text-anchor", "middle")
+          .attr("font-family", TILE_FONT)
           .attr("font-size", valFs)
+          .attr("font-weight", 400)
           .attr("fill", ink)
-          .attr("opacity", 0.85)
+          .attr("opacity", 0.92)
           .text(fmt(d.data.value));
       }
     });
@@ -1836,12 +1910,12 @@ function teamMeta(t, key) {
     const v = rows.reduce((a, r) => a + situationCellValue(r, false), 0);
     const sh = rows.reduce((a, r) => a + (r.shots || 0), 0);
     const sot = rows.reduce((a, r) => a + (r.sot || 0), 0);
-    return `${metricShort()} ${fmt(v)} · Sh ${sh} · SoT ${sot}`;
+    return `${metricShort()} - ${fmt(v)} · Sh - ${sh} · SoT - ${sot}`;
   }
-  if (key.startsWith("cc")) return `CC ${fmt(t.cc)} · xG asst ${fmt(t.cc_xg)}`;
-  if (key === "shots" || key === "shots_p90") return `Sh ${fmt(val(t, key))} · SoT ${t.sot || 0}`;
-  if (key === "sot" || key === "sot_p90") return `SoT ${fmt(val(t, key))} · Sh ${t.shots || 0}`;
-  return `xG ${fmt(val(t, key))} · Sh ${t.shots || 0} · SoT ${t.sot || 0}`;
+  if (key.startsWith("cc")) return `CC - ${fmt(t.cc)} · xG asst - ${fmt(t.cc_xg)}`;
+  if (key === "shots" || key === "shots_p90") return `Sh - ${fmt(val(t, key))} · SoT - ${t.sot || 0}`;
+  if (key === "sot" || key === "sot_p90") return `SoT - ${fmt(val(t, key))} · Sh - ${t.shots || 0}`;
+  return `xG - ${fmt(val(t, key))} · Sh - ${t.shots || 0} · SoT - ${t.sot || 0}`;
 }
 
 function teamSolid(short) {

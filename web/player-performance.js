@@ -97,6 +97,7 @@
     els.status = $("perf-status");
     els.chart = $("perf-chart");
     els.tip = $("perf-tip");
+    els.chartDl = $("perf-chart-dl");
   }
 
   function fillMetricSelects() {
@@ -184,6 +185,15 @@
     document.addEventListener("click", (e) => {
       if (!els.excludeDrop?.contains(e.target)) closeExcludeMenu();
     });
+    if (els.chartDl && window.ChartExport && !els.chartDl.dataset.bound) {
+      els.chartDl.dataset.bound = "1";
+      window.ChartExport.bindChartDownload(
+        els.chartDl,
+        () => els.chart,
+        () => `fpl-pulse-talk-performance-${state.xMetric || "x"}-${state.yMetric || "y"}`,
+        exportCaption
+      );
+    }
 
     window.addEventListener("resize", () => {
       clearTimeout(resizeTimer);
@@ -191,6 +201,29 @@
         if (!$("page-insights-player-performance")?.hidden) render();
       }, 120);
     });
+  }
+
+  function exportCaption() {
+    const x = METRIC_BY_ID[state.xMetric] || { short: state.xMetric, name: state.xMetric };
+    const y = METRIC_BY_ID[state.yMetric] || { short: state.yMetric, name: state.yMetric };
+    const size = METRIC_BY_ID[state.sizeMetric] || { short: state.sizeMetric, name: state.sizeMetric };
+    const rate = state.per90 ? " per 90 minutes" : "";
+    const gloss = [
+      `${x.short} = ${x.name}`,
+      `${y.short} = ${y.name}`,
+      `Bubble = ${size.name}`,
+    ];
+    if (state.sortMetric && METRIC_BY_ID[state.sortMetric]) {
+      const sort = METRIC_BY_ID[state.sortMetric];
+      gloss.push(`Ranked by ${sort.name}`);
+    }
+    return {
+      title: `${y.name} vs ${x.name}${rate}`,
+      metrics: gloss.join(" · "),
+      meta: [state.season, `GW ${state.gwFrom}–${state.gwTo}`, `Top ${state.topN}`]
+        .filter(Boolean)
+        .join(" · "),
+    };
   }
 
   function populateSeasons() {
@@ -520,6 +553,9 @@
         .attr("x", pick.dx)
         .attr("y", pick.dy)
         .attr("text-anchor", pick.anchor)
+        .attr("fill", "#f4f7f6")
+        .attr("font-family", "Roboto, Helvetica Neue, Segoe UI, sans-serif")
+        .attr("font-weight", 500)
         .text(text);
     });
   }

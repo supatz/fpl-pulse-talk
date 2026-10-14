@@ -4,10 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Shot creation explorer · FPL Pulse Talk</title>
+  <link rel="icon" type="image/png" href="./assets/fpl-pulse-logo.png" />
+  <link rel="apple-touch-icon" href="./assets/fpl-pulse-logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./understat-shots.css?v=17" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&family=Roboto:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./understat-shots.css?v=20" />
 </head>
 <body class="us-shots-standalone">
   <div class="us-shots page" data-name="shots.page" data-shots-standalone>
@@ -113,6 +115,9 @@
     <div id="us-timing" class="timing-board" hidden data-name="shots.chart.timing"></div>
     <div id="us-tempo" class="timing-board tempo-board" hidden data-name="shots.chart.tempo"></div>
     <p class="footnote" id="us-footnote" data-name="shots.footnote"></p>
+    <div class="chart-dl-row">
+      <button type="button" class="chart-dl" id="us-chart-dl" data-name="shots.export">Download chart</button>
+    </div>
 
     <aside id="us-drawer" class="drawer" hidden data-name="shots.drawer">
       <div class="drawer-head">
@@ -137,7 +142,8 @@
 
   <script src="./vendor/d3.min.js"></script>
   <script src="./dual-range.js?v=1"></script>
-  <script src="./team-colors.js?v=1"></script>
-  <script src="./understat-shots.js?v=18"></script>
+  <script src="./chart-export.js?v=5"></script>
+  <script src="./team-colors.js?v=3"></script>
+  <script src="./understat-shots.js?v=22"></script>
 </body>
 </html>

@@ -28,7 +28,7 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Sidebar | Children of a nav parent are indented with a left guide rule (`.nav-kids`). Collapsed rail still hides them entirely. |
 | Local preview | `scripts/serve.command` (double-click) or `.venv/bin/python serve.py --port N`. Port defaults to 8765; `serve.py` has no persistent port setting. |
 | DefCon | `defcon` prefers upstream match-level `defensive_contributions`; when blank (2026-27 on) it derives CBIT for defenders, CBIT + recoveries for MID/FWD, and 0 for GK, using `coalesce(tackles, tackles_won)`. Derivation reproduces FPL gameweek totals exactly. |
-| Branding | Sidebar mark is an animated pulse (ECG + beating ring), not the PNG logo. The X icon still links to `https://x.com/fpl_pulse_talk`. |
+| Branding | Mark is option-A mint cartoon vintage mic + white ECG pulse + teal ring (animated in sidebar). Same mark in chart-export footer, `web/assets/fpl-pulse-mark.svg`, and square `web/assets/fpl-pulse-logo.png` (favicon). X still links to `https://x.com/fpl_pulse_talk`. |
 | Players table drawer | Clicking a name on Attackers / Defenders / GK opens a side drawer of that player’s gameweeks for the **currently visible** metric columns, plus Total and Per 90 footer rows. Points/CS are one figure per GW. |
 | Metric controls | Metric-group chips are always visible; there is no redundant “More metrics” toggle. |
 | Understat CSS | Scoped under `.us-shots`. Site-wide accent green (`#3ddc97`) lives in `web/styles.css`. |
@@ -40,13 +40,35 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Player drawer | Situation + last-action mixes are **that player’s shots**. Against (conceded) is team-only and hidden on a player drawer. |
 | Understat player playing time | Player per-90 and average minutes use FPL/Opta PL minutes/appearances from the merged table; shot metrics remain Understat. |
 | Treemap tooltip | Column grid. First row: matches + avg mins/90. No “% of shown teams”. Do not repeat the selected metric in the volume row. |
-| Asset cache | Bump `?v=` on `understat-shots.js/css`, `dual-range.js`, `us_shot_treemap.json`, `us_team_timing.json`, and `us_team_attack_speed.json` when serving shape or UI changes. |
+| Asset cache | Bump `?v=` on `understat-shots.js/css`, `dual-range.js`, `chart-export.js`, `us_shot_treemap.json`, `us_team_timing.json`, and `us_team_attack_speed.json` when serving shape or UI changes. |
 | Range filters | GW and price use one two-thumb slider (both ends movable). Price max/min follow live `meta.prices` (0.5 steps). |
 | `now_cost` | Already £m. Do not divide by 10. |
 | FPL points | Authoritative on `player_gw`. `player_match` can repeat GW points on DGW rows (`is_dgw`). |
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-10-15 — Brand mark: mint mic + pulse (option A)
+
+**Choice:** Replace the green center dot with a cartoon vintage broadcast mic (mint fill, dark outlines, grille, U-yoke, base). Keep the teal ring and white ECG pulse (pulse draws behind the mic). Use that mark everywhere: sidebar SVG, chart PNG footer, favicon, and `web/assets/fpl-pulse-logo.png`.
+
+**Why:** User locked concept A from the logo options (mic from stadium-mic refs, doodle style, brand green retained).
+
+**Where:** `web/index.html`, `web/styles.css`, `web/chart-export.js`, `web/assets/fpl-pulse-mark.svg`, `web/assets/fpl-pulse-logo.png`.
+
+### 2026-10-15 — Chart download caption header
+
+**Choice:** PNG downloads for Understat, FPL treemap, and Player performances get a compact top banner: plain-English title, small metric glossary (`G = Goals · …`), and short filter meta (season / GW). Footer brand strip unchanged.
+
+**Why:** Shared images need a quick read of what the chart shows without opening the site.
+
+**Where:** `web/chart-export.js`, caption builders in `web/{fpl-treemap,player-performance,understat-shots}.js`.
+
+### 2026-10-15 — Insight chart PNG download with brand strip
+
+**Choice:** Add a small “Download chart” control under Understat, FPL treemap, and Player performances. Export is PNG of the visible chart plus a short footer stripe: pulse mark, “FPL PULSE TALK”, X mark, `@fpl_pulse_talk`.
+
+**Where:** `web/chart-export.js`, page hosts in `web/index.html` / `understat-shots.html`, bind in the three chart scripts.
 
 ### 2026-10-15 — Dual-thumb GW/price ranges + dynamic cost ceiling
 
