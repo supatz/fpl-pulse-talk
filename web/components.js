@@ -227,10 +227,10 @@ const SUM_FIELDS = [
   "G", "A", "PenG", "xG", "xA", "xGI", "Sh", "SoT", "CC", "TiB", "BCM", "xGOT",
   "Sv", "GC", "xGOTf", "xGP", "Tkl", "CBI", "DefCon", "npxG", "F3", "Dr", "YC",
   "Aer", "Clr", "Int", "Blk", "Rec", "SiB", "HC", "SW", "Cr", "SPxG", "PS",
-  "USMin", "USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP",
+  "USMin", "USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP", "BCC", "BCT", "BCS", "BCM",
 ];
 
-const UNDERSTAT_RATE_FIELDS = new Set(["USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP"]);
+const UNDERSTAT_RATE_FIELDS = new Set(["USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP", "BCC", "BCT", "BCS", "BCM"]);
 
 function inList(list, value) {
   if (list == null) return true;
@@ -755,8 +755,8 @@ export function makeTable(cfg) {
     players: persisted.players || [],
     gwFrom: persisted.gwFrom ?? null,
     gwTo: persisted.gwTo ?? null,
-    costMin: persisted.costMin ?? 4,
-    costMax: persisted.costMax ?? 15,
+    costMin: persisted.costMin,
+    costMax: persisted.costMax,
     currentOnly: true,
     groups: persisted.groups || [],
     positions: cfg.positions,
@@ -852,7 +852,9 @@ export function makeTable(cfg) {
   if (!cfg.hideDetail && cfg.metricGroups) filterRow.appendChild(metricGroupControl(state, cfg, `${view}.filter.detail`, render));
   sliderRow.appendChild(gwCtrl);
   if (!cfg.hideMins) sliderRow.appendChild(minsControl(state, `${view}.filter.mins`, render));
-  if (!cfg.hideCost && !cfg.hidePlayers) sliderRow.appendChild(costControl(state, `${view}.filter.cost`, render));
+  if (!cfg.hideCost && !cfg.hidePlayers) {
+    sliderRow.appendChild(costControl(state, `${view}.filter.cost`, render, cfg.prices || {}));
+  }
   controls.append(filterRow, sliderRow);
 
   const count = document.createElement("p");
@@ -1018,25 +1020,27 @@ function gwRangeControl(state, name, render) {
   const toVal = state.gwTo ?? 38;
   const box = labeledCtrl(
     name,
-    "Exact gameweek range inside the selected season.",
+    "Exact gameweek range inside the selected season. Drag either end.",
     `<span class="ctrl-copy"><span data-range-label>GW ${fromVal}–${toVal}</span>
-    <span class="dual-range">
-      <label class="range-leg">From<input data-from type="range" min="1" max="38" value="${fromVal}" /></label>
-      <label class="range-leg">To<input data-to type="range" min="1" max="38" value="${toVal}" /></label>
-    </span></span>`
+    <div class="range-2" data-gw-range></div></span>`
   );
-  const from = box.querySelector("[data-from]");
-  const to = box.querySelector("[data-to]");
-  const sync = () => {
-    let a = Number(from.value);
-    let b = Number(to.value);
-    if (a > b) [a, b] = [b, a];
-    state.gwFrom = a;
-    state.gwTo = b;
-    render();
-  };
-  from.addEventListener("input", sync);
-  to.addEventListener("input", sync);
+  const label = box.querySelector("[data-range-label]");
+  const mount = window.mountDualRange;
+  if (mount) {
+    mount(box.querySelector("[data-gw-range]"), {
+      min: 1,
+      max: 38,
+      step: 1,
+      from: fromVal,
+      to: toVal,
+      onInput: (a, b) => {
+        state.gwFrom = a;
+        state.gwTo = b;
+        label.textContent = `GW ${a}–${b}`;
+        render();
+      },
+    });
+  }
   return box;
 }
 
@@ -1057,30 +1061,43 @@ function minsControl(state, name, render) {
   return box;
 }
 
-function costControl(state, name, render) {
+function costControl(state, name, render, prices = {}) {
+  const bounds = (window.priceBounds || (() => ({ min: 4, max: 16 })))(prices);
+  let lo = bounds.min;
+  let hi = bounds.max;
+  // Migrate legacy hard-cap of £15.0m so premium players stay visible.
+  let costMin = state.costMin != null ? Number(state.costMin) : lo;
+  let costMax = state.costMax != null ? Number(state.costMax) : hi;
+  if (state.costMax != null && Number(state.costMax) === 15 && hi > 15) costMax = hi;
+  costMin = Math.min(hi, Math.max(lo, costMin));
+  costMax = Math.min(hi, Math.max(lo, costMax));
+  if (costMin > costMax) [costMin, costMax] = [lo, hi];
+  state.costMin = costMin;
+  state.costMax = costMax;
+
   const box = labeledCtrl(
     name,
-    "Current-season FPL price in £m.",
-    `<span class="ctrl-copy"><span data-cost-label>£${Number(state.costMin).toFixed(1)}–${Number(state.costMax).toFixed(1)}m</span>
-    <span class="dual-range">
-      <label class="range-leg">From £<input data-cost-from type="range" min="4" max="15" step="0.5" value="${state.costMin}" /></label>
-      <label class="range-leg">To £<input data-cost-to type="range" min="4" max="15" step="0.5" value="${state.costMax}" /></label>
-    </span></span>`
+    "Current-season FPL price in £m. Ends follow the live price ladder; drag either thumb.",
+    `<span class="ctrl-copy"><span data-cost-label>£${costMin.toFixed(1)}–${costMax.toFixed(1)}m</span>
+    <div class="range-2" data-cost-range></div></span>`
   );
-  const from = box.querySelector("[data-cost-from]");
-  const to = box.querySelector("[data-cost-to]");
   const label = box.querySelector("[data-cost-label]");
-  const sync = () => {
-    let a = Number(from.value);
-    let b = Number(to.value);
-    if (a > b) [a, b] = [b, a];
-    state.costMin = a;
-    state.costMax = b;
-    label.textContent = `£${a.toFixed(1)}–${b.toFixed(1)}m`;
-    render();
-  };
-  from.addEventListener("input", sync);
-  to.addEventListener("input", sync);
+  const mount = window.mountDualRange;
+  if (mount) {
+    mount(box.querySelector("[data-cost-range]"), {
+      min: lo,
+      max: hi,
+      step: 0.5,
+      from: costMin,
+      to: costMax,
+      onInput: (a, b) => {
+        state.costMin = a;
+        state.costMax = b;
+        label.textContent = `£${a.toFixed(1)}–${b.toFixed(1)}m`;
+        render();
+      },
+    });
+  }
   return box;
 }
 

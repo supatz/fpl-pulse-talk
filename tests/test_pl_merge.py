@@ -210,6 +210,36 @@ def test_match_two_candidates_stay_unmatched():
     assert unmatched.row(0, named=True)["reason"] == "ambiguous_date_pm1"
 
 
+def test_mapped_big_chances_bct_and_bcc():
+    from pipeline.pl_merge.merge import BIG_CHANCE_XG, _mapped_big_chances
+
+    shots = pl.DataFrame(
+        {
+            "match_id": ["u1", "u1", "u1"],
+            "season": ["2025-2026", "2025-2026", "2025-2026"],
+            "player_id": ["10", "20", "30"],
+            "player_name": ["Taker One", "Taker Two", "Creator"],
+            "player_assisted": ["Creator", None, ""],
+            "xg": [BIG_CHANCE_XG + 0.01, BIG_CHANCE_XG, 0.1],
+        }
+    )
+    match_map = pl.DataFrame({"understat_match_id": ["u1"], "fpl_match_id": ["f1"]})
+    player_map = pl.DataFrame(
+        {
+            "understat_player_id": ["10", "20", "30"],
+            "player_code": [100, 200, 300],
+            "status": ["accepted", "accepted", "accepted"],
+        }
+    )
+    shots = shots.with_columns(pl.Series("is_goal", [True, False, False]))
+    out = _mapped_big_chances(shots, match_map, player_map)
+    by_code = {r["player_code"]: r for r in out.to_dicts()}
+    assert by_code[100]["us_bct"] == 1 and by_code[100]["us_bcs"] == 1 and by_code[100]["us_bcm"] == 0
+    assert by_code[100]["us_bcc"] == 0
+    assert 200 not in by_code  # xG == threshold is not a big chance
+    assert by_code[300]["us_bct"] == 0 and by_code[300]["us_bcc"] == 1
+
+
 def test_normalize_match_roster_keeps_player_id():
     raw = {
         "h": {

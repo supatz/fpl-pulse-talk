@@ -5,11 +5,43 @@
   const TOP_TEAMS = 10;
   const HEADER_H = 42;
   const MIN_FONT = 5;
+  const BC_KEYS = ["BCC", "BCT", "BCS", "BCM"];
   const METRICS = {
-    G: { name: "Goals", keys: ["G", "SoT", "xG", "npxG"], show: ["G", "xG"], extra: ["SoT", "npxG"], lines: [["G"], ["xG"]] },
-    A: { name: "Assists", keys: ["A", "CC"], show: ["A", "CC"], extra: [], lines: [["A"], ["CC"]] },
-    xGI: { name: "Expected goal involvements", keys: ["xGI", "xG"], show: ["xGI", "xG"], extra: [], lines: [["xGI"], ["xG"]] },
-    DefCon: { name: "Defensive contributions", keys: ["DefCon", "CS"], show: ["DefCon", "CS"], extra: [], lines: [["DefCon"], ["CS"]] },
+    G: {
+      name: "Goals",
+      keys: ["G", "SoT", "xG", "npxG", ...BC_KEYS],
+      show: ["G", "xG"],
+      extra: ["SoT", "npxG", ...BC_KEYS],
+      lines: [["G"], ["xG"]],
+    },
+    A: {
+      name: "Assists",
+      keys: ["A", "CC", ...BC_KEYS],
+      show: ["A", "CC"],
+      extra: [...BC_KEYS],
+      lines: [["A"], ["CC"]],
+    },
+    xGI: {
+      name: "Expected goal involvements",
+      keys: ["xGI", "xG", ...BC_KEYS],
+      show: ["xGI", "xG"],
+      extra: [...BC_KEYS],
+      lines: [["xGI"], ["xG"]],
+    },
+    DefCon: {
+      name: "Defensive contributions",
+      keys: ["DefCon", "CS", ...BC_KEYS],
+      show: ["DefCon", "CS"],
+      extra: [...BC_KEYS],
+      lines: [["DefCon"], ["CS"]],
+    },
+    BigChance: {
+      name: "Big chances",
+      keys: [...BC_KEYS],
+      show: ["BCT", "BCS", "BCM"],
+      extra: ["BCC"],
+      lines: [["BCT"], ["BCS", "BCM"]],
+    },
   };
   const FIELDS = {
     G: { label: "G", name: "Goals", digits: 0 },
@@ -21,6 +53,10 @@
     xGI: { label: "xGI", name: "Expected goal involvements", short: "Expected involvement", digits: 2 },
     DefCon: { label: "DC", name: "Defensive contributions", digits: 0 },
     CS: { label: "CS", name: "Clean sheets", digits: 0 },
+    BCC: { label: "BCC", name: "Big chances created", short: "Big chance created (US)", digits: 0 },
+    BCT: { label: "BCT", name: "Big chances taken", short: "Big chance taken (US)", digits: 0 },
+    BCS: { label: "BCS", name: "Big chances scored", short: "Big chance scored (US)", digits: 0 },
+    BCM: { label: "BCM", name: "Big chances missed", short: "Big chance missed (US)", digits: 0 },
   };
   const { teamFill, textOnTeam } = window.TeamColors;
 
@@ -71,9 +107,9 @@
     els.metric = $("fpl-map-metric");
     els.sort = $("fpl-map-sort");
     els.position = $("fpl-map-position");
-    els.gwFrom = $("fpl-map-gw-from");
-    els.gwTo = $("fpl-map-gw-to");
+    els.gwRange = $("fpl-map-gw-range");
     els.gwLabel = $("fpl-map-gw-label");
+    els.gwControl = null;
     els.status = $("fpl-map-status");
     els.chart = $("fpl-map-chart");
     els.tip = $("fpl-map-tip");
@@ -110,20 +146,24 @@
       state.teamMode = "preset";
       applyTeamMode();
     });
-    const syncGw = () => {
-      let from = Number(els.gwFrom.value);
-      let to = Number(els.gwTo.value);
-      if (from > to) [from, to] = [to, from];
-      state.gwFrom = from;
-      state.gwTo = to;
-      updateGwLabel();
-      if (state.teamMode === "custom") {
-        populateTeams();
-        render();
-      } else applyTeamMode();
-    };
-    els.gwFrom.addEventListener("input", syncGw);
-    els.gwTo.addEventListener("input", syncGw);
+    if (els.gwRange && window.mountDualRange && !els.gwControl) {
+      els.gwControl = window.mountDualRange(els.gwRange, {
+        min: 1,
+        max: 38,
+        step: 1,
+        from: state.gwFrom,
+        to: state.gwTo,
+        onInput: (from, to) => {
+          state.gwFrom = from;
+          state.gwTo = to;
+          updateGwLabel();
+          if (state.teamMode === "custom") {
+            populateTeams();
+            render();
+          } else applyTeamMode();
+        },
+      });
+    }
     els.topTeams.addEventListener("click", () => {
       state.teamMode = "preset";
       applyTeamMode();
@@ -169,15 +209,17 @@
     const gws = seasonRows().map((r) => Number(r.gw)).filter((v) => Number.isFinite(v) && v > 0);
     const min = gws.length ? Math.min(...gws) : 1;
     const max = gws.length ? Math.max(...gws) : 38;
-    for (const input of [els.gwFrom, els.gwTo]) {
-      input.min = String(min);
-      input.max = String(max);
-    }
     if (reset) {
       state.gwFrom = min;
       state.gwTo = max;
-      els.gwFrom.value = String(min);
-      els.gwTo.value = String(max);
+    } else {
+      state.gwFrom = Math.min(max, Math.max(min, state.gwFrom));
+      state.gwTo = Math.min(max, Math.max(min, state.gwTo));
+      if (state.gwFrom > state.gwTo) [state.gwFrom, state.gwTo] = [min, max];
+    }
+    if (els.gwControl) {
+      els.gwControl.setBounds(min, max);
+      els.gwControl.set(state.gwFrom, state.gwTo);
     }
     updateGwLabel();
   }
@@ -286,13 +328,17 @@
           SoT: 0,
           CC: 0,
           DefCon: 0,
+          BCC: 0,
+          BCT: 0,
+          BCS: 0,
+          BCM: 0,
           csByGw: new Map(),
         });
       }
       const p = players.get(key);
       p.apps += 1;
       p.minutes += num(r.m);
-      for (const metric of ["G", "A", "xGI", "xG", "npxG", "SoT", "CC", "DefCon"]) {
+      for (const metric of ["G", "A", "xGI", "xG", "npxG", "SoT", "CC", "DefCon", "BCC", "BCT", "BCS", "BCM"]) {
         p[metric] += num(r[metric]);
       }
       if (r.cs != null && !p.csByGw.has(r.gw)) p.csByGw.set(r.gw, num(r.cs));
@@ -337,7 +383,8 @@
 
     const mode = state.teamMode === "preset" ? "top 10 teams" : state.teamMode === "all" ? "all teams" : "custom teams";
     const position = els.position.options[els.position.selectedIndex]?.textContent || "All positions";
-    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · ${teams.length} teams (${mode}) · team and tile area follow ${FIELDS[sortKey].label} · top ${TOP_PLAYERS_PER_TEAM} positive players per team · FPL-Core`;
+    const srcNote = BC_KEYS.includes(sortKey) || state.metric === "BigChance" ? "FPL + Understat big chances" : "FPL-Core";
+    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · ${teams.length} teams (${mode}) · team and tile area follow ${FIELDS[sortKey].label} · top ${TOP_PLAYERS_PER_TEAM} positive players per team · ${srcNote}`;
 
     const width = els.chart.clientWidth || 1000;
     const height = els.chart.clientHeight || 640;
@@ -441,7 +488,8 @@
       .attr("fill", (d) => textOnTeam(d.data.team_short))
       .attr("opacity", 0.85)
       .text((d) =>
-        metric.show
+        tipKeys(metric, sortKey)
+          .filter((key) => metric.show.includes(key) || key === sortKey)
           .map((key) => `${FIELDS[key].label} ${format(d.data.totals[key], fieldDigits(key))}`)
           .join(" · ")
       );
@@ -459,11 +507,26 @@
       });
   }
 
+  function tileLines(metric, sortKey) {
+    const lines = metric.lines.map((keys) => [...keys]);
+    const shown = new Set(lines.flat());
+    // Always surface the Size / sort metric on the tile when it is not already paired.
+    if (!shown.has(sortKey)) lines.unshift([sortKey]);
+    return lines;
+  }
+
+  function tipKeys(metric, sortKey) {
+    const keys = [...metric.show, ...metric.extra];
+    if (!keys.includes(sortKey)) keys.unshift(sortKey);
+    return keys;
+  }
+
   function drawTile(g, tile, metric, sortKey) {
     const w = tile.x1 - tile.x0;
     const h = tile.y1 - tile.y0;
     const ink = textOnTeam(tile.team.team_short);
     const ratio = tile.teamMax > 0 ? (tile.data[sortKey] || 0) / tile.teamMax : 1;
+    const lines = tileLines(metric, sortKey);
 
     g.append("rect")
       .attr("x", tile.x0)
@@ -472,14 +535,14 @@
       .attr("height", Math.max(0, h))
       .attr("rx", 6)
       .attr("fill", teamFill(tile.team.team_short, 0.72 + ratio * 0.28))
-      .on("mousemove", (event) => showTip(event, tile.data, metric))
+      .on("mousemove", (event) => showTip(event, tile.data, metric, sortKey))
       .on("mouseleave", hideTip);
 
     // Font scales with metric share within the team (top player largest).
     const nameFs = Math.max(MIN_FONT, Math.min(MIN_FONT + ratio * 13, w / 4.6, h / 2.6));
     const valFs = Math.max(MIN_FONT, Math.min(nameFs * 0.72, nameFs - 1));
     const cx = tile.x0 + w / 2;
-    const showVals = h >= nameFs + valFs * 2 + 6 && w >= 24;
+    const showVals = h >= nameFs + valFs * Math.min(lines.length, 2) + 6 && w >= 24;
     g.append("text")
       .attr("x", cx)
       .attr("y", showVals ? tile.y0 + h / 2 - valFs : tile.y0 + h / 2 + nameFs * 0.35)
@@ -489,7 +552,7 @@
       .attr("fill", ink)
       .text(truncate(shortName(tile.data.player_name), Math.max(2, Math.floor(w / (nameFs * 0.55)))));
     if (!showVals) return;
-    metric.lines.forEach((keys, index) => {
+    lines.slice(0, 3).forEach((keys, index) => {
       g.append("text")
         .attr("x", cx)
         .attr("y", tile.y0 + h / 2 + valFs * (0.4 + index * 1.3))
@@ -505,8 +568,8 @@
     });
   }
 
-  function showTip(event, player, metric) {
-    const metrics = [...metric.show, ...metric.extra]
+  function showTip(event, player, metric, sortKey) {
+    const metrics = tipKeys(metric, sortKey)
       .map((key) => `${FIELDS[key].name}: ${format(player[key], fieldDigits(key))}`)
       .join("<br>");
     els.tip.innerHTML = `<strong>${escapeHtml(player.player_name)} · ${escapeHtml(player.team_short)}</strong>
@@ -516,7 +579,8 @@
   }
 
   function showTeamTip(event, team, metric) {
-    const metrics = [...metric.show, ...metric.extra]
+    const sortKey = state.sortMetric;
+    const metrics = tipKeys(metric, sortKey)
       .map((key) => `${FIELDS[key].name}: ${format(team.totals[key], fieldDigits(key))}`)
       .join("<br>");
     els.tip.innerHTML = `<strong>${escapeHtml(team.team_short)}</strong><br>${metrics}`;

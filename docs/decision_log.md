@@ -16,14 +16,15 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Topic | Choice |
 |---|---|
 | Merged site | Player pages read Premier League `master/pl_merge/player_match`. FPL/Opta and Understat measures remain separately labeled; never average or silently coalesce them. |
-| Metric precedence | When FPL-Core has the same player metric, the site shows FPL-Core only. Hide duplicate US minutes/xG/xA/npxG/shots/key passes; retain Understat-only xGChain/xGBuildup and Understat-native insight views. |
+| Metric precedence | When FPL-Core has the same player metric, the site shows FPL-Core only. Hide duplicate US minutes/xG/xA/npxG/shots/key passes; retain Understat-only xGChain/xGBuildup, BCC/BCT/BCS/BCM (xG > 0.27), and Understat-native insight views. |
+| Big chance (US) | Shots with `xg > 0.27`. **BCT** = taken (shooter); **BCS** = scored; **BCM** = missed (`BCT = BCS + BCM`); **BCC** = created (`player_assisted`, name→id). Match-level `us_*` → site `BCC`/`BCT`/`BCS`/`BCM`. Site **BCM** is Understat (not Opta `big_chances_missed`, kept as `BCM_opta`). Creativity = BCC; Threat = BCT/BCS/BCM. Per-90 uses Understat minutes. |
 | Site dimensions | FPL owns player identity, team, position, price, GW, and default minutes. Understat player views use curated FPL `player_code` / names; Understat metrics carry `US` / `us_*` labels. |
 | Team identity | Understat teams join FPL `team_code` via `data/understat/maps/team_map.csv` only (no fuzzy team match). |
 | PL merge | Premier League-only identity maps + `master/pl_merge/player_match` in `pipeline/pl_merge/`. This is the player-match source for site serving. |
 | Player map | Curated under `data/pl_merge/maps/player_map.csv`. Fuzzy is a proposal; overrides win. Do not join on season-scoped FPL `player_id`. |
 | Insights → Understat | Same shell (`#insights-understat`). Match timing = shots × FPL GW. Attack tempo = season `attackSpeed` ribbons (`us_team_attack_speed.json`). Standalone `web/understat-shots.html` remains. |
-| FPL treemap | Separate `#insights-fpl-treemap` page below Understat. One nested treemap like Understat: club blocks sized by the club total of the Size / sort measure, player tiles nested inside. Top 10 / All / custom teams. Position filter = All / MID / ATT / DEF + GK. Goals shows G and xG on tiles/headers; SoT and npxG stay in the tooltip. A shows A, CC; xGI shows xGI, xG; DC shows DC, CS. No drawer. Shares `web/team-colors.js`. |
-| Player performances | `#insights-player-performance`. Free X / Y / bubble / sort metrics (G, xG, A, xA, GI, xGI, DC, CS, xGOT, CC, npxG, Sh, SoT, TiB). Top 10–40 by sort metric. Exclude multi-search. Season / position / GW / Per 90 / 45+ kept. Axes auto-scale; bubble size stays on raw totals under Per 90. |
+| FPL treemap | Separate `#insights-fpl-treemap`. Club/player area follow Size / sort. Metric groups include Big chances (BCT · BCS · BCM). Tiles show the metric-pair lines **and** the selected Size / sort value when it is not already in the pair. BCC/BCT/BCS/BCM available under every metric’s sort list. No drawer. Shares `web/team-colors.js`. |
+| Player performances | `#insights-player-performance`. Free X / Y / bubble / sort metrics (G, xG, A, xA, GI, xGI, DC, CS, xGOT, CC, npxG, Sh, SoT, TiB, BCC, BCT, BCS, BCM). Top 10–40 by sort metric. Exclude multi-search. Season / position / GW / Per 90 / 45+ kept. Axes auto-scale; bubble size stays on raw totals under Per 90. |
 | Sidebar | Children of a nav parent are indented with a left guide rule (`.nav-kids`). Collapsed rail still hides them entirely. |
 | Local preview | `scripts/serve.command` (double-click) or `.venv/bin/python serve.py --port N`. Port defaults to 8765; `serve.py` has no persistent port setting. |
 | DefCon | `defcon` prefers upstream match-level `defensive_contributions`; when blank (2026-27 on) it derives CBIT for defenders, CBIT + recoveries for MID/FWD, and 0 for GK, using `coalesce(tackles, tackles_won)`. Derivation reproduces FPL gameweek totals exactly. |
@@ -39,12 +40,37 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Player drawer | Situation + last-action mixes are **that player’s shots**. Against (conceded) is team-only and hidden on a player drawer. |
 | Understat player playing time | Player per-90 and average minutes use FPL/Opta PL minutes/appearances from the merged table; shot metrics remain Understat. |
 | Treemap tooltip | Column grid. First row: matches + avg mins/90. No “% of shown teams”. Do not repeat the selected metric in the volume row. |
-| Asset cache | Bump `?v=` on `understat-shots.js/css`, `us_shot_treemap.json`, `us_team_timing.json`, and `us_team_attack_speed.json` when serving shape or UI changes. |
+| Asset cache | Bump `?v=` on `understat-shots.js/css`, `dual-range.js`, `us_shot_treemap.json`, `us_team_timing.json`, and `us_team_attack_speed.json` when serving shape or UI changes. |
+| Range filters | GW and price use one two-thumb slider (both ends movable). Price max/min follow live `meta.prices` (0.5 steps). |
 | `now_cost` | Already £m. Do not divide by 10. |
 | FPL points | Authoritative on `player_gw`. `player_match` can repeat GW points on DGW rows (`is_dgw`). |
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-10-15 — Dual-thumb GW/price ranges + dynamic cost ceiling
+
+**Choice:** Replace paired From/To range inputs with one two-thumb slider (both ends movable) for GW and price filters site-wide. Price bounds come from live `meta.prices` (0.5 steps); migrate the old £15.0 hard max so Haaland (£15.6) stays visible.
+
+**Where:** `web/dual-range.js`, `web/components.js`, `web/understat-shots.js`, `web/fpl-treemap.js`, `web/player-performance.js`, `web/styles.css`, `web/index.html`.
+
+### 2026-10-15 — Understat BCS / BCM split + player performance axes
+
+**Choice:** Split taken big chances into **BCS** (goal) and **BCM** (non-goal). Site `BCM` is now Understat-derived; Opta `big_chances_missed` serves as `BCM_opta` only. Add BCC/BCT/BCS/BCM to Player performances X/Y/bubble (and sort list). Treemap Big chances group shows BCT · BCS · BCM.
+
+**Why:** Conversion of the same xG>0.27 chances needs scored vs missed, not only taken.
+
+**Where:** `pipeline/pl_merge/merge.py`, `build_serving.py`, `web/registry.js`, `web/player-performance.js`, `web/fpl-treemap.js`.
+
+### 2026-10-15 — Understat BCC / BCT + treemap sort on tiles
+
+**Choice:** Derive match-level big chances from Understat shots (`xg > 0.27`): BCT for the shooter, BCC for `player_assisted`. Join onto `pl_merge/player_match`. Expose as `BCC` / `BCT` on Attackers / Defenders / GK (Creativity / Threat). FPL treemap adds Big chances metric group, BCC/BCT in every Size / sort list, and prints the selected sort metric on tiles.
+
+**Why:** FPL publishes BCM but not player-level big chances created; Understat shot xG is the available definition. Tiles previously hid non-primary sort metrics (e.g. SoT).
+
+**Where:** `pipeline/pl_merge/merge.py`, `build_serving.py`, `web/registry.js`, `web/components.js`, `web/fpl-treemap.js`, `web/index.html`.
+
+**Drawbacks:** Assister id is name-matched within season; unmapped names drop BCC. Threshold is locked at 0.27 (strict >).
 
 ### 2026-10-13 — Player performances free axes
 

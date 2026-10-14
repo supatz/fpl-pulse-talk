@@ -69,7 +69,8 @@ def run_pl_merge(
     written: dict[str, Path] = {}
     if not maps_only:
         fpl_pm = load_fpl_pl_player_match(fpl_seasons)
-        written = write_merged_player_match(fpl_pm, roster, match_map, player_map)
+        shots = read_master("shot", fpl_seasons)
+        written = write_merged_player_match(fpl_pm, roster, match_map, player_map, shots=shots)
 
     summary = {
         "fpl_seasons": fpl_seasons,

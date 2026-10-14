@@ -36,7 +36,7 @@ SUM_KEYS = {
     "SoT": "shots_on_target",
     "CC": "chances_created",
     "TiB": "touches_opposition_box",
-    "BCM": "big_chances_missed",
+    "BCM_opta": "big_chances_missed",
     "xGOT": "xgot",
     "Saves": "saves",
     "GC": "goals_conceded",
@@ -237,7 +237,8 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         "shots_on_target": "SoT",
         "chances_created": "CC",
         "touches_opposition_box": "TiB",
-        "big_chances_missed": "BCM",
+        # Opta big-chances-missed kept for audit; site BCM is Understat-derived (us_bcm).
+        "big_chances_missed": "BCM_opta",
         "xgot": "xGOT",
         "saves": "Sv",
         "goals_conceded": "GC",
@@ -273,6 +274,10 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         "us_xg_buildup": "USxGB",
         "us_shots": "USSh",
         "us_key_passes": "USKP",
+        "us_bcc": "BCC",
+        "us_bct": "BCT",
+        "us_bcs": "BCS",
+        "us_bcm": "BCM",
     }
     exprs = []
     for src, dest in keep.items():

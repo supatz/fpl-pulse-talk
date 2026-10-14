@@ -66,4 +66,6 @@ This first run: **0 unmatched matches**, **0 ambiguous players**, **0 unmatched 
 
 `build_serving.py` requires this merged table for `players_matches.json`. The player tables expose Understat roster metrics under the **Understat** metric group with `US` labels. US per-90 metrics use `us_minutes`; FPL/Opta rates use FPL `minutes`.
 
+Match-level **BCC** / **BCT** / **BCS** / **BCM** are derived from Understat shots (`xg > 0.27`) during merge (`us_*` → serving keys). BCT = shooter; BCS = goal; BCM = non-goal; BCC = `player_assisted` (season name map). Creativity = BCC; Threat = BCT/BCS/BCM. Site `BCM` is Understat; Opta `big_chances_missed` is `BCM_opta`.
+
 Understat shot serving also applies `player_map.csv` and uses FPL player names/codes and FPL/Opta Premier League minutes. Original Understat ids and names remain in JSON for traceability.

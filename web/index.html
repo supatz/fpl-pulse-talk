@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FPL Pulse Talk</title>
-  <link rel="stylesheet" href="./styles.css?v=17" />
-  <link rel="stylesheet" href="./understat-shots.css?v=16" />
+  <link rel="stylesheet" href="./styles.css?v=18" />
+  <link rel="stylesheet" href="./understat-shots.css?v=17" />
 </head>
 <body>
   <div id="tooltip" hidden></div>
@@ -306,10 +306,7 @@
                       <span>Gameweeks</span>
                       <div class="timing-gw" id="us-timing-gw">
                         <span class="timing-gw-label" id="us-timing-gw-label">GW 1–38</span>
-                        <span class="dual-range">
-                          <label class="range-leg">From<input id="us-gw-from" type="range" min="1" max="38" value="1" /></label>
-                          <label class="range-leg">To<input id="us-gw-to" type="range" min="1" max="38" value="38" /></label>
-                        </span>
+                        <div class="range-2" id="us-gw-range"></div>
                       </div>
                     </div>
                     <div class="field field-teams" data-name="shots.controls.teams">
@@ -372,6 +369,7 @@
                   <option value="A">Assists (A · CC)</option>
                   <option value="xGI">Expected involvement (xGI · xG)</option>
                   <option value="DefCon">Defensive contributions (DC · CS)</option>
+                  <option value="BigChance">Big chances (BCT · BCS · BCM)</option>
                 </select>
               </label>
               <label class="fpl-map-field" data-name="fpl_treemap.controls.sort">
@@ -389,10 +387,7 @@
               </label>
               <div class="fpl-map-field fpl-map-gw" data-name="fpl_treemap.controls.gw">
                 <span id="fpl-map-gw-label">GW 1–38</span>
-                <div class="dual-range">
-                  <label class="range-leg">From<input id="fpl-map-gw-from" type="range" min="1" max="38" value="1" /></label>
-                  <label class="range-leg">To<input id="fpl-map-gw-to" type="range" min="1" max="38" value="38" /></label>
-                </div>
+                <div class="range-2" id="fpl-map-gw-range"></div>
               </div>
               <div class="fpl-map-team-filter" data-name="fpl_treemap.controls.teams">
                 <span>Teams</span>
@@ -457,10 +452,7 @@
               </label>
               <div class="perf-field perf-gw" data-name="player_performance.controls.gw">
                 <span id="perf-gw-label">GW 1–38</span>
-                <div class="dual-range">
-                  <label class="range-leg">From<input id="perf-gw-from" type="range" min="1" max="38" value="1" /></label>
-                  <label class="range-leg">To<input id="perf-gw-to" type="range" min="1" max="38" value="38" /></label>
-                </div>
+                <div class="range-2" id="perf-gw-range"></div>
               </div>
               <div class="perf-field perf-exclude" data-name="player_performance.controls.exclude">
                 <span>Exclude</span>
@@ -527,10 +519,11 @@
     </aside>
   </div>
   <script src="./vendor/d3.min.js"></script>
+  <script src="./dual-range.js?v=1"></script>
   <script src="./team-colors.js?v=1"></script>
-  <script src="./understat-shots.js?v=17"></script>
-  <script src="./fpl-treemap.js?v=8"></script>
-  <script src="./player-performance.js?v=11"></script>
-  <script type="module" src="./app.js?v=11"></script>
+  <script src="./understat-shots.js?v=18"></script>
+  <script src="./fpl-treemap.js?v=11"></script>
+  <script src="./player-performance.js?v=13"></script>
+  <script type="module" src="./app.js?v=14"></script>
 </body>
 </html>

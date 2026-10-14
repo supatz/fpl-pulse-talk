@@ -604,6 +604,70 @@ body.us-shots-standalone .us-shots {
 }
 .us-shots .dual-range { display: grid; gap: 8px; }
 .us-shots .dual-range input { width: 168px; accent-color: var(--accent); }
+.us-shots .range-2 {
+  position: relative;
+  width: 196px;
+  height: 28px;
+  display: grid;
+  align-items: center;
+  touch-action: none;
+}
+.us-shots .range-2-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line, #2d3d4a);
+  pointer-events: none;
+}
+.us-shots .range-2-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: var(--accent, #3ddc97);
+  opacity: 0.85;
+}
+.us-shots .range-2-input {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+  height: 28px;
+}
+.us-shots .range-2-input::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+}
+.us-shots .range-2-input::-webkit-slider-thumb {
+  appearance: none;
+  pointer-events: auto;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--bg, #121820);
+  background: var(--accent, #3ddc97);
+  cursor: pointer;
+}
+.us-shots .range-2-input::-moz-range-track {
+  height: 4px;
+  background: transparent;
+  border: 0;
+}
+.us-shots .range-2-input::-moz-range-thumb {
+  pointer-events: auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--bg, #121820);
+  background: var(--accent, #3ddc97);
+  cursor: pointer;
+}
 .us-shots .range-leg {
   display: grid;
   gap: 2px;

@@ -19,9 +19,16 @@
     { id: "Sh", field: "Sh", short: "Sh", name: "Shots", digits: 0 },
     { id: "SoT", field: "SoT", short: "SoT", name: "Shots on target", digits: 0 },
     { id: "TiB", field: "TiB", short: "TiB", name: "Touches in box", digits: 0 },
+    { id: "BCC", field: "BCC", short: "BCC", name: "Big chances created (US)", digits: 0 },
+    { id: "BCT", field: "BCT", short: "BCT", name: "Big chances taken (US)", digits: 0 },
+    { id: "BCS", field: "BCS", short: "BCS", name: "Big chances scored (US)", digits: 0 },
+    { id: "BCM", field: "BCM", short: "BCM", name: "Big chances missed (US)", digits: 0 },
   ];
   const METRIC_BY_ID = Object.fromEntries(METRICS.map((m) => [m.id, m]));
-  const SUM_FIELDS = ["G", "A", "xG", "xA", "xGI", "DefCon", "cs", "xGOT", "CC", "npxG", "Sh", "SoT", "TiB"];
+  const SUM_FIELDS = [
+    "G", "A", "xG", "xA", "xGI", "DefCon", "cs", "xGOT", "CC", "npxG", "Sh", "SoT", "TiB",
+    "BCC", "BCT", "BCS", "BCM",
+  ];
 
   const state = {
     rows: [],
@@ -78,9 +85,9 @@
     els.sortMetric = $("perf-sort");
     els.top = $("perf-top");
     els.position = $("perf-position");
-    els.gwFrom = $("perf-gw-from");
-    els.gwTo = $("perf-gw-to");
+    els.gwRange = $("perf-gw-range");
     els.gwLabel = $("perf-gw-label");
+    els.gwControl = null;
     els.per90 = $("perf-per90");
     els.min45 = $("perf-min45");
     els.excludeSearch = $("perf-exclude-search");
@@ -141,17 +148,21 @@
       state.position = els.position.value;
       render();
     });
-    const syncGw = () => {
-      let from = Number(els.gwFrom.value);
-      let to = Number(els.gwTo.value);
-      if (from > to) [from, to] = [to, from];
-      state.gwFrom = from;
-      state.gwTo = to;
-      updateGwLabel();
-      render();
-    };
-    els.gwFrom.addEventListener("input", syncGw);
-    els.gwTo.addEventListener("input", syncGw);
+    if (els.gwRange && window.mountDualRange && !els.gwControl) {
+      els.gwControl = window.mountDualRange(els.gwRange, {
+        min: 1,
+        max: 38,
+        step: 1,
+        from: state.gwFrom,
+        to: state.gwTo,
+        onInput: (from, to) => {
+          state.gwFrom = from;
+          state.gwTo = to;
+          updateGwLabel();
+          render();
+        },
+      });
+    }
     els.per90.addEventListener("change", () => {
       state.per90 = els.per90.checked;
       render();
@@ -204,15 +215,17 @@
     const gws = seasonRows().map((r) => Number(r.gw)).filter((v) => Number.isFinite(v) && v > 0);
     const min = gws.length ? Math.min(...gws) : 1;
     const max = gws.length ? Math.max(...gws) : 38;
-    for (const input of [els.gwFrom, els.gwTo]) {
-      input.min = String(min);
-      input.max = String(max);
-    }
     if (reset) {
       state.gwFrom = min;
       state.gwTo = max;
-      els.gwFrom.value = String(min);
-      els.gwTo.value = String(max);
+    } else {
+      state.gwFrom = Math.min(max, Math.max(min, state.gwFrom));
+      state.gwTo = Math.min(max, Math.max(min, state.gwTo));
+      if (state.gwFrom > state.gwTo) [state.gwFrom, state.gwTo] = [min, max];
+    }
+    if (els.gwControl) {
+      els.gwControl.setBounds(min, max);
+      els.gwControl.set(state.gwFrom, state.gwTo);
     }
     updateGwLabel();
   }

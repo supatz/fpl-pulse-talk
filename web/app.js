@@ -1,4 +1,4 @@
-import { FDR_URL, INSIGHT_WINDOWS, VIEWS } from "./registry.js?v=9";
+import { FDR_URL, INSIGHT_WINDOWS, VIEWS } from "./registry.js?v=11";
 import {
   aggregatePlayers,
   aggregateTeamRows,
@@ -18,8 +18,8 @@ import {
   renderMatchBoard,
   renderTicker,
   saveState,
-} from "./components.js?v=11";
-import { bindPlayerDrawer, openPlayerDrawer } from "./player-drawer.js?v=1";
+} from "./components.js?v=14";
+import { bindPlayerDrawer, openPlayerDrawer } from "./player-drawer.js?v=3";
 
 const DATA = {};
 const FILES = ["meta.json", "players_matches.json", "fixtures.json", "teams_gw.json"];
@@ -270,6 +270,7 @@ function renderPlayerView(key) {
     seasons,
     season: meta.analysis_season,
     roster,
+    prices,
     matches: () => DATA.players_matches,
     onPlayerClick: (row, ctx) => openPlayerDrawer(row, ctx),
     rows: (state) =>

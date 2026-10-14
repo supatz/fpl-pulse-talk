@@ -125,9 +125,9 @@ function bindEls() {
   els.timingMetric = $("us-timing-metric");
   els.timing = $("us-timing");
   els.tempo = $("us-tempo");
-  els.gwFrom = $("us-gw-from");
-  els.gwTo = $("us-gw-to");
+  els.gwRange = $("us-gw-range");
   els.gwLabel = $("us-timing-gw-label");
+  els.gwControl = null;
   els.teams = $("us-team-pills");
   els.topTeamsBtn = $("us-top-teams");
   els.chart = $("us-chart");
@@ -195,22 +195,25 @@ function bindEvents() {
       applyTeamMode();
     } else render();
   });
-  const syncGwInputs = () => {
-    if (!els.gwFrom || !els.gwTo) return;
-    let a = Number(els.gwFrom.value);
-    let b = Number(els.gwTo.value);
-    if (a > b) [a, b] = [b, a];
-    state.gwFrom = a;
-    state.gwTo = b;
-    if (els.gwLabel) els.gwLabel.textContent = `GW ${a}–${b}`;
-    if (state.teamMode !== "custom") {
-      state.teamMode = "preset";
-      applyTeamMode();
-    } else if (state.view === "timing") renderTiming();
-    else if (state.view === "tempo") renderTempo();
-  };
-  els.gwFrom?.addEventListener("input", syncGwInputs);
-  els.gwTo?.addEventListener("input", syncGwInputs);
+  if (els.gwRange && window.mountDualRange && !els.gwControl) {
+    els.gwControl = window.mountDualRange(els.gwRange, {
+      min: 1,
+      max: 38,
+      step: 1,
+      from: state.gwFrom || 1,
+      to: state.gwTo || 38,
+      onInput: (a, b) => {
+        state.gwFrom = a;
+        state.gwTo = b;
+        if (els.gwLabel) els.gwLabel.textContent = `GW ${a}–${b}`;
+        if (state.teamMode !== "custom") {
+          state.teamMode = "preset";
+          applyTeamMode();
+        } else if (state.view === "timing") renderTiming();
+        else if (state.view === "tempo") renderTempo();
+      },
+    });
+  }
   els.sitToggle.addEventListener("click", (e) => {
     e.stopPropagation();
     const open = els.sitMenu.hidden;
@@ -1309,14 +1312,6 @@ function syncTimingGwRange({ resetDefaults = false } = {}) {
   const meta = timingGwMeta();
   const min = Number(meta.min) || 1;
   const max = Number(meta.max) || 38;
-  if (els.gwFrom) {
-    els.gwFrom.min = String(min);
-    els.gwFrom.max = String(max);
-  }
-  if (els.gwTo) {
-    els.gwTo.min = String(min);
-    els.gwTo.max = String(max);
-  }
   if (resetDefaults) {
     state.gwFrom = Number(meta.default_from) || min;
     state.gwTo = Number(meta.default_to) || max;
@@ -1325,8 +1320,10 @@ function syncTimingGwRange({ resetDefaults = false } = {}) {
     state.gwTo = Math.min(max, Math.max(min, Number(state.gwTo) || max));
   }
   if (state.gwFrom > state.gwTo) [state.gwFrom, state.gwTo] = [state.gwTo, state.gwFrom];
-  if (els.gwFrom) els.gwFrom.value = String(state.gwFrom);
-  if (els.gwTo) els.gwTo.value = String(state.gwTo);
+  if (els.gwControl) {
+    els.gwControl.setBounds(min, max);
+    els.gwControl.set(state.gwFrom, state.gwTo);
+  }
   if (els.gwLabel) els.gwLabel.textContent = `GW ${state.gwFrom}–${state.gwTo}`;
 }
 
