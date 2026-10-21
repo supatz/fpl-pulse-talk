@@ -1,6 +1,6 @@
 # FPL master datasets — data dictionary
 
-Generated `2026-10-20T12:37:38Z`.
+Generated `2026-10-21T19:28:56Z`.
 
 Source: public [`olbauday/FPL-Core-Insights`](https://github.com/olbauday/FPL-Core-Insights).
 
@@ -10,73 +10,73 @@ Missing values are null, never filled with zero. `player_id` is season-scoped;
 
 ## `player_match`
 
-Rows: **20,074**. Columns: **114**.
+Rows: **20,155**. Columns: **114**.
 
 | Column | Dtype | Nulls | Notes |
 |---|---|---:|---|
 | `player_id` | `Int64` | 0 (0.0%) | Season-scoped FPL player id. Do not join across seasons. |
 | `match_id` | `String` | 0 (0.0%) | Stable match identifier from the source repo. |
 | `minutes` | `Float64` | 62 (0.3%) | Minutes played (Opta/match layer). Missing is unknown, not zero. |
-| `goals` | `Float64` | 1,325 (6.6%) |  |
-| `assists` | `Float64` | 1,404 (7.0%) |  |
-| `total_shots` | `Float64` | 2,988 (14.9%) |  |
-| `xg` | `Float64` | 3,229 (16.1%) | Opta/match-layer expected goals. Distinct from FPL expected_goals and shot-model xG. |
-| `xa` | `Float64` | 2,576 (12.8%) | Opta expected assists. |
-| `shots_on_target` | `Float64` | 2,988 (14.9%) |  |
-| `successful_dribbles` | `String` | 4,704 (23.4%) |  |
-| `big_chances_missed` | `String` | 5,032 (25.1%) |  |
-| `touches_opposition_box` | `Float64` | 1,733 (8.6%) |  |
-| `touches` | `Float64` | 1,164 (5.8%) |  |
-| `accurate_passes` | `Float64` | 1,405 (7.0%) |  |
-| `accurate_passes_percent` | `Float64` | 1,470 (7.3%) |  |
-| `chances_created` | `Float64` | 1,396 (7.0%) |  |
-| `final_third_passes` | `Float64` | 2,193 (10.9%) |  |
-| `accurate_crosses` | `Float64` | 3,207 (16.0%) |  |
-| `accurate_crosses_percent` | `Float64` | 3,242 (16.2%) |  |
-| `accurate_long_balls` | `Float64` | 2,478 (12.3%) |  |
-| `accurate_long_balls_percent` | `Float64` | 2,513 (12.5%) |  |
-| `tackles_won` | `Float64` | 1,164 (5.8%) |  |
-| `interceptions` | `Float64` | 1,164 (5.8%) |  |
-| `recoveries` | `Float64` | 1,164 (5.8%) |  |
-| `blocks` | `Float64` | 1,733 (8.6%) |  |
-| `clearances` | `Float64` | 1,164 (5.8%) |  |
-| `headed_clearances` | `Float64` | 3,756 (18.7%) |  |
-| `dribbled_past` | `Float64` | 1,733 (8.6%) |  |
-| `duels_won` | `Float64` | 1,806 (9.0%) |  |
-| `duels_lost` | `Float64` | 1,835 (9.1%) |  |
-| `ground_duels_won` | `Float64` | 1,658 (8.3%) |  |
-| `ground_duels_won_percent` | `Float64` | 1,658 (8.3%) |  |
-| `aerial_duels_won` | `Float64` | 1,380 (6.9%) |  |
-| `aerial_duels_won_percent` | `Float64` | 2,523 (12.6%) |  |
-| `was_fouled` | `Float64` | 3,169 (15.8%) |  |
-| `fouls_committed` | `Float64` | 1,164 (5.8%) |  |
-| `saves` | `Float64` | 4,463 (22.2%) |  |
-| `goals_conceded` | `Float64` | 4,463 (22.2%) |  |
-| `xgot_faced` | `String` | 4,840 (24.1%) |  |
-| `goals_prevented` | `String` | 4,840 (24.1%) |  |
-| `sweeper_actions` | `Float64` | 4,791 (23.9%) |  |
-| `gk_accurate_passes` | `Float64` | 4,791 (23.9%) |  |
-| `gk_accurate_long_balls` | `Float64` | 4,793 (23.9%) |  |
-| `dispossessed` | `String` | 1,718 (8.6%) |  |
-| `high_claim` | `Float64` | 4,791 (23.9%) |  |
-| `saves_inside_box` | `Float64` | 4,791 (23.9%) |  |
-| `offsides` | `String` | 5,032 (25.1%) |  |
-| `successful_dribbles_percent` | `String` | 4,739 (23.6%) |  |
-| `tackles_won_percent` | `String` | 4,739 (23.6%) |  |
-| `xgot` | `Float64` | 4,025 (20.1%) |  |
-| `tackles` | `String` | 4,704 (23.4%) |  |
-| `start_min` | `Int64` | 1,211 (6.0%) |  |
-| `finish_min` | `Int64` | 1,211 (6.0%) |  |
+| `goals` | `Float64` | 1,347 (6.7%) |  |
+| `assists` | `Float64` | 1,426 (7.1%) |  |
+| `total_shots` | `Float64` | 3,036 (15.1%) |  |
+| `xg` | `Float64` | 3,277 (16.3%) | Opta/match-layer expected goals. Distinct from FPL expected_goals and shot-model xG. |
+| `xa` | `Float64` | 2,611 (13.0%) | Opta expected assists. |
+| `shots_on_target` | `Float64` | 3,036 (15.1%) |  |
+| `successful_dribbles` | `String` | 4,785 (23.7%) |  |
+| `big_chances_missed` | `String` | 5,113 (25.4%) |  |
+| `touches_opposition_box` | `Float64` | 1,755 (8.7%) |  |
+| `touches` | `Float64` | 1,182 (5.9%) |  |
+| `accurate_passes` | `Float64` | 1,427 (7.1%) |  |
+| `accurate_passes_percent` | `Float64` | 1,492 (7.4%) |  |
+| `chances_created` | `Float64` | 1,417 (7.0%) |  |
+| `final_third_passes` | `Float64` | 2,225 (11.0%) |  |
+| `accurate_crosses` | `Float64` | 3,259 (16.2%) |  |
+| `accurate_crosses_percent` | `Float64` | 3,294 (16.3%) |  |
+| `accurate_long_balls` | `Float64` | 2,524 (12.5%) |  |
+| `accurate_long_balls_percent` | `Float64` | 2,559 (12.7%) |  |
+| `tackles_won` | `Float64` | 1,182 (5.9%) |  |
+| `interceptions` | `Float64` | 1,182 (5.9%) |  |
+| `recoveries` | `Float64` | 1,182 (5.9%) |  |
+| `blocks` | `Float64` | 1,755 (8.7%) |  |
+| `clearances` | `Float64` | 1,182 (5.9%) |  |
+| `headed_clearances` | `Float64` | 3,815 (18.9%) |  |
+| `dribbled_past` | `Float64` | 1,755 (8.7%) |  |
+| `duels_won` | `Float64` | 1,832 (9.1%) |  |
+| `duels_lost` | `Float64` | 1,868 (9.3%) |  |
+| `ground_duels_won` | `Float64` | 1,684 (8.4%) |  |
+| `ground_duels_won_percent` | `Float64` | 1,684 (8.4%) |  |
+| `aerial_duels_won` | `Float64` | 1,401 (7.0%) |  |
+| `aerial_duels_won_percent` | `Float64` | 2,567 (12.7%) |  |
+| `was_fouled` | `Float64` | 3,220 (16.0%) |  |
+| `fouls_committed` | `Float64` | 1,182 (5.9%) |  |
+| `saves` | `Float64` | 4,540 (22.5%) |  |
+| `goals_conceded` | `Float64` | 4,540 (22.5%) |  |
+| `xgot_faced` | `String` | 4,917 (24.4%) |  |
+| `goals_prevented` | `String` | 4,917 (24.4%) |  |
+| `sweeper_actions` | `Float64` | 4,868 (24.2%) |  |
+| `gk_accurate_passes` | `Float64` | 4,868 (24.2%) |  |
+| `gk_accurate_long_balls` | `Float64` | 4,870 (24.2%) |  |
+| `dispossessed` | `String` | 1,740 (8.6%) |  |
+| `high_claim` | `Float64` | 4,868 (24.2%) |  |
+| `saves_inside_box` | `Float64` | 4,868 (24.2%) |  |
+| `offsides` | `String` | 5,113 (25.4%) |  |
+| `successful_dribbles_percent` | `String` | 4,820 (23.9%) |  |
+| `tackles_won_percent` | `String` | 4,820 (23.9%) |  |
+| `xgot` | `Float64` | 4,092 (20.3%) |  |
+| `tackles` | `String` | 4,785 (23.7%) |  |
+| `start_min` | `Int64` | 1,229 (6.1%) |  |
+| `finish_min` | `Int64` | 1,229 (6.1%) |  |
 | `team_goals_conceded` | `Int64` | 314 (1.6%) |  |
 | `penalties_scored` | `Float64` | 46 (0.2%) |  |
 | `penalties_missed` | `Int64` | 21 (0.1%) |  |
-| `top_speed` | `String` | 15,245 (75.9%) |  |
-| `distance_covered` | `String` | 15,245 (75.9%) |  |
-| `walking_distance` | `String` | 17,367 (86.5%) |  |
-| `running_distance` | `String` | 15,245 (75.9%) |  |
-| `sprinting_distance` | `String` | 15,344 (76.4%) |  |
-| `number_of_sprints` | `String` | 15,429 (76.9%) |  |
-| `defensive_contributions` | `String` | 5,234 (26.1%) |  |
+| `top_speed` | `String` | 15,294 (75.9%) |  |
+| `distance_covered` | `String` | 15,294 (75.9%) |  |
+| `walking_distance` | `String` | 17,448 (86.6%) |  |
+| `running_distance` | `String` | 15,294 (75.9%) |  |
+| `sprinting_distance` | `String` | 15,394 (76.4%) |  |
+| `number_of_sprints` | `String` | 15,480 (76.8%) |  |
+| `defensive_contributions` | `String` | 5,315 (26.4%) |  |
 | `player_code` | `Int64` | 0 (0.0%) | Stable cross-season player identity. |
 | `web_name` | `String` | 0 (0.0%) |  |
 | `position` | `String` | 0 (0.0%) |  |
@@ -84,7 +84,7 @@ Rows: **20,074**. Columns: **114**.
 | `gw` | `Int64` | 0 (0.0%) | FPL gameweek from the GW folder number (includes 0 for pre-season). |
 | `competition` | `String` | 0 (0.0%) | Tournament folder name. Dashboard filters; ingest keeps every competition. |
 | `home_team` | `Int64` | 1,552 (7.7%) |  |
-| `away_team` | `Int64` | 1,992 (9.9%) |  |
+| `away_team` | `Int64` | 2,034 (10.1%) |  |
 | `home_score` | `Float64` | 0 (0.0%) |  |
 | `away_score` | `Float64` | 0 (0.0%) |  |
 | `finished` | `Boolean` | 0 (0.0%) |  |
@@ -93,35 +93,35 @@ Rows: **20,074**. Columns: **114**.
 | `match_gw` | `Int64` | 0 (0.0%) |  |
 | `kickoff_utc` | `String` | 749 (3.7%) |  |
 | `is_home` | `Boolean` | 1,552 (7.7%) | True if the row's team/player is the home side. |
-| `opponent_code` | `Int64` | 3,713 (18.5%) | Opponent club code. |
+| `opponent_code` | `Int64` | 3,755 (18.6%) | Opponent club code. |
 | `team_goals_for` | `Float64` | 253 (1.3%) |  |
 | `team_goals_against` | `Float64` | 253 (1.3%) |  |
 | `venue` | `String` | 0 (0.0%) | H or A. |
 | `result` | `String` | 253 (1.3%) |  |
-| `started` | `Boolean` | 6,574 (32.7%) |  |
-| `formation` | `String` | 6,574 (32.7%) |  |
-| `lineup_status` | `String` | 6,574 (32.7%) |  |
-| `lineup_team_code` | `Int64` | 6,574 (32.7%) |  |
-| `rating` | `Float64` | 7,497 (37.3%) |  |
-| `yellow_cards` | `Float64` | 7,258 (36.2%) |  |
-| `red_cards` | `Float64` | 7,258 (36.2%) |  |
-| `np_xg` | `Float64` | 12,891 (64.2%) | Non-penalty xG from FPL-Core shots (situation != penalty) joined on match_id + player_id. Serving fills gaps with xG − 0.79 × penalties_scored when the shot join is null. |
-| `set_piece_xg` | `Float64` | 12,891 (64.2%) | Shot-model xG on set-piece situations. |
-| `open_play_xg` | `Float64` | 12,891 (64.2%) | Shot-model xG on open-play situations. |
-| `penalty_shots` | `UInt32` | 12,891 (64.2%) |  |
-| `own_goals` | `Float64` | 1,040 (5.2%) |  |
+| `started` | `Boolean` | 6,655 (33.0%) |  |
+| `formation` | `String` | 6,655 (33.0%) |  |
+| `lineup_status` | `String` | 6,655 (33.0%) |  |
+| `lineup_team_code` | `Int64` | 6,655 (33.0%) |  |
+| `rating` | `Float64` | 7,578 (37.6%) |  |
+| `yellow_cards` | `Float64` | 7,339 (36.4%) |  |
+| `red_cards` | `Float64` | 7,339 (36.4%) |  |
+| `np_xg` | `Float64` | 12,956 (64.3%) | Non-penalty xG from FPL-Core shots (situation != penalty) joined on match_id + player_id. Serving fills gaps with xG − 0.79 × penalties_scored when the shot join is null. |
+| `set_piece_xg` | `Float64` | 12,956 (64.3%) | Shot-model xG on set-piece situations. |
+| `open_play_xg` | `Float64` | 12,956 (64.3%) | Shot-model xG on open-play situations. |
+| `penalty_shots` | `UInt32` | 12,956 (64.3%) |  |
+| `own_goals` | `Float64` | 1,082 (5.4%) |  |
 | `season` | `String` | 0 (0.0%) | Season folder name (YYYY-YYYY). |
-| `corners` | `String` | 20,074 (100.0%) |  |
-| `fpl_points` | `Float64` | 1,040 (5.2%) | FPL gameweek points attached for convenience. Authoritative series is player_gw. Do not sum on DGW rows. |
-| `bonus` | `Float64` | 1,040 (5.2%) |  |
-| `bps` | `Float64` | 1,040 (5.2%) |  |
-| `now_cost` | `Float64` | 1,040 (5.2%) | FPL price in £m as a decimal (e.g. 7.0). Do not divide by 10. |
-| `selected_by_percent` | `Float64` | 1,040 (5.2%) |  |
-| `form` | `Float64` | 1,040 (5.2%) |  |
-| `penalties_order` | `String` | 18,061 (90.0%) |  |
-| `direct_freekicks_order` | `String` | 17,964 (89.5%) |  |
-| `corners_and_indirect_freekicks_order` | `String` | 17,269 (86.0%) |  |
-| `status` | `String` | 1,040 (5.2%) |  |
+| `corners` | `String` | 20,155 (100.0%) |  |
+| `fpl_points` | `Float64` | 1,082 (5.4%) | FPL gameweek points attached for convenience. Authoritative series is player_gw. Do not sum on DGW rows. |
+| `bonus` | `Float64` | 1,082 (5.4%) |  |
+| `bps` | `Float64` | 1,082 (5.4%) |  |
+| `now_cost` | `Float64` | 1,082 (5.4%) | FPL price in £m as a decimal (e.g. 7.0). Do not divide by 10. |
+| `selected_by_percent` | `Float64` | 1,082 (5.4%) |  |
+| `form` | `Float64` | 1,082 (5.4%) |  |
+| `penalties_order` | `String` | 18,134 (90.0%) |  |
+| `direct_freekicks_order` | `String` | 18,039 (89.5%) |  |
+| `corners_and_indirect_freekicks_order` | `String` | 17,340 (86.0%) |  |
+| `status` | `String` | 1,082 (5.4%) |  |
 | `gw_match_index` | `Int64` | 0 (0.0%) | 1-based index of this match within the player's GW. |
 | `gw_match_count` | `UInt32` | 0 (0.0%) | Player-match rows for this player in the GW (all competitions). |
 | `is_dgw` | `Boolean` | 0 (0.0%) | True when the player has 2+ Premier League matches in this GW. |
@@ -139,7 +139,7 @@ Rows: **34,563**. Columns: **52**.
 | `gw` | `Int64` | 0 (0.0%) | FPL gameweek from the GW folder number (includes 0 for pre-season). |
 | `web_name` | `String` | 0 (0.0%) |  |
 | `status` | `String` | 0 (0.0%) |  |
-| `news` | `String` | 22,463 (65.0%) |  |
+| `news` | `String` | 22,464 (65.0%) |  |
 | `now_cost` | `Float64` | 0 (0.0%) | FPL price in £m as a decimal (e.g. 7.0). Do not divide by 10. |
 | `selected_by_percent` | `Float64` | 0 (0.0%) |  |
 | `form` | `Float64` | 0 (0.0%) |  |
@@ -202,89 +202,89 @@ Rows: **1,922**. Columns: **115**.
 | `opponent_code` | `Int64` | 322 (16.8%) | Opponent club code. |
 | `is_home` | `Boolean` | 0 (0.0%) | True if the row's team/player is the home side. |
 | `finished` | `Boolean` | 0 (0.0%) |  |
-| `goals_for` | `Float64` | 692 (36.0%) |  |
-| `goals_against` | `Float64` | 692 (36.0%) |  |
+| `goals_for` | `Float64` | 690 (35.9%) |  |
+| `goals_against` | `Float64` | 690 (35.9%) |  |
 | `elo` | `Float64` | 996 (51.8%) |  |
-| `possession` | `Float64` | 774 (40.3%) |  |
-| `xg` | `Float64` | 775 (40.3%) | Opta/match-layer expected goals. Distinct from FPL expected_goals and shot-model xG. |
-| `np_xg` | `Float64` | 809 (42.1%) | Non-penalty xG from FPL-Core shots (situation != penalty) joined on match_id + player_id. Serving fills gaps with xG − 0.79 × penalties_scored when the shot join is null. |
-| `xg_open_play` | `String` | 803 (41.8%) |  |
-| `xg_set_play` | `String` | 803 (41.8%) |  |
-| `xgot` | `Float64` | 803 (41.8%) |  |
-| `total_shots` | `String` | 768 (40.0%) |  |
-| `shots_on_target` | `String` | 768 (40.0%) |  |
-| `shots_inside_box` | `String` | 769 (40.0%) |  |
-| `shots_outside_box` | `String` | 769 (40.0%) |  |
-| `big_chances` | `String` | 769 (40.0%) |  |
-| `big_chances_missed` | `String` | 769 (40.0%) |  |
-| `touches_in_opposition_box` | `String` | 769 (40.0%) |  |
-| `corners` | `String` | 768 (40.0%) |  |
-| `accurate_passes` | `String` | 769 (40.0%) |  |
-| `accurate_passes_pct` | `String` | 769 (40.0%) |  |
-| `accurate_long_balls` | `String` | 769 (40.0%) |  |
-| `accurate_long_balls_pct` | `String` | 769 (40.0%) |  |
-| `accurate_crosses` | `String` | 769 (40.0%) |  |
-| `accurate_crosses_pct` | `String` | 769 (40.0%) |  |
-| `tackles_won` | `String` | 778 (40.5%) |  |
+| `possession` | `Float64` | 770 (40.1%) |  |
+| `xg` | `Float64` | 771 (40.1%) | Opta/match-layer expected goals. Distinct from FPL expected_goals and shot-model xG. |
+| `np_xg` | `Float64` | 805 (41.9%) | Non-penalty xG from FPL-Core shots (situation != penalty) joined on match_id + player_id. Serving fills gaps with xG − 0.79 × penalties_scored when the shot join is null. |
+| `xg_open_play` | `String` | 799 (41.6%) |  |
+| `xg_set_play` | `String` | 799 (41.6%) |  |
+| `xgot` | `Float64` | 799 (41.6%) |  |
+| `total_shots` | `String` | 764 (39.8%) |  |
+| `shots_on_target` | `String` | 764 (39.8%) |  |
+| `shots_inside_box` | `String` | 765 (39.8%) |  |
+| `shots_outside_box` | `String` | 765 (39.8%) |  |
+| `big_chances` | `String` | 765 (39.8%) |  |
+| `big_chances_missed` | `String` | 765 (39.8%) |  |
+| `touches_in_opposition_box` | `String` | 765 (39.8%) |  |
+| `corners` | `String` | 764 (39.8%) |  |
+| `accurate_passes` | `String` | 765 (39.8%) |  |
+| `accurate_passes_pct` | `String` | 765 (39.8%) |  |
+| `accurate_long_balls` | `String` | 765 (39.8%) |  |
+| `accurate_long_balls_pct` | `String` | 765 (39.8%) |  |
+| `accurate_crosses` | `String` | 765 (39.8%) |  |
+| `accurate_crosses_pct` | `String` | 765 (39.8%) |  |
+| `tackles_won` | `String` | 774 (40.3%) |  |
 | `tackles_won_pct` | `String` | 1,011 (52.6%) |  |
-| `interceptions` | `String` | 769 (40.0%) |  |
-| `blocks` | `String` | 773 (40.2%) |  |
-| `clearances` | `String` | 769 (40.0%) |  |
-| `duels_won` | `String` | 773 (40.2%) |  |
-| `aerial_duels_won` | `String` | 769 (40.0%) |  |
-| `aerial_duels_won_pct` | `String` | 769 (40.0%) |  |
-| `ground_duels_won` | `String` | 769 (40.0%) |  |
-| `ground_duels_won_pct` | `String` | 770 (40.1%) |  |
-| `fouls_committed` | `String` | 769 (40.0%) |  |
-| `offsides` | `String` | 769 (40.0%) |  |
-| `yellow_cards` | `String` | 771 (40.1%) |  |
-| `red_cards` | `String` | 772 (40.2%) |  |
-| `keeper_saves` | `String` | 769 (40.0%) |  |
-| `successful_dribbles` | `String` | 769 (40.0%) |  |
-| `successful_dribbles_pct` | `String` | 769 (40.0%) |  |
-| `possession_against` | `String` | 774 (40.3%) |  |
-| `xga` | `Float64` | 775 (40.3%) | Expected goals against (opponent xG) on team_match. |
-| `np_xg_against` | `String` | 809 (42.1%) |  |
-| `xg_open_play_against` | `String` | 803 (41.8%) |  |
-| `xg_set_play_against` | `String` | 803 (41.8%) |  |
-| `xgot_against` | `String` | 803 (41.8%) |  |
-| `shots_conceded` | `String` | 768 (40.0%) |  |
-| `sot_conceded` | `String` | 768 (40.0%) |  |
-| `shots_inside_box_against` | `String` | 769 (40.0%) |  |
-| `shots_outside_box_against` | `String` | 769 (40.0%) |  |
-| `big_chances_conceded` | `String` | 769 (40.0%) |  |
-| `big_chances_missed_against` | `String` | 769 (40.0%) |  |
-| `touches_in_opposition_box_against` | `String` | 769 (40.0%) |  |
-| `corners_against` | `String` | 768 (40.0%) |  |
-| `accurate_passes_against` | `String` | 769 (40.0%) |  |
-| `accurate_passes_pct_against` | `String` | 769 (40.0%) |  |
-| `accurate_long_balls_against` | `String` | 769 (40.0%) |  |
-| `accurate_long_balls_pct_against` | `String` | 769 (40.0%) |  |
-| `accurate_crosses_against` | `String` | 769 (40.0%) |  |
-| `accurate_crosses_pct_against` | `String` | 769 (40.0%) |  |
-| `tackles_won_against` | `String` | 778 (40.5%) |  |
+| `interceptions` | `String` | 765 (39.8%) |  |
+| `blocks` | `String` | 769 (40.0%) |  |
+| `clearances` | `String` | 765 (39.8%) |  |
+| `duels_won` | `String` | 769 (40.0%) |  |
+| `aerial_duels_won` | `String` | 765 (39.8%) |  |
+| `aerial_duels_won_pct` | `String` | 765 (39.8%) |  |
+| `ground_duels_won` | `String` | 765 (39.8%) |  |
+| `ground_duels_won_pct` | `String` | 766 (39.9%) |  |
+| `fouls_committed` | `String` | 765 (39.8%) |  |
+| `offsides` | `String` | 765 (39.8%) |  |
+| `yellow_cards` | `String` | 767 (39.9%) |  |
+| `red_cards` | `String` | 768 (40.0%) |  |
+| `keeper_saves` | `String` | 765 (39.8%) |  |
+| `successful_dribbles` | `String` | 765 (39.8%) |  |
+| `successful_dribbles_pct` | `String` | 765 (39.8%) |  |
+| `possession_against` | `String` | 770 (40.1%) |  |
+| `xga` | `Float64` | 771 (40.1%) | Expected goals against (opponent xG) on team_match. |
+| `np_xg_against` | `String` | 805 (41.9%) |  |
+| `xg_open_play_against` | `String` | 799 (41.6%) |  |
+| `xg_set_play_against` | `String` | 799 (41.6%) |  |
+| `xgot_against` | `String` | 799 (41.6%) |  |
+| `shots_conceded` | `String` | 764 (39.8%) |  |
+| `sot_conceded` | `String` | 764 (39.8%) |  |
+| `shots_inside_box_against` | `String` | 765 (39.8%) |  |
+| `shots_outside_box_against` | `String` | 765 (39.8%) |  |
+| `big_chances_conceded` | `String` | 765 (39.8%) |  |
+| `big_chances_missed_against` | `String` | 765 (39.8%) |  |
+| `touches_in_opposition_box_against` | `String` | 765 (39.8%) |  |
+| `corners_against` | `String` | 764 (39.8%) |  |
+| `accurate_passes_against` | `String` | 765 (39.8%) |  |
+| `accurate_passes_pct_against` | `String` | 765 (39.8%) |  |
+| `accurate_long_balls_against` | `String` | 765 (39.8%) |  |
+| `accurate_long_balls_pct_against` | `String` | 765 (39.8%) |  |
+| `accurate_crosses_against` | `String` | 765 (39.8%) |  |
+| `accurate_crosses_pct_against` | `String` | 765 (39.8%) |  |
+| `tackles_won_against` | `String` | 774 (40.3%) |  |
 | `tackles_won_pct_against` | `String` | 1,011 (52.6%) |  |
-| `interceptions_against` | `String` | 769 (40.0%) |  |
-| `blocks_against` | `String` | 773 (40.2%) |  |
-| `clearances_against` | `String` | 769 (40.0%) |  |
-| `duels_won_against` | `String` | 773 (40.2%) |  |
-| `aerial_duels_won_against` | `String` | 769 (40.0%) |  |
-| `aerial_duels_won_pct_against` | `String` | 769 (40.0%) |  |
-| `ground_duels_won_against` | `String` | 769 (40.0%) |  |
-| `ground_duels_won_pct_against` | `String` | 770 (40.1%) |  |
-| `fouls_committed_against` | `String` | 769 (40.0%) |  |
-| `offsides_against` | `String` | 769 (40.0%) |  |
-| `yellow_cards_against` | `String` | 771 (40.1%) |  |
-| `red_cards_against` | `String` | 772 (40.2%) |  |
-| `keeper_saves_against` | `String` | 769 (40.0%) |  |
-| `successful_dribbles_against` | `String` | 769 (40.0%) |  |
-| `successful_dribbles_pct_against` | `String` | 769 (40.0%) |  |
+| `interceptions_against` | `String` | 765 (39.8%) |  |
+| `blocks_against` | `String` | 769 (40.0%) |  |
+| `clearances_against` | `String` | 765 (39.8%) |  |
+| `duels_won_against` | `String` | 769 (40.0%) |  |
+| `aerial_duels_won_against` | `String` | 765 (39.8%) |  |
+| `aerial_duels_won_pct_against` | `String` | 765 (39.8%) |  |
+| `ground_duels_won_against` | `String` | 765 (39.8%) |  |
+| `ground_duels_won_pct_against` | `String` | 766 (39.9%) |  |
+| `fouls_committed_against` | `String` | 765 (39.8%) |  |
+| `offsides_against` | `String` | 765 (39.8%) |  |
+| `yellow_cards_against` | `String` | 767 (39.9%) |  |
+| `red_cards_against` | `String` | 768 (40.0%) |  |
+| `keeper_saves_against` | `String` | 765 (39.8%) |  |
+| `successful_dribbles_against` | `String` | 765 (39.8%) |  |
+| `successful_dribbles_pct_against` | `String` | 765 (39.8%) |  |
 | `kickoff_raw` | `String` | 44 (2.3%) |  |
 | `tournament` | `String` | 0 (0.0%) |  |
 | `kickoff_utc` | `String` | 44 (2.3%) |  |
-| `result` | `String` | 692 (36.0%) |  |
-| `points` | `Int64` | 692 (36.0%) |  |
-| `clean_sheet` | `Boolean` | 692 (36.0%) |  |
+| `result` | `String` | 690 (35.9%) |  |
+| `points` | `Int64` | 690 (35.9%) |  |
+| `clean_sheet` | `Boolean` | 690 (35.9%) |  |
 | `venue` | `String` | 0 (0.0%) | H or A. |
 | `travel_distance_km` | `String` | 1,826 (95.0%) |  |
 | `weather_description` | `String` | 1,850 (96.3%) |  |

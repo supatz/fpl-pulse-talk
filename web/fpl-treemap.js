@@ -61,6 +61,7 @@
   const { teamFill, textOnTeam } = window.TeamColors;
   const TILE_FONT = "Roboto, Helvetica Neue, Segoe UI, sans-serif";
 
+  const MIN_MINUTES_PER_APP = 45;
   const state = {
     rows: [],
     season: null,
@@ -69,6 +70,8 @@
     position: "ALL",
     gwFrom: 1,
     gwTo: 38,
+    per90: false,
+    min45: false,
     teams: new Set(),
     teamMode: "preset",
   };
@@ -117,6 +120,8 @@
     els.teamPills = $("fpl-map-team-pills");
     els.topTeams = $("fpl-map-top-teams");
     els.allTeams = $("fpl-map-all-teams");
+    els.per90 = $("fpl-map-per90");
+    els.min45 = $("fpl-map-min45");
     els.chartDl = $("fpl-map-chart-dl");
   }
 
@@ -172,6 +177,15 @@
     });
     els.allTeams.addEventListener("click", () => {
       state.teamMode = "all";
+      applyTeamMode();
+    });
+    els.per90?.addEventListener("change", () => {
+      state.per90 = Boolean(els.per90.checked);
+      render();
+    });
+    els.min45?.addEventListener("change", () => {
+      state.min45 = Boolean(els.min45.checked);
+      state.teamMode = "preset";
       applyTeamMode();
     });
     if (els.chartDl && window.ChartExport && !els.chartDl.dataset.bound) {
@@ -393,7 +407,20 @@
       p.CS = [...p.csByGw.values()].reduce((sum, value) => sum + value, 0);
       delete p.csByGw;
     }
-    return [...players.values()];
+    let list = [...players.values()];
+    if (state.min45) {
+      list = list.filter((p) => p.apps > 0 && p.minutes / p.apps >= MIN_MINUTES_PER_APP);
+    }
+    if (state.per90) {
+      const rateKeys = ["G", "A", "xGI", "xG", "npxG", "SoT", "CC", "DefCon", "BCC", "BCT", "BCS", "BCM"];
+      list = list.map((p) => {
+        const out = { ...p };
+        const scale = p.minutes > 0 ? 90 / p.minutes : 0;
+        for (const key of rateKeys) out[key] = (p[key] || 0) * scale;
+        return out;
+      });
+    }
+    return list;
   }
 
   function render() {
@@ -430,7 +457,8 @@
     const mode = state.teamMode === "preset" ? "top 10 teams" : state.teamMode === "all" ? "all teams" : "custom teams";
     const position = els.position.options[els.position.selectedIndex]?.textContent || "All positions";
     const srcNote = BC_KEYS.includes(sortKey) || state.metric === "BigChance" ? "FPL + Understat big chances" : "FPL-Core";
-    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · ${teams.length} teams (${mode}) · team and tile area follow ${FIELDS[sortKey].label} · top ${TOP_PLAYERS_PER_TEAM} positive players per team · ${srcNote}`;
+    const rateNote = [state.per90 ? "per 90" : null, state.min45 ? "45+ mins" : null].filter(Boolean).join(" · ");
+    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position}${rateNote ? ` · ${rateNote}` : ""} · ${teams.length} teams (${mode}) · team and tile area follow ${FIELDS[sortKey].label} · top ${TOP_PLAYERS_PER_TEAM} positive players per team · ${srcNote}`;
 
     const width = els.chart.clientWidth || 1000;
     const height = els.chart.clientHeight || 640;

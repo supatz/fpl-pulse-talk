@@ -50,7 +50,7 @@ export function openPlayerDrawer(player, ctx) {
   const state = ctx.state || {};
   const cfg = ctx.cfg || {};
   const metricKeys = (ctx.columns || []).filter((key) => !SKIP.has(key));
-  const keys = ["gw", "venue", "mins", ...metricKeys.filter((k) => k !== "mins")];
+  const keys = ["gw", "opp", "venue", "mins", ...metricKeys.filter((k) => k !== "mins")];
   const rows = playerGwRows(matches, player, state);
 
   title.textContent = `${player.player || "Player"} · ${player.team || ""}`;
@@ -61,7 +61,7 @@ export function openPlayerDrawer(player, ctx) {
     .filter(Boolean)
     .join(" · ");
 
-  const totals = { gw: "Total", venue: "", mins: 0 };
+  const totals = { gw: "Total", opp: "", venue: "", mins: 0 };
   for (const key of metricKeys) totals[key] = 0;
   let any = Object.fromEntries(metricKeys.map((k) => [k, false]));
   for (const row of rows) {
@@ -77,7 +77,7 @@ export function openPlayerDrawer(player, ctx) {
     if (!any[key]) totals[key] = null;
   }
 
-  const per90 = { gw: "Per 90", venue: "", mins: totals.mins || null };
+  const per90 = { gw: "Per 90", opp: "", venue: "", mins: totals.mins || null };
   const per90Keys = new Set([...(cfg.per90Keys || []), ...(cfg.always90Keys || [])]);
   for (const key of metricKeys) {
     if (!per90Keys.has(key) || totals[key] == null || !totals.mins) per90[key] = null;
@@ -110,6 +110,7 @@ export function openPlayerDrawer(player, ctx) {
 
 function header(key, cfg) {
   if (key === "gw") return "GW";
+  if (key === "opp") return "Opp";
   if (key === "venue") return "V";
   if (key === "mins") return "Min";
   const m = METRICS[key] || { label: key };
@@ -119,6 +120,7 @@ function header(key, cfg) {
 
 function cell(row, key, as90 = false) {
   if (key === "gw") return row.gw ?? "—";
+  if (key === "opp") return row.opp || "—";
   if (key === "venue") return row.venue || "—";
   if (key === "mins") return fmt(row.mins, "int");
   const m = METRICS[key] || { fmt: "2dp" };
@@ -147,6 +149,7 @@ function playerGwRows(matches, player, state) {
       gw,
       gw_from: sliced.from,
       gw_to: sliced.to,
+      opp: [...new Set(apps.map((r) => r.opp).filter(Boolean))].join("+") || "—",
       venue: [...new Set(apps.map((r) => (r.h === true ? "H" : r.h === false ? "A" : null)).filter(Boolean))].join("+"),
       mins: apps.reduce((a, r) => a + num(r.m), 0),
     };

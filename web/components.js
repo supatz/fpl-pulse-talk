@@ -370,6 +370,22 @@ export function aggregateTeamRows(rows, state) {
       team_code: last.team_code,
       apps: list.length,
       mins_per_app: 90,
+      Pts: sum("points"),
+      G: sum("goals_for"),
+      "G-A": sum("goals_against"),
+      xG: sum("xg"),
+      "xG-A": sum("xga"),
+      Sh: sum("shots"),
+      "Sh-A": sum("shots_conceded"),
+      SoT: sum("shots_on_target"),
+      "SoT-A": sum("sot_conceded"),
+      CC: sum("CC"),
+      "CC-A": sum("CC_A"),
+      BCC: sum("big_chances"),
+      "BCC-A": sum("big_chances_conceded"),
+      Poss: mean("possession"),
+      CS: list.filter((r) => r.clean_sheet).length,
+      // legacy aliases for home insight lists
       PtsT: sum("points"),
       GF: sum("goals_for"),
       GA: sum("goals_against"),
@@ -377,7 +393,6 @@ export function aggregateTeamRows(rows, state) {
       xGa: sum("xga"),
       ShT: sum("shots"),
       SoTT: sum("shots_on_target"),
-      Poss: mean("possession"),
       CST: list.filter((r) => r.clean_sheet).length,
       gw_from: from,
       gw_to: to,
@@ -940,7 +955,12 @@ export function makeTable(cfg) {
                 const name = fmt(cellValue(r, key, state, cfg), m.fmt);
                 return `<td class="sticky"><button type="button" class="player-link" data-player-open="${id}">${escapeCell(name)}</button></td>`;
               }
-              return `<td class="${key === "player" ? "sticky" : ""}">${fmt(cellValue(r, key, state, cfg), m.fmt)}</td>`;
+              if (key === "team" && cfg.onTeamClick) {
+                const name = fmt(cellValue(r, key, state, cfg), m.fmt);
+                const tc = String(r.team_code ?? "");
+                return `<td class="sticky"><button type="button" class="player-link" data-team-open="${tc}">${escapeCell(name)}</button></td>`;
+              }
+              return `<td class="${key === "player" || key === "team" ? "sticky" : ""}">${fmt(cellValue(r, key, state, cfg), m.fmt)}</td>`;
             })
             .join("")}</tr>`;
         })
@@ -951,6 +971,14 @@ export function makeTable(cfg) {
         btn.addEventListener("click", () => {
           const row = sorted.find((r) => String(r.pc ?? r.pid) === btn.dataset.playerOpen);
           if (row) cfg.onPlayerClick(row, { state, columns: cols, cfg, matches: cfg.matches });
+        });
+      });
+    }
+    if (cfg.onTeamClick) {
+      tb.querySelectorAll("[data-team-open]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const row = sorted.find((r) => String(r.team_code ?? "") === btn.dataset.teamOpen);
+          if (row) cfg.onTeamClick(row, { state, columns: cols, cfg, matches: cfg.matches || cfg.teamMatches });
         });
       });
     }

@@ -214,6 +214,11 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
     else:
         pm = pm.with_columns(pl.lit(None).alias("PS"))
     pm = pm.join(teams.select("team_code", "short"), on="team_code", how="left")
+    if "opponent_code" in pm.columns:
+        opp = teams.select(pl.col("team_code").alias("opponent_code"), pl.col("short").alias("opp"))
+        pm = pm.join(opp, on="opponent_code", how="left")
+    else:
+        pm = pm.with_columns(pl.lit(None).alias("opp"))
     keep = {
         "season": "s",
         "competition": "c",
@@ -224,6 +229,7 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         "web_name": "n",
         "team_code": "tc",
         "short": "tm",
+        "opp": "opp",
         "position": "pos",
         "is_home": "h",
         "minutes": "m",
@@ -544,10 +550,24 @@ def build_insights(attackers: list[dict], season: str) -> dict:
     }
 
 
-def build_teams_gw(tm: pl.DataFrame, teams: pl.DataFrame) -> list[dict]:
+def build_teams_gw(tm: pl.DataFrame, teams: pl.DataFrame, pm: pl.DataFrame | None = None) -> list[dict]:
     if tm.is_empty():
         return []
-    tm = _f(tm, ["goals_for", "goals_against", "xg", "xga", "possession", "total_shots", "shots_on_target", "points"])
+    metric_cols = [
+        "goals_for",
+        "goals_against",
+        "xg",
+        "xga",
+        "possession",
+        "total_shots",
+        "shots_on_target",
+        "shots_conceded",
+        "sot_conceded",
+        "big_chances",
+        "big_chances_conceded",
+        "points",
+    ]
+    tm = _f(tm, [c for c in metric_cols if c in tm.columns])
     tm = tm.with_columns(
         pl.when(pl.col("total_shots").is_not_null())
         .then(pl.col("total_shots").cast(pl.Float64, strict=False))
@@ -557,6 +577,24 @@ def build_teams_gw(tm: pl.DataFrame, teams: pl.DataFrame) -> list[dict]:
     tm = tm.join(teams.select("team_code", "team", "short"), on="team_code", how="left")
     opp = teams.select(pl.col("team_code").alias("opponent_code"), pl.col("short").alias("opp"))
     tm = tm.join(opp, on="opponent_code", how="left")
+
+    # Team CC = sum of player chances_created; CC-A = opponent's CC in the same match.
+    if pm is not None and not pm.is_empty() and "chances_created" in pm.columns:
+        cc = (
+            pm.filter(pl.col("match_id").is_not_null() & pl.col("team_code").is_not_null())
+            .group_by(["match_id", "team_code"])
+            .agg(pl.col("chances_created").cast(pl.Float64, strict=False).sum().alias("CC"))
+        )
+        tm = tm.join(cc, on=["match_id", "team_code"], how="left")
+        opp_cc = tm.select(
+            pl.col("match_id"),
+            pl.col("team_code").alias("opponent_code"),
+            pl.col("CC").alias("CC_A"),
+        )
+        tm = tm.join(opp_cc, on=["match_id", "opponent_code"], how="left")
+    else:
+        tm = tm.with_columns(pl.lit(None).alias("CC"), pl.lit(None).alias("CC_A"))
+
     keep = [
         "season",
         "competition",
@@ -575,6 +613,12 @@ def build_teams_gw(tm: pl.DataFrame, teams: pl.DataFrame) -> list[dict]:
         "xga",
         "shots",
         "shots_on_target",
+        "shots_conceded",
+        "sot_conceded",
+        "big_chances",
+        "big_chances_conceded",
+        "CC",
+        "CC_A",
         "possession",
         "points",
         "clean_sheet",
@@ -833,7 +877,7 @@ def build_from_disk() -> dict:
     matches = build_player_matches(pm, gw, teams)
     players = build_player_files(pm, gw, teams)
     insights = build_insights(players["attackers"], prior)
-    teams_gw = build_teams_gw(tm, teams)
+    teams_gw = build_teams_gw(tm, teams, pm)
     fixtures = build_fixtures(fx, tm, teams, players["attackers"], current, prior)
     players_gw = build_players_gw(gw, teams, current)
     roster, prices = current_roster_and_prices(gw, current)
@@ -868,7 +912,7 @@ def build_from_disk() -> dict:
             "Player pages use master/pl_merge/player_match (Premier League only). FPL/Opta fields keep their existing labels; Understat roster fields are labeled US.",
             "FPL minutes and Understat minutes are separate. US per-90 metrics use US minutes.",
             "FPL Pts/CS come from player_gw and are Premier League only.",
-            "Big chances created is not available; CC, xA and TiB are creation proxies.",
+            "Team BCC / BCC-A are Opta big_chances / big_chances_conceded. Team CC is the sum of player chances_created; CC-A is the opponent's CC.",
             "now_cost is already in £m. Price column is the current-season FPL price.",
             "Predicted xG blends a team's recent xG-for with the opponent's xG-against, with a small home nudge.",
             "Current-squad filter hides players who are not in this season's FPL list.",

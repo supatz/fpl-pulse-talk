@@ -12,6 +12,24 @@ from pipeline.understat.config import (
 )
 
 
+def side_channel(y: float | None) -> str | None:
+    """Pitch width thirds from the attacking team's view (Understat Y: 0–1).
+
+    Convention (attacking toward increasing X): low Y = Right, high Y = Left, middle = Center.
+    """
+    if y is None:
+        return None
+    try:
+        yf = float(y)
+    except (TypeError, ValueError):
+        return None
+    if yf < 1.0 / 3.0:
+        return "Right"
+    if yf > 2.0 / 3.0:
+        return "Left"
+    return "Center"
+
+
 def shot_zone(x: float | None, y: float | None, *, result: str | None = None) -> str | None:
     """
     Map Understat pitch coords to zone labels aligned with their shotZone family.

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=22" />
+  <link rel="stylesheet" href="./styles.css?v=26" />
   <link rel="stylesheet" href="./understat-shots.css?v=20" />
 </head>
 <body>
@@ -95,18 +95,6 @@
             <i class="chev" aria-hidden="true"></i>
           </button>
           <div class="nav-kids">
-            <a class="nav-link" href="#insights-players" data-page="insights-players" data-name="nav.insights.players">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="9" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 18c.8-2.4 2.6-3.6 4.5-3.6S12.7 15.6 13.5 18M13 15.2c1.2-.4 2.5-.2 3.6.6.8.6 1.4 1.4 1.8 2.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-              <span>Players</span>
-            </a>
-            <a class="nav-link" href="#insights-matches" data-page="insights-matches" data-name="nav.insights.matches">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4.8 10h14.4M12 4c2.2 2.4 3.3 5 3.3 8S14.2 17.6 12 20c-2.2-2.4-3.3-5-3.3-8S9.8 6.4 12 4z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-              <span>Matches</span>
-            </a>
-            <a class="nav-link" href="#insights-teams" data-page="insights-teams" data-name="nav.insights.teams">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V5h10l-2 3 2 3H8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-              <span>Teams</span>
-            </a>
             <a class="nav-link" href="#insights-understat" data-page="insights-understat" data-name="nav.insights.understat">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="4" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="10" width="7" height="10" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
               <span>Understat</span>
@@ -118,6 +106,14 @@
             <a class="nav-link" href="#insights-player-performance" data-page="insights-player-performance" data-name="nav.insights.player_performance">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4M4 20h16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 18.5L19 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 2"/><circle cx="9" cy="14" r="1.7" fill="currentColor"/><circle cx="13" cy="8.5" r="1.7" fill="currentColor"/><circle cx="16.5" cy="13" r="1.7" fill="currentColor"/></svg>
               <span>Player performances</span>
+            </a>
+            <a class="nav-link" href="#insights-finishing" data-page="insights-finishing" data-name="nav.insights.finishing">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>
+              <span>Finishing</span>
+            </a>
+            <a class="nav-link" href="#insights-team-sides" data-page="insights-team-sides" data-name="nav.insights.team_sides">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9.3 5v14M14.7 5v14" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+              <span>Team shot sides</span>
             </a>
           </div>
         </div>
@@ -157,6 +153,67 @@
             <p id="home-meta" class="lede" data-name="home.meta"></p>
           </div>
           <div id="home-jumps" data-name="home.jumps"></div>
+
+          <section class="home-section" id="home-match-insights" data-name="home.matches">
+            <div class="page-head tight">
+              <div class="name-row" data-name="home.matches.title"><h2>Match Insights</h2></div>
+              <p class="lede">Current Premier League season. Defaults to the latest finished gameweek. Pick GW and match to drill in.</p>
+            </div>
+            <div id="insights-matches-controls"></div>
+            <div id="insights-matches-board" data-name="home.matches.board"></div>
+          </section>
+
+          <section class="home-section" id="home-player-insights" data-name="home.players">
+            <div class="page-head tight">
+              <div class="name-row" data-name="home.players.title"><h2>Player Insights</h2></div>
+              <p class="lede">Compact lists. Window is last N gameweeks, capped at 10. Green is overperformance, red is under, amber is a watch.</p>
+            </div>
+            <div id="insights-players-controls"></div>
+            <div class="insight-grid">
+              <section>
+                <div class="name-row" data-name="home.players.topxgi.title"><h3>Top xGI</h3></div>
+                <div id="insights-topxgi"></div>
+              </section>
+              <section>
+                <div class="name-row" data-name="home.players.rising.title"><h3>Rising xGI/90</h3></div>
+                <div id="insights-rising"></div>
+              </section>
+              <section>
+                <div class="name-row" data-name="home.players.finishing.title"><h3>Finishing over / under</h3></div>
+                <div id="insights-finishing"></div>
+              </section>
+              <section>
+                <div class="name-row" data-name="home.players.quiet.title"><h3>High xGI, low return</h3></div>
+                <div id="insights-quiet"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="home-section" id="home-team-insights" data-name="home.teams">
+            <div class="page-head tight">
+              <div class="name-row" data-name="home.teams.title"><h2>Team Insights</h2></div>
+              <p class="lede">Club-level signals in the last N gameweeks. Green / red only on over and under performance.</p>
+            </div>
+            <div id="insights-teams-controls"></div>
+            <div class="insight-grid">
+              <section>
+                <div class="name-row" data-name="home.teams.attack.title"><h3>Highest xG for</h3></div>
+                <div id="insights-team-attack"></div>
+              </section>
+              <section>
+                <div class="name-row" data-name="home.teams.defend.title"><h3>Lowest xG against</h3></div>
+                <div id="insights-team-defend"></div>
+              </section>
+              <section>
+                <div class="name-row" data-name="home.teams.over.title"><h3>Goals vs xG</h3></div>
+                <div id="insights-team-over"></div>
+              </section>
+              <section>
+                <div class="name-row" data-name="home.teams.leak.title"><h3>Goals conceded vs xGA</h3></div>
+                <div id="insights-team-leak"></div>
+              </section>
+            </div>
+          </section>
         </section>
 
         <section class="page" id="page-fixtures" hidden>
@@ -196,67 +253,6 @@
             <p class="lede">xGP is xG prevented via saves. xGOTf is on-target xG faced.</p>
           </div>
           <div id="gk-root"></div>
-        </section>
-
-        <section class="page" id="page-insights-players" hidden>
-          <div class="page-head">
-            <div class="name-row" data-name="insights.players.title"><h1>Player insights</h1></div>
-            <p class="lede">Compact lists. Window is last N gameweeks, capped at 10. Green is overperformance, red is under, amber is a watch.</p>
-          </div>
-          <div id="insights-players-controls"></div>
-          <div class="insight-grid">
-            <section>
-              <div class="name-row" data-name="insights.players.topxgi.title"><h2>Top xGI</h2></div>
-              <div id="insights-topxgi"></div>
-            </section>
-            <section>
-              <div class="name-row" data-name="insights.players.rising.title"><h2>Rising xGI/90</h2></div>
-              <div id="insights-rising"></div>
-            </section>
-            <section>
-              <div class="name-row" data-name="insights.players.finishing.title"><h2>Finishing over / under</h2></div>
-              <div id="insights-finishing"></div>
-            </section>
-            <section>
-              <div class="name-row" data-name="insights.players.quiet.title"><h2>High xGI, low return</h2></div>
-              <div id="insights-quiet"></div>
-            </section>
-          </div>
-        </section>
-
-        <section class="page" id="page-insights-matches" hidden>
-          <div class="page-head">
-            <div class="name-row" data-name="insights.matches.title"><h1>Match insights</h1></div>
-            <p class="lede">Current Premier League season. Defaults to the latest finished gameweek. Pick GW and match to drill in.</p>
-          </div>
-          <div id="insights-matches-controls"></div>
-          <div id="insights-matches-board" data-name="insights.matches.board"></div>
-        </section>
-
-        <section class="page" id="page-insights-teams" hidden>
-          <div class="page-head">
-            <div class="name-row" data-name="insights.teams.title"><h1>Team insights</h1></div>
-            <p class="lede">Club-level signals in the last N gameweeks. Green / red only on over and under performance.</p>
-          </div>
-          <div id="insights-teams-controls"></div>
-          <div class="insight-grid">
-            <section>
-              <div class="name-row" data-name="insights.teams.attack.title"><h2>Highest xG for</h2></div>
-              <div id="insights-team-attack"></div>
-            </section>
-            <section>
-              <div class="name-row" data-name="insights.teams.defend.title"><h2>Lowest xG against</h2></div>
-              <div id="insights-team-defend"></div>
-            </section>
-            <section>
-              <div class="name-row" data-name="insights.teams.over.title"><h2>Goals vs xG</h2></div>
-              <div id="insights-team-over"></div>
-            </section>
-            <section>
-              <div class="name-row" data-name="insights.teams.leak.title"><h2>Goals conceded vs xGA</h2></div>
-              <div id="insights-team-leak"></div>
-            </section>
-          </div>
         </section>
 
         <section class="page" id="page-insights-understat" hidden>
@@ -417,6 +413,14 @@
                 <span id="fpl-map-gw-label">GW 1–38</span>
                 <div class="range-2" id="fpl-map-gw-range"></div>
               </div>
+              <label class="fpl-map-field fpl-map-check" data-name="fpl_treemap.controls.per90">
+                <input type="checkbox" id="fpl-map-per90" />
+                <span>Per 90</span>
+              </label>
+              <label class="fpl-map-field fpl-map-check" data-name="fpl_treemap.controls.min45">
+                <input type="checkbox" id="fpl-map-min45" />
+                <span>45+ mins</span>
+              </label>
               <div class="fpl-map-team-filter" data-name="fpl_treemap.controls.teams">
                 <span>Teams</span>
                 <div class="fpl-map-pills" id="fpl-map-team-pills"></div>
@@ -511,10 +515,127 @@
           </div>
         </section>
 
+        <section class="page" id="page-insights-finishing" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="insights.finishing.title"><h1>Finishing</h1></div>
+            <p class="lede">Shot on target % against shots per 90 — who tests the keeper often, and who puts a high share of shots on target.</p>
+          </div>
+          <div class="perf" id="fin-root">
+            <section class="perf-controls" aria-label="Finishing filters" data-name="finishing.controls">
+              <label class="perf-field" data-name="finishing.controls.season">
+                <span>Season</span>
+                <select id="fin-season"></select>
+              </label>
+              <label class="perf-field" data-name="finishing.controls.position">
+                <span>Position</span>
+                <select id="fin-position">
+                  <option value="ALL">All</option>
+                  <option value="MID">MID</option>
+                  <option value="ATT">ATT</option>
+                  <option value="DEF">DEF + GK</option>
+                </select>
+              </label>
+              <label class="perf-field" data-name="finishing.controls.top">
+                <span>Players</span>
+                <select id="fin-top">
+                  <option value="15">Top 15</option>
+                  <option value="20" selected>Top 20</option>
+                  <option value="30">Top 30</option>
+                  <option value="40">Top 40</option>
+                </select>
+              </label>
+              <div class="perf-field perf-gw" data-name="finishing.controls.gw">
+                <span id="fin-gw-label">GW 1–38</span>
+                <div class="range-2" id="fin-gw-range"></div>
+              </div>
+              <label class="perf-field perf-check" data-name="finishing.controls.per90">
+                <input id="fin-per90" type="checkbox" checked />
+                <span>Per 90</span>
+              </label>
+              <label class="perf-field perf-check" data-name="finishing.controls.min45">
+                <input id="fin-min45" type="checkbox" checked />
+                <span>45+ mins per appearance</span>
+              </label>
+            </section>
+            <p class="perf-status" id="fin-status" data-name="finishing.status"></p>
+            <div class="perf-chart" id="fin-chart" role="img" aria-label="Finishing scatter" data-name="finishing.chart"></div>
+            <div class="fpl-map-tip" id="fin-tip" hidden></div>
+            <div class="chart-dl-row">
+              <button type="button" class="chart-dl" id="fin-chart-dl" data-name="finishing.export">Download chart</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-insights-team-sides" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="insights.team_sides.title"><h1>Team shot sides</h1></div>
+            <p class="lede">Where shots are taken and conceded — Left, Center, Right — from Understat pitch coordinates. Spot dominant and weak channels in attack and defence.</p>
+          </div>
+          <div class="side-ch" id="side-root">
+            <section class="perf-controls" aria-label="Team side filters" data-name="team_sides.controls">
+              <label class="perf-field" data-name="team_sides.controls.season">
+                <span>Season</span>
+                <select id="side-season"></select>
+              </label>
+              <label class="perf-field" data-name="team_sides.controls.metric">
+                <span>Table metric</span>
+                <select id="side-metric">
+                  <option value="shots">Shots</option>
+                  <option value="xg">xG</option>
+                </select>
+              </label>
+              <label class="perf-field" data-name="team_sides.controls.sort_mode">
+                <span>Sort columns by</span>
+                <select id="side-sort-mode">
+                  <option value="value" selected>Value</option>
+                  <option value="pct">%</option>
+                </select>
+              </label>
+              <label class="perf-field" data-name="team_sides.controls.size">
+                <span>Pitch circle size</span>
+                <select id="side-size-metric">
+                  <option value="xg" selected>xG</option>
+                  <option value="equal">Equal</option>
+                </select>
+              </label>
+              <div class="perf-field perf-gw" data-name="team_sides.controls.gw">
+                <span id="side-gw-label">GW 1–38</span>
+                <div class="range-2" id="side-gw-range"></div>
+              </div>
+            </section>
+            <p class="perf-status" id="side-status" data-name="team_sides.status"></p>
+            <div class="side-ch-chart" id="side-chart" data-name="team_sides.chart"></div>
+            <div class="chart-dl-row">
+              <button type="button" class="chart-dl" id="side-chart-dl" data-name="team_sides.export">Download chart</button>
+            </div>
+            <section class="side-pitch-compare" aria-label="Pitch compare" data-name="team_sides.pitch">
+              <div class="name-row"><h2>Pitch compare</h2></div>
+              <p class="lede side-pitch-lede">Two teams side by side. Attack toward the top goal; conceded toward the bottom. Vertical bands = L / C / R with value (%) near centre (attack blue · defend red). Circle size = Understat xG (xGOT is not on Understat shots).</p>
+              <div class="side-pitches" id="side-pitches">
+                <div class="side-pitch-col" data-name="team_sides.pitch.team_a">
+                  <label class="perf-field">
+                    <span>Team A</span>
+                    <select id="side-team-a"></select>
+                  </label>
+                  <div class="side-pitch" data-pitch="a" role="img" aria-label="Team A pitch"></div>
+                </div>
+                <div class="side-pitch-col" data-name="team_sides.pitch.team_b">
+                  <label class="perf-field">
+                    <span>Team B</span>
+                    <select id="side-team-b"></select>
+                  </label>
+                  <div class="side-pitch" data-pitch="b" role="img" aria-label="Team B pitch"></div>
+                </div>
+              </div>
+              <div class="fpl-map-tip" id="side-tip" hidden></div>
+            </section>
+          </div>
+        </section>
+
         <section class="page" id="page-teams" hidden>
           <div class="page-head">
             <div class="name-row" data-name="teams.title"><h1>Teams</h1></div>
-            <p class="lede">Last N or an exact GW range, with season, competition and home/away filters.</p>
+            <p class="lede">Last N or an exact GW range. Against metrics use the -A suffix (e.g. SoT-A). Click a team for gameweek rows with opponent.</p>
           </div>
           <div id="teams-root"></div>
         </section>
@@ -557,8 +678,10 @@
   <script src="./chart-export.js?v=5"></script>
   <script src="./team-colors.js?v=3"></script>
   <script src="./understat-shots.js?v=22"></script>
-  <script src="./fpl-treemap.js?v=15"></script>
+  <script src="./fpl-treemap.js?v=16"></script>
   <script src="./player-performance.js?v=17"></script>
-  <script type="module" src="./app.js?v=14"></script>
+  <script src="./finishing.js?v=5"></script>
+  <script src="./team-sides.js?v=5"></script>
+  <script type="module" src="./app.js?v=16"></script>
 </body>
 </html>

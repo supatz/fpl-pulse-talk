@@ -1,4 +1,4 @@
-import { FDR_URL, INSIGHT_WINDOWS, VIEWS } from "./registry.js?v=11";
+import { FDR_URL, INSIGHT_WINDOWS, VIEWS } from "./registry.js?v=12";
 import {
   aggregatePlayers,
   aggregateTeamRows,
@@ -18,8 +18,9 @@ import {
   renderMatchBoard,
   renderTicker,
   saveState,
-} from "./components.js?v=14";
-import { bindPlayerDrawer, openPlayerDrawer } from "./player-drawer.js?v=3";
+} from "./components.js?v=15";
+import { bindPlayerDrawer, openPlayerDrawer } from "./player-drawer.js?v=4";
+import { openTeamDrawer } from "./team-drawer.js?v=1";
 
 const DATA = {};
 const FILES = ["meta.json", "players_matches.json", "fixtures.json", "teams_gw.json"];
@@ -29,24 +30,23 @@ const PAGES = [
   "attackers",
   "defenders",
   "gk",
-  "insights-players",
-  "insights-matches",
-  "insights-teams",
   "insights-understat",
   "insights-fpl-treemap",
   "insights-player-performance",
+  "insights-finishing",
+  "insights-team-sides",
   "teams",
   "chips",
   "data",
 ];
 const INSIGHT_PAGES = [
-  "insights-players",
-  "insights-matches",
-  "insights-teams",
   "insights-understat",
   "insights-fpl-treemap",
   "insights-player-performance",
+  "insights-finishing",
+  "insights-team-sides",
 ];
+const LEGACY_HOME_HASHES = new Set(["insights-players", "insights-matches", "insights-teams", "insights"]);
 
 async function loadData() {
   const results = await Promise.all(
@@ -67,12 +67,11 @@ const PAGE_TITLES = {
   attackers: "Attackers",
   defenders: "Defenders",
   gk: "Goalkeepers",
-  "insights-players": "Insights · Players",
-  "insights-matches": "Insights · Matches",
-  "insights-teams": "Insights · Teams",
   "insights-understat": "Insights · Understat",
   "insights-fpl-treemap": "Insights · FPL treemap",
   "insights-player-performance": "Insights · Player performances",
+  "insights-finishing": "Insights · Finishing",
+  "insights-team-sides": "Insights · Team shot sides",
   teams: "Teams",
   chips: "Chips",
   data: "Data",
@@ -80,7 +79,16 @@ const PAGE_TITLES = {
 
 function showPage(id) {
   id = String(id || "").replace(/^#/, "");
-  if (id === "insights") id = "insights-players";
+  if (LEGACY_HOME_HASHES.has(id)) id = "home";
+
+  // In-page Home anchors (#home-match-insights, etc.) — keep Home visible and scroll.
+  let scrollTo = null;
+  const sectionEl = document.getElementById(id);
+  if (sectionEl?.classList?.contains("home-section")) {
+    scrollTo = id;
+    id = "home";
+  }
+
   const hasPage = Boolean(document.getElementById(`page-${id}`));
   const page = hasPage ? id : "home";
   document.querySelectorAll("main > .page").forEach((p) => {
@@ -109,7 +117,13 @@ function showPage(id) {
     app.classList.remove("is-open");
     if (scrim) scrim.hidden = true;
   }
-  if (location.hash !== `#${page}`) history.replaceState(null, "", `#${page}`);
+  const hash = scrollTo || page;
+  if (location.hash !== `#${hash}`) history.replaceState(null, "", `#${hash}`);
+  if (scrollTo) {
+    requestAnimationFrame(() => {
+      document.getElementById(scrollTo)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
   if (page === "insights-understat") {
     requestAnimationFrame(() => {
       try {
@@ -137,6 +151,26 @@ function showPage(id) {
       } catch (err) {
         const status = document.getElementById("perf-status");
         if (status) status.textContent = `Player performances failed to start: ${err.message}`;
+      }
+    });
+  }
+  if (page === "insights-finishing") {
+    requestAnimationFrame(() => {
+      try {
+        window.initFinishing?.();
+      } catch (err) {
+        const status = document.getElementById("fin-status");
+        if (status) status.textContent = `Finishing view failed to start: ${err.message}`;
+      }
+    });
+  }
+  if (page === "insights-team-sides") {
+    requestAnimationFrame(() => {
+      try {
+        window.initTeamSides?.();
+      } catch (err) {
+        const status = document.getElementById("side-status");
+        if (status) status.textContent = `Team shot sides failed to start: ${err.message}`;
       }
     });
   }
@@ -205,12 +239,12 @@ function renderHome() {
       .join(" · ");
   }
   renderCards("home-jumps", [
+    { name: "home.jump.matches", href: "#home-match-insights", kicker: "Home", title: "Match Insights", value: "Latest GW", meta: "Finished PL boards" },
+    { name: "home.jump.players", href: "#home-player-insights", kicker: "Home", title: "Player Insights", value: "Last N GW", meta: "xGI · finishing · quiet" },
+    { name: "home.jump.teamins", href: "#home-team-insights", kicker: "Home", title: "Team Insights", value: "Form lists", meta: "Attack · defence · over/under" },
     { name: "home.jump.fixtures", href: "#fixtures", kicker: "Next", title: "Fixtures", value: meta.upcoming_gw != null ? `GW ${meta.upcoming_gw}` : "—", meta: "One gameweek of cards" },
     { name: "home.jump.attackers", href: "#attackers", kicker: "Players", title: "Attackers", value: "MID + FWD", meta: "xGI and creation" },
-    { name: "home.jump.defenders", href: "#defenders", kicker: "Players", title: "Defenders", value: "DEF", meta: "CS + DefCon/90" },
-    { name: "home.jump.gk", href: "#gk", kicker: "Players", title: "Goalkeepers", value: "GK", meta: "xG prevented" },
-    { name: "home.jump.insights", href: "#insights-players", kicker: "Watch", title: "Insights", value: "Players · Matches · Teams", meta: "Compact lists + match boards" },
-    { name: "home.jump.teams", href: "#teams", kicker: "Clubs", title: "Teams", value: "Last N GW", meta: "Home / away split" },
+    { name: "home.jump.teams", href: "#teams", kicker: "Clubs", title: "Teams", value: "Table + GW drawer", meta: "For / against (-A)" },
   ]);
 }
 
@@ -288,6 +322,8 @@ function renderTeams() {
     competitions,
     seasons,
     season: meta.analysis_season,
+    matches: () => DATA.teams_gw,
+    onTeamClick: (row, ctx) => openTeamDrawer(row, ctx),
     rows: (state) => aggregateTeamRows(DATA.teams_gw, state),
   });
 }
@@ -301,10 +337,12 @@ function asList(v, fallback) {
 function insightBaseState(key, extra = {}) {
   const { meta, seasons, competitions, roster } = metaCtx();
   const persisted = loadState(key);
+  const seasonsSel = asList(persisted.seasons || persisted.season, [meta.analysis_season].filter(Boolean));
+  const venuesSel = asList(persisted.venues || persisted.venue, ["H", "A"]);
   return {
-    seasons: asList(persisted.seasons || persisted.season, [meta.analysis_season].filter(Boolean)),
+    seasons: seasonsSel.length ? seasonsSel : [meta.analysis_season].filter(Boolean),
     competitions: asList(persisted.competitions || persisted.competition, ["Premier League"]),
-    venues: asList(persisted.venues || persisted.venue, ["H", "A"]),
+    venues: venuesSel.length ? venuesSel : ["H", "A"],
     window: persisted.window || 5,
     currentOnly: true,
     roster,
@@ -326,7 +364,7 @@ function mountGlobalInsightFilters(host, namePrefix, state, extras, render) {
     options: state.seasonsAll.map((s) => ({ value: s, label: s })),
     selected: state.seasons,
     onChange: (v) => {
-      state.seasons = v;
+      state.seasons = v.length ? v : [state.seasonsAll.at(-1)].filter(Boolean);
       render();
     },
   });
@@ -337,7 +375,7 @@ function mountGlobalInsightFilters(host, namePrefix, state, extras, render) {
     options: state.competitionsAll.map((c) => ({ value: c, label: c })),
     selected: state.competitions,
     onChange: (v) => {
-      state.competitions = v;
+      state.competitions = v.length ? v : ["Premier League"];
       render();
     },
   });
@@ -351,7 +389,7 @@ function mountGlobalInsightFilters(host, namePrefix, state, extras, render) {
     ],
     selected: state.venues,
     onChange: (v) => {
-      state.venues = v;
+      state.venues = v.length ? v : ["H", "A"];
       render();
     },
   });
@@ -402,12 +440,21 @@ function renderInsightsMatches() {
   let matchMs;
   const paint = () => {
     saveState("insights-matches", state);
+    if (!state.seasons?.length) {
+      state.seasons = [meta.current_season || meta.analysis_season].filter(Boolean);
+    }
+    if (!state.venues?.length) state.venues = ["H", "A"];
+    if (!state.competitions?.length) state.competitions = ["Premier League"];
     const opts = matchFilterOptions(DATA.teams_gw, state);
+    const valid = new Set(opts.gws);
+    state.gws = (state.gws || []).map(Number).filter((g) => valid.has(g));
     const last = lastGwSlice(
       (DATA.teams_gw || []).filter((r) => r.finished && r.season === (meta.current_season || meta.analysis_season) && r.competition === "Premier League"),
       1
     );
     if (!state.gws.length && last.to != null) state.gws = [last.to];
+    const validMatches = new Set(opts.matches.map((m) => m.value));
+    state.matches = (state.matches || []).filter((m) => validMatches.has(m));
     gwMs?.setOptions(
       opts.gws.map((g) => ({ value: String(g), label: `GW ${g}` })),
       (state.gws || []).map(String)
@@ -466,6 +513,9 @@ function renderInsightsTeams() {
   });
   const paint = () => {
     saveState("insights-teams", state);
+    if (!state.seasons?.length) state.seasons = [metaCtx().meta.analysis_season].filter(Boolean);
+    if (!state.venues?.length) state.venues = ["H", "A"];
+    if (!state.competitions?.length) state.competitions = ["Premier League"];
     const scoped = (DATA.teams_gw || []).filter(
       (r) =>
         r.finished &&

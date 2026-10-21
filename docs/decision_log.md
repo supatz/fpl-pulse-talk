@@ -29,6 +29,10 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Local preview | `scripts/serve.command` (double-click) or `.venv/bin/python serve.py --port N`. Port defaults to 8765; `serve.py` has no persistent port setting. |
 | DefCon | `defcon` prefers upstream match-level `defensive_contributions`; when blank (2026-27 on) it derives CBIT for defenders, CBIT + recoveries for MID/FWD, and 0 for GK, using `coalesce(tackles, tackles_won)`. Derivation reproduces FPL gameweek totals exactly. |
 | Branding | Mark is option-A mint cartoon vintage mic + white ECG pulse + teal ring (animated in sidebar). Same mark in chart-export footer, `web/assets/fpl-pulse-mark.svg`, and square `web/assets/fpl-pulse-logo.png` (favicon). X still links to `https://x.com/fpl_pulse_talk`. |
+| Home hub | Match / Player / Team insight boards live on Home (not separate Insights nav pages). Legacy `#insights-players|matches|teams` hashes redirect to Home. |
+| Team metrics (-A) | Teams table against metrics use short + `-A` (`G-A`, `xG-A`, `Sh-A`, `SoT-A`, `CC-A`, `BCC-A`). BCC/BCC-A = Opta team big chances for/conceded; CC = sum of player chances_created; CC-A = opponent CC. |
+| Shot sides | `#insights-team-sides` uses Understat Y thirds (low=Right, mid=Center, high=Left) for shots for/against. Serving: `us_team_side_channels.json` (aggregates + per-shot `points` with shooter/assister). Table cells show `value (%)`; sort mode Value vs %. Dual pitch: vertical (attack ↑ / concede ↓), team dropdowns above each pitch, L/C/R band stats near centre (attack blue / defend red), circle size = Understat xG. Assister xA on a shot = that shot’s xG. |
+| Finishing | Bubble fill = club colour. Per 90 (default on): X = Sh/90, bubble = xG/90; off: X = Sh, bubble = xG. Y = SoT% always. Axes auto-scale to cohort. |
 | Players table drawer | Clicking a name on Attackers / Defenders / GK opens a side drawer of that player’s gameweeks for the **currently visible** metric columns, plus Total and Per 90 footer rows. Points/CS are one figure per GW. |
 | Metric controls | Metric-group chips are always visible; there is no redundant “More metrics” toggle. |
 | Understat CSS | Scoped under `.us-shots`. Site-wide accent green (`#3ddc97`) lives in `web/styles.css`. |
@@ -47,6 +51,46 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-10-22 — Finishing Per 90 checkbox
+
+**Choice:** Finishing gains a Per 90 filter (default on). On: X = Sh/90, bubble = xG/90. Off: X = Sh, bubble = xG. SoT% unchanged.
+
+**Where:** `web/{finishing.js,index.html}`.
+
+### 2026-10-22 — Pitch tip shooter/assist + finishing xG/90 bubble
+
+**Choice:** Pitch tip shows shooter + xG and assister + xA (xA = shot xG when assisted) in a 2-col grid. Finishing bubble size = xG/90; tip adds G/xG in a 2-col grid.
+
+**Where:** `pipeline/understat/side_channels.py`, `web/{finishing,team-sides,styles}.{js,css}`, serving `us_team_side_channels.json`.
+
+### 2026-10-22 — Finishing autoscale + pitch label colours
+
+**Choice:** Finishing scatter axes auto-scale to the filtered cohort (padded extent, not fixed 0–floor). Pitch compare stats sit near midfield; attack labels/circles blue, defend red.
+
+**Where:** `web/{finishing,team-sides}.js`.
+
+### 2026-10-22 — Team sides vertical pitch + value/% sort
+
+**Choice:** Rotate pitch compare to vertical (attack ↑, concede ↓); place each team dropdown above its pitch; show `value (%)` on L/C/R bands (attack gold / concede red). Table cells show value (%); “Sort columns by” toggles value vs % for L/C/R headers.
+
+**Where:** `web/{team-sides,index,styles}.{js,html,css}`, `docs/decision_log.md`.
+
+### 2026-10-21 — Team sides pitch compare + finishing label/tooltip polish
+
+**Choice:** Extend `us_team_side_channels.json` with per-shot `points` for pitch viz. Team sides table sorts on L/C/R and L-A/C-A/R-A click. Dual pitch UI under the table (two team dropdowns): green pitch with goals, L/C/R bands, attack (gold) at right / concede (red) at left, circle size by xG or equal. Finishing keeps club colours (documented in status); collision-aware short labels + cursor-following tooltip.
+
+**Why:** User asked for sortable side columns, visual pitch compare, and readable finishing labels/tooltip; xGOT unavailable on Understat shots so size filter is xG/equal.
+
+**Where:** `pipeline/understat/side_channels.py`, `web/{team-sides,finishing,index,styles}.{js,html,css}`, `docs/dashboard_readme.md`.
+
+**Drawbacks:** Pitch size cannot offer true xGOT; against points duplicate each shot under the defending team.
+
+### 2026-10-21 — Home hub, team -A metrics, finishing + shot sides
+
+**Choice:** Move Match / Player / Team insight boards onto Home; remove those Insights nav links. Fix empty boards when persisted GW/filters don’t match the season. Teams table adds for/against metrics with `-A` suffix + GW drawer (opponent). Player drawer shows opponent. FPL treemap gains Per 90 + 45+ mins. New Insights: Finishing (SoT% vs Sh/90) and Team shot sides (L/C/R for & against). Chances-created side zones deferred pending coordinate proxy confirmation.
+
+**Where:** `web/{index,app,components,registry,player-drawer,team-drawer,fpl-treemap,finishing,team-sides}.js`, `build_serving.py`, `pipeline/understat/{zones,side_channels,serve}.py`.
 
 ### 2026-10-15 — Brand mark: mint mic + pulse (option A)
 
