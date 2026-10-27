@@ -609,6 +609,58 @@ main { max-width: 1240px; margin: 0 auto; padding: 28px 22px 72px; }
 @media (max-width: 900px) {
   .side-pitches { grid-template-columns: 1fr; }
 }
+
+/* Fixture Proof */
+.fp-ms { position: relative; min-width: 140px; }
+.fp-ms-btn {
+  display: block; width: 100%; text-align: left;
+  padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--bg-2); color: var(--ink); font: inherit; cursor: pointer;
+}
+.fp-ms-btn:hover { border-color: var(--accent); }
+.fp-ms-panel {
+  position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; min-width: 180px;
+  padding: 8px; border: 1px solid var(--line); border-radius: 8px;
+  background: rgba(12, 18, 24, 0.98); box-shadow: var(--shadow);
+}
+.fp-ms-panel[hidden] { display: none !important; }
+.fp-ms-actions { display: flex; gap: 8px; margin-bottom: 6px; }
+.fp-ms-actions button {
+  border: 0; background: transparent; color: var(--accent); font: inherit;
+  font-size: 12px; cursor: pointer; padding: 0;
+}
+.fp-ms-opt {
+  display: flex; align-items: center; gap: 8px; padding: 5px 4px;
+  font-size: 13px; cursor: pointer;
+}
+.fp-ms-opt input { accent-color: var(--accent); }
+.fp-teams {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  max-width: 96ch;
+}
+.fp-teams strong { color: var(--ink); font-weight: 600; }
+.fp-legend {
+  display: flex; flex-wrap: wrap; gap: 14px 20px;
+  margin: 0 0 12px; font-size: 12px; color: var(--muted);
+}
+.fp-legend .fp-dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 99px;
+  margin-right: 6px; vertical-align: -1px;
+}
+.fp-legend .fp-dot.top { background: #1f7a4c; }
+.fp-legend .fp-dot.rest {
+  background: transparent; border: 2px solid #c5d0d6; box-sizing: border-box;
+}
+.fp-legend .fp-dot.bottom { background: #e07070; }
+.fp-chart {
+  width: 100%; min-height: 420px; overflow-x: auto;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: rgba(8, 14, 18, 0.45); padding: 8px 4px 12px;
+}
+.fp-chart svg { display: block; max-width: 100%; }
 .insight-list { display: grid; gap: 4px; }
 .insight-row {
   display: grid; grid-template-columns: 22px 1fr auto; gap: 8px 10px; align-items: baseline;

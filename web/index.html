@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=26" />
+  <link rel="stylesheet" href="./styles.css?v=28" />
   <link rel="stylesheet" href="./understat-shots.css?v=20" />
 </head>
 <body>
@@ -114,6 +114,10 @@
             <a class="nav-link" href="#insights-team-sides" data-page="insights-team-sides" data-name="nav.insights.team_sides">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9.3 5v14M14.7 5v14" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
               <span>Team shot sides</span>
+            </a>
+            <a class="nav-link" href="#insights-fixture-proof" data-page="insights-fixture-proof" data-name="nav.insights.fixture_proof">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="12" r="2.2" fill="currentColor" opacity="0.55"/></svg>
+              <span>Fixture Proof</span>
             </a>
           </div>
         </div>
@@ -632,6 +636,113 @@
           </div>
         </section>
 
+        <section class="page" id="page-insights-fixture-proof" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="insights.fixture_proof.title"><h1>Fixture Proof</h1></div>
+            <p class="lede">Who keeps producing against the best — and who feasts on the rest? Compare per-90 rates vs current-season top 5, middle, and bottom 5 opponents.</p>
+          </div>
+          <div class="fp" id="fp-root">
+            <section class="perf-controls" aria-label="Fixture Proof filters" data-name="fixture_proof.controls">
+              <label class="perf-field" data-name="fixture_proof.controls.season">
+                <span>Season</span>
+                <select id="fp-season"></select>
+              </label>
+              <label class="perf-field" data-name="fixture_proof.controls.metric">
+                <span>Metric</span>
+                <select id="fp-metric">
+                  <option value="npgia" selected>npG+A / 90</option>
+                  <option value="npxgia">npxG+xA / 90</option>
+                </select>
+              </label>
+              <label class="perf-field" data-name="fixture_proof.controls.top_basis">
+                <span>Top 5 by</span>
+                <select id="fp-top-basis">
+                  <option value="xg" selected>xG</option>
+                  <option value="g">G</option>
+                </select>
+              </label>
+              <label class="perf-field" data-name="fixture_proof.controls.bottom_basis">
+                <span>Bottom 5 by</span>
+                <select id="fp-bottom-basis">
+                  <option value="xga" selected>xGC</option>
+                  <option value="gc">GC</option>
+                </select>
+              </label>
+              <div class="perf-field" data-name="fixture_proof.controls.position" id="fp-position-wrap">
+                <span>Position</span>
+                <div class="fp-ms" id="fp-position-ms"></div>
+              </div>
+              <label class="perf-field" data-name="fixture_proof.controls.rank">
+                <span>Top N by</span>
+                <select id="fp-rank">
+                  <option value="xG" selected>xG / 90</option>
+                  <option value="xGI">xGI / 90</option>
+                  <option value="npxG">npxG / 90</option>
+                  <option value="G">G / 90</option>
+                  <option value="A">A / 90</option>
+                  <option value="xA">xA / 90</option>
+                  <option value="npgia">npG+A / 90</option>
+                  <option value="npxgia">npxG+xA / 90</option>
+                </select>
+              </label>
+              <label class="perf-field" data-name="fixture_proof.controls.top">
+                <span>Players</span>
+                <select id="fp-top">
+                  <option value="10">Top 10</option>
+                  <option value="15" selected>Top 15</option>
+                  <option value="20">Top 20</option>
+                  <option value="30">Top 30</option>
+                </select>
+              </label>
+              <label class="perf-field" data-name="fixture_proof.controls.sort">
+                <span>Sort chart</span>
+                <select id="fp-sort">
+                  <option value="top" selected>Best vs top 5</option>
+                  <option value="drop">Biggest drop</option>
+                  <option value="overall">Display metric /90</option>
+                  <option value="rank">Rank metric /90</option>
+                </select>
+              </label>
+              <div class="perf-field perf-gw" data-name="fixture_proof.controls.gw">
+                <span id="fp-gw-label">GW 1–38</span>
+                <div class="range-2" id="fp-gw-range"></div>
+              </div>
+              <label class="perf-field perf-check" data-name="fixture_proof.controls.min_sample">
+                <input id="fp-min-sample" type="checkbox" checked />
+                <span>45+ mins/app · ≥30% of matches</span>
+              </label>
+              <div class="perf-field perf-exclude" data-name="fixture_proof.controls.exclude">
+                <span>Exclude</span>
+                <div class="perf-ms" id="fp-exclude-drop">
+                  <input type="search" id="fp-exclude-search" placeholder="Remove players…" autocomplete="off" />
+                  <div class="perf-chips" id="fp-exclude-chips"></div>
+                  <div class="perf-ms-menu" id="fp-exclude-menu" hidden></div>
+                </div>
+              </div>
+              <div class="perf-field perf-exclude" data-name="fixture_proof.controls.include">
+                <span>Add player</span>
+                <div class="perf-ms" id="fp-include-drop">
+                  <input type="search" id="fp-include-search" placeholder="Pin players…" autocomplete="off" />
+                  <div class="perf-chips" id="fp-include-chips"></div>
+                  <div class="perf-ms-menu" id="fp-include-menu" hidden></div>
+                </div>
+              </div>
+            </section>
+            <p class="perf-status" id="fp-status" data-name="fixture_proof.status"></p>
+            <p class="fp-teams" id="fp-teams" data-name="fixture_proof.teams"></p>
+            <div class="fp-legend" data-name="fixture_proof.legend">
+              <span><i class="fp-dot top"></i> vs top 5</span>
+              <span><i class="fp-dot rest"></i> vs rest</span>
+              <span><i class="fp-dot bottom"></i> vs bottom 5</span>
+            </div>
+            <div class="fp-chart" id="fp-chart" role="img" aria-label="Fixture Proof dumbbell chart" data-name="fixture_proof.chart"></div>
+            <div class="fpl-map-tip" id="fp-tip" hidden></div>
+            <div class="chart-dl-row">
+              <button type="button" class="chart-dl" id="fp-chart-dl" data-name="fixture_proof.export">Download chart</button>
+            </div>
+          </div>
+        </section>
+
         <section class="page" id="page-teams" hidden>
           <div class="page-head">
             <div class="name-row" data-name="teams.title"><h1>Teams</h1></div>
@@ -682,6 +793,7 @@
   <script src="./player-performance.js?v=17"></script>
   <script src="./finishing.js?v=5"></script>
   <script src="./team-sides.js?v=5"></script>
-  <script type="module" src="./app.js?v=16"></script>
+  <script src="./fixture-proof.js?v=4"></script>
+  <script type="module" src="./app.js?v=17"></script>
 </body>
 </html>

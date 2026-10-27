@@ -35,6 +35,7 @@ const PAGES = [
   "insights-player-performance",
   "insights-finishing",
   "insights-team-sides",
+  "insights-fixture-proof",
   "teams",
   "chips",
   "data",
@@ -45,6 +46,7 @@ const INSIGHT_PAGES = [
   "insights-player-performance",
   "insights-finishing",
   "insights-team-sides",
+  "insights-fixture-proof",
 ];
 const LEGACY_HOME_HASHES = new Set(["insights-players", "insights-matches", "insights-teams", "insights"]);
 
@@ -72,6 +74,7 @@ const PAGE_TITLES = {
   "insights-player-performance": "Insights · Player performances",
   "insights-finishing": "Insights · Finishing",
   "insights-team-sides": "Insights · Team shot sides",
+  "insights-fixture-proof": "Insights · Fixture Proof",
   teams: "Teams",
   chips: "Chips",
   data: "Data",
@@ -171,6 +174,16 @@ function showPage(id) {
       } catch (err) {
         const status = document.getElementById("side-status");
         if (status) status.textContent = `Team shot sides failed to start: ${err.message}`;
+      }
+    });
+  }
+  if (page === "insights-fixture-proof") {
+    requestAnimationFrame(() => {
+      try {
+        window.initFixtureProof?.();
+      } catch (err) {
+        const status = document.getElementById("fp-status");
+        if (status) status.textContent = `Fixture Proof failed to start: ${err.message}`;
       }
     });
   }

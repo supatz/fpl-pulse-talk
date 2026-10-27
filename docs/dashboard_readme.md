@@ -48,6 +48,7 @@ Hard-refresh after serving-shape changes. Understat JS/CSS/JSON use `?v=` cache 
 | `#insights-player-performance` | Free X / Y / bubble / sort metrics (incl. BCC/BCT/BCS/BCM); top 10–40; exclude players; season / position / GW / Per 90 / 45+. Axes auto-scale |
 | `#insights-finishing` | SoT% vs shots/90 scatter (top N by total shots). Bubble = xG/90, colour = club; 2-col tooltip (incl. G/xG). |
 | `#insights-team-sides` | Table cells `value (%)`; sort by value or %. Dual vertical pitches (attack ↑ / concede ↓) with dropdowns above each, L/C/R band stats, circles sized by xG. Data: `us_team_side_channels.json`. |
+| `#insights-fixture-proof` | Dumbbell: npG+A/90 or npxG+xA/90 vs live-season top 5 · rest · bottom 5. Top N by separate rank metric (xG/xGI/…). Position multi-select; exclude/add players. |
 | `#teams` | Club table with `-A` against metrics; click team → GW drawer with opponent |
 
 Standalone Understat: `web/understat-shots.html`.

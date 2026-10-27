@@ -33,6 +33,7 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Team metrics (-A) | Teams table against metrics use short + `-A` (`G-A`, `xG-A`, `Sh-A`, `SoT-A`, `CC-A`, `BCC-A`). BCC/BCC-A = Opta team big chances for/conceded; CC = sum of player chances_created; CC-A = opponent CC. |
 | Shot sides | `#insights-team-sides` uses Understat Y thirds (low=Right, mid=Center, high=Left) for shots for/against. Serving: `us_team_side_channels.json` (aggregates + per-shot `points` with shooter/assister). Table cells show `value (%)`; sort mode Value vs %. Dual pitch: vertical (attack ↑ / concede ↓), team dropdowns above each pitch, L/C/R band stats near centre (attack blue / defend red), circle size = Understat xG. Assister xA on a shot = that shot’s xG. |
 | Finishing | Bubble fill = club colour. Per 90 (default on): X = Sh/90, bubble = xG/90; off: X = Sh, bubble = xG. Y = SoT% always. Axes auto-scale to cohort. |
+| Fixture Proof | `#insights-fixture-proof`. Live PL table in GW window: Top 5 by G or xG; Bottom 5 by GC or xGC among the rest (disjoint). Chart metric npG+A/90 or npxG+xA/90. Top N by separate rank metric. Position multi-select. Optional sample filter: ≥45 mins/app and ≥30% of that team’s PL matches in the GW window. Dots: top green · rest open · bottom red; connector yellow. |
 | Players table drawer | Clicking a name on Attackers / Defenders / GK opens a side drawer of that player’s gameweeks for the **currently visible** metric columns, plus Total and Per 90 footer rows. Points/CS are one figure per GW. |
 | Metric controls | Metric-group chips are always visible; there is no redundant “More metrics” toggle. |
 | Understat CSS | Scoped under `.us-shots`. Site-wide accent green (`#3ddc97`) lives in `web/styles.css`. |
@@ -51,6 +52,24 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-10-27 — Fixture Proof GW + sample filter
+
+**Choice:** GW dual-range (like other insights). Checkbox (default on): keep players with ≥45 mins per appearance and apps ≥30% of their team’s finished PL matches in the GW window.
+
+**Where:** `web/{fixture-proof.js,index.html}`.
+
+### 2026-10-27 — Fixture Proof rank metric + position multi-select
+
+**Choice:** Position is multi-select (MID / ATT / DEF+GK). Top N selection uses a separate “Top N by” filter (default xG/90), independent of the chart display metric (npG+A or npxG+xA /90).
+
+**Where:** `web/{fixture-proof,index,styles}.{js,html,css}`.
+
+### 2026-10-27 — Fixture Proof insight page
+
+**Choice:** New Insights page comparing each player’s selected per-90 metric vs current-season top 5 / rest / bottom 5 opponents. Top 5 ranked by G or xG; bottom 5 by GC or xGC among remaining clubs. npG = G − PenG. Dumbbell: green / open / red dots, yellow connector. Top N by overall rate with exclude + pin.
+
+**Where:** `web/{fixture-proof,app,index,styles}.{js,html,css}`, `docs/{decision_log,dashboard_readme}.md`.
 
 ### 2026-10-22 — Finishing Per 90 checkbox
 
