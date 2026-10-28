@@ -1,6 +1,6 @@
 # Understat masters — data dictionary (samples)
 
-Generated `2026-10-27T11:54:40Z`.
+Generated `2026-10-28T07:25:11Z`.
 
 FPL dimensions on the **site** come from FPL sources. These tables hold Understat metrics.
 Team-facing derived tables are joined to FPL `team_code` via `data/understat/maps/team_map.csv`.
@@ -64,7 +64,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "forecast_w": 0.32,
     "forecast_d": 0.3197,
     "forecast_l": 0.3603,
-    "ingested_at_utc": "2026-10-27T11:54:33Z",
+    "ingested_at_utc": "2026-10-28T07:25:09Z",
     "source": "understat.com"
   },
   {
@@ -87,7 +87,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "forecast_w": 0.3444,
     "forecast_d": 0.291,
     "forecast_l": 0.3646,
-    "ingested_at_utc": "2026-10-27T11:54:33Z",
+    "ingested_at_utc": "2026-10-28T07:25:09Z",
     "source": "understat.com"
   },
   {
@@ -110,7 +110,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "forecast_w": 0.0674,
     "forecast_d": 0.1385,
     "forecast_l": 0.7941,
-    "ingested_at_utc": "2026-10-27T11:54:33Z",
+    "ingested_at_utc": "2026-10-28T07:25:09Z",
     "source": "understat.com"
   }
 ]
@@ -187,7 +187,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "y": 0.699,
     "shot_zone": "outside_box",
     "is_goal": false,
-    "ingested_at_utc": "2026-10-27T11:53:54Z",
+    "ingested_at_utc": "2026-10-28T07:24:39Z",
     "source": "understat.com"
   },
   {
@@ -217,7 +217,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "y": 0.313,
     "shot_zone": "penalty_area",
     "is_goal": false,
-    "ingested_at_utc": "2026-10-27T11:53:54Z",
+    "ingested_at_utc": "2026-10-28T07:24:39Z",
     "source": "understat.com"
   },
   {
@@ -247,7 +247,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "y": 0.505,
     "shot_zone": "penalty_area",
     "is_goal": false,
-    "ingested_at_utc": "2026-10-27T11:53:54Z",
+    "ingested_at_utc": "2026-10-28T07:24:39Z",
     "source": "understat.com"
   }
 ]
@@ -344,7 +344,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "opponent_code": 2,
     "opponent": "Leeds",
     "opponent_short": "LEE",
-    "ingested_at_utc": "2026-10-27T11:54:23Z",
+    "ingested_at_utc": "2026-10-28T07:24:59Z",
     "source": "understat.com"
   },
   {
@@ -384,7 +384,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "opponent_code": 56,
     "opponent": "Sunderland",
     "opponent_short": "SUN",
-    "ingested_at_utc": "2026-10-27T11:54:23Z",
+    "ingested_at_utc": "2026-10-28T07:24:59Z",
     "source": "understat.com"
   },
   {
@@ -424,7 +424,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "opponent_code": 1,
     "opponent": "Man Utd",
     "opponent_short": "MUN",
-    "ingested_at_utc": "2026-10-27T11:54:23Z",
+    "ingested_at_utc": "2026-10-28T07:24:59Z",
     "source": "understat.com"
   }
 ]
@@ -485,7 +485,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "team_code": 43,
     "team": "Man City",
     "team_short": "MCI",
-    "ingested_at_utc": "2026-10-27T11:54:14Z",
+    "ingested_at_utc": "2026-10-28T07:24:57Z",
     "source": "understat.com"
   },
   {
@@ -507,7 +507,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "team_code": 91,
     "team": "Bournemouth",
     "team_short": "BOU",
-    "ingested_at_utc": "2026-10-27T11:54:14Z",
+    "ingested_at_utc": "2026-10-28T07:24:57Z",
     "source": "understat.com"
   },
   {
@@ -529,7 +529,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "team_code": 8,
     "team": "Chelsea",
     "team_short": "CHE",
-    "ingested_at_utc": "2026-10-27T11:54:14Z",
+    "ingested_at_utc": "2026-10-28T07:24:57Z",
     "source": "understat.com"
   }
 ]
@@ -594,7 +594,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "xg_buildup": 5.1635,
     "yellow_cards": 2.0,
     "red_cards": 0.0,
-    "ingested_at_utc": "2026-10-27T11:54:16Z",
+    "ingested_at_utc": "2026-10-28T07:24:58Z",
     "source": "understat.com"
   },
   {
@@ -618,7 +618,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "xg_buildup": 4.9276,
     "yellow_cards": 7.0,
     "red_cards": 0.0,
-    "ingested_at_utc": "2026-10-27T11:54:16Z",
+    "ingested_at_utc": "2026-10-28T07:24:58Z",
     "source": "understat.com"
   },
   {
@@ -642,7 +642,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "xg_buildup": 7.8937,
     "yellow_cards": 7.0,
     "red_cards": 0.0,
-    "ingested_at_utc": "2026-10-27T11:54:16Z",
+    "ingested_at_utc": "2026-10-28T07:24:58Z",
     "source": "understat.com"
   }
 ]
@@ -721,7 +721,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "red_cards": 0.0,
     "roster_in": "0",
     "roster_out": "0",
-    "ingested_at_utc": "2026-10-27T11:54:33Z",
+    "ingested_at_utc": "2026-10-28T07:25:09Z",
     "source": "understat.com"
   },
   {
@@ -752,7 +752,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "red_cards": 0.0,
     "roster_in": "731582",
     "roster_out": "0",
-    "ingested_at_utc": "2026-10-27T11:54:33Z",
+    "ingested_at_utc": "2026-10-28T07:25:09Z",
     "source": "understat.com"
   },
   {
@@ -783,7 +783,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "red_cards": 0.0,
     "roster_in": "0",
     "roster_out": "0",
-    "ingested_at_utc": "2026-10-27T11:54:33Z",
+    "ingested_at_utc": "2026-10-28T07:25:09Z",
     "source": "understat.com"
   }
 ]
@@ -837,7 +837,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "opponent": "Sunderland",
     "opponent_short": "SUN",
     "us_xg_per_shot": 0.1617,
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   },
   {
     "season": "2026-2027",
@@ -855,7 +855,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "opponent": "Sunderland",
     "opponent_short": "SUN",
     "us_xg_per_shot": 0.0897,
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   },
   {
     "season": "2026-2027",
@@ -873,7 +873,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "opponent": "Sunderland",
     "opponent_short": "SUN",
     "us_xg_per_shot": 0.0244,
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   }
 ]
 ```
@@ -926,7 +926,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "opponent": "Sunderland",
     "opponent_short": "SUN",
     "us_xga_per_shot": 0.0495,
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   },
   {
     "season": "2026-2027",
@@ -944,7 +944,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "opponent": "Sunderland",
     "opponent_short": "SUN",
     "us_xga_per_shot": 0.0786,
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   },
   {
     "season": "2026-2027",
@@ -962,7 +962,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "opponent": "Sunderland",
     "opponent_short": "SUN",
     "us_xga_per_shot": 0.0643,
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   }
 ]
 ```
@@ -1016,7 +1016,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "goals": 0,
     "us_xg": 0.034,
     "window": 5,
-    "built_at_utc": "2026-10-27T11:54:39Z",
+    "built_at_utc": "2026-10-28T07:25:10Z",
     "us_xg_per_shot": 0.034
   },
   {
@@ -1035,7 +1035,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "goals": 1,
     "us_xg": 1.1851,
     "window": 5,
-    "built_at_utc": "2026-10-27T11:54:39Z",
+    "built_at_utc": "2026-10-28T07:25:10Z",
     "us_xg_per_shot": 0.1317
   },
   {
@@ -1054,7 +1054,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "goals": 4,
     "us_xg": 5.403,
     "window": 5,
-    "built_at_utc": "2026-10-27T11:54:39Z",
+    "built_at_utc": "2026-10-28T07:25:10Z",
     "us_xg_per_shot": 0.115
   }
 ]
@@ -1109,7 +1109,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "goals_against": 0,
     "us_xga": 0.1586,
     "window": 5,
-    "built_at_utc": "2026-10-27T11:54:39Z",
+    "built_at_utc": "2026-10-28T07:25:10Z",
     "us_xga_per_shot": 0.0793
   },
   {
@@ -1128,7 +1128,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "goals_against": 0,
     "us_xga": 0.7564,
     "window": 5,
-    "built_at_utc": "2026-10-27T11:54:39Z",
+    "built_at_utc": "2026-10-28T07:25:10Z",
     "us_xga_per_shot": 0.0946
   },
   {
@@ -1147,7 +1147,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "goals_against": 4,
     "us_xga": 5.3243,
     "window": 5,
-    "built_at_utc": "2026-10-27T11:54:39Z",
+    "built_at_utc": "2026-10-28T07:25:10Z",
     "us_xga_per_shot": 0.1087
   }
 ]
@@ -1197,7 +1197,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "kickoff_raw": "2026-10-25 16:30:00",
     "opponent_code": 56,
     "opponent": "Sunderland",
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   },
   {
     "season": "2026-2027",
@@ -1213,7 +1213,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "kickoff_raw": "2026-10-25 16:30:00",
     "opponent_code": 56,
     "opponent": "Sunderland",
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   },
   {
     "season": "2026-2027",
@@ -1229,7 +1229,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "kickoff_raw": "2026-10-25 16:30:00",
     "opponent_code": 56,
     "opponent": "Sunderland",
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   }
 ]
 ```
@@ -1272,7 +1272,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "primary_team_id": "88",
     "sample_last_action": "Cross",
     "us_xg_per_shot": 0.2218,
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   },
   {
     "season": "2025-2026",
@@ -1285,7 +1285,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "primary_team_id": "244",
     "sample_last_action": "Rebound",
     "us_xg_per_shot": 0.2401,
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   },
   {
     "season": "2025-2026",
@@ -1298,7 +1298,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "primary_team_id": "71",
     "sample_last_action": "Pass",
     "us_xg_per_shot": 0.2143,
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   }
 ]
 ```
@@ -1335,7 +1335,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "assisted_goals": 10,
     "assisted_us_xg": 11.8637,
     "player_id": "1228",
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   },
   {
     "season": "2025-2026",
@@ -1345,7 +1345,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "assisted_goals": 11,
     "assisted_us_xg": 9.0433,
     "player_id": "8094",
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   },
   {
     "season": "2025-2026",
@@ -1355,7 +1355,7 @@ Seasons in scope: 2025-2026, 2026-2027 (Understat 2025, 2026).
     "assisted_goals": 5,
     "assisted_us_xg": 7.2875,
     "player_id": "8981",
-    "built_at_utc": "2026-10-27T11:54:39Z"
+    "built_at_utc": "2026-10-28T07:25:10Z"
   }
 ]
 ```

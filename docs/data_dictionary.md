@@ -1,6 +1,6 @@
 # FPL master datasets — data dictionary
 
-Generated `2026-10-27T11:53:51Z`.
+Generated `2026-10-28T07:24:35Z`.
 
 Source: public [`olbauday/FPL-Core-Insights`](https://github.com/olbauday/FPL-Core-Insights).
 
@@ -139,7 +139,7 @@ Rows: **35,232**. Columns: **52**.
 | `gw` | `Int64` | 0 (0.0%) | FPL gameweek from the GW folder number (includes 0 for pre-season). |
 | `web_name` | `String` | 0 (0.0%) |  |
 | `status` | `String` | 0 (0.0%) |  |
-| `news` | `String` | 22,934 (65.1%) |  |
+| `news` | `String` | 22,929 (65.1%) |  |
 | `now_cost` | `Float64` | 0 (0.0%) | FPL price in £m as a decimal (e.g. 7.0). Do not divide by 10. |
 | `selected_by_percent` | `Float64` | 0 (0.0%) |  |
 | `form` | `Float64` | 0 (0.0%) |  |
@@ -202,8 +202,8 @@ Rows: **1,922**. Columns: **115**.
 | `opponent_code` | `Int64` | 322 (16.8%) | Opponent club code. |
 | `is_home` | `Boolean` | 0 (0.0%) | True if the row's team/player is the home side. |
 | `finished` | `Boolean` | 0 (0.0%) |  |
-| `goals_for` | `Float64` | 663 (34.5%) |  |
-| `goals_against` | `Float64` | 663 (34.5%) |  |
+| `goals_for` | `Float64` | 662 (34.4%) |  |
+| `goals_against` | `Float64` | 662 (34.4%) |  |
 | `elo` | `Float64` | 996 (51.8%) |  |
 | `possession` | `Float64` | 743 (38.7%) |  |
 | `xg` | `Float64` | 744 (38.7%) | Opta/match-layer expected goals. Distinct from FPL expected_goals and shot-model xG. |
@@ -282,7 +282,7 @@ Rows: **1,922**. Columns: **115**.
 | `kickoff_raw` | `String` | 44 (2.3%) |  |
 | `tournament` | `String` | 0 (0.0%) |  |
 | `kickoff_utc` | `String` | 44 (2.3%) |  |
-| `result` | `String` | 663 (34.5%) |  |
+| `result` | `String` | 662 (34.4%) |  |
 | `points` | `Int64` | 663 (34.5%) |  |
 | `clean_sheet` | `Boolean` | 663 (34.5%) |  |
 | `venue` | `String` | 0 (0.0%) | H or A. |

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=28" />
+  <link rel="stylesheet" href="./styles.css?v=38" />
   <link rel="stylesheet" href="./understat-shots.css?v=20" />
 </head>
 <body>
@@ -66,6 +66,10 @@
         <a href="#fixtures" class="nav-link" data-page="fixtures" data-name="nav.fixtures">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 10h16M9 5v3M15 5v3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
           <span>Fixtures</span>
+        </a>
+        <a href="#gw-review" class="nav-link" data-page="gw-review" data-name="nav.gw_review">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V8l7-4 7 4v11H5z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 19v-5h6v5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11h8" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          <span>GW Review</span>
         </a>
         <div class="nav-block" data-group="players" data-name="nav.players">
           <button type="button" class="nav-link nav-parent" data-page="players">
@@ -233,6 +237,27 @@
           <div id="fixtures-cards" class="fx-grid" data-name="fixtures.cards"></div>
           <div class="name-row" data-name="fixtures.ticker.title"><h2>Next six gameweeks</h2></div>
           <div id="fixtures-ticker" class="ticker-wrap" data-name="fixtures.ticker"></div>
+        </section>
+
+        <section class="page" id="page-gw-review" hidden>
+          <div class="page-head">
+            <div class="name-row" data-name="gw_review.title"><h1>GW Review</h1></div>
+            <p class="lede">FPL snapshot for one gameweek — points, attack, defence, and a pitch XI. Each card has its own download for X / Twitter.</p>
+          </div>
+          <div class="gwrev" id="gwrev-root">
+            <section class="perf-controls" aria-label="GW Review filters" data-name="gw_review.controls">
+              <label class="perf-field" data-name="gw_review.controls.season">
+                <span>Season</span>
+                <select id="gwrev-season"></select>
+              </label>
+              <label class="perf-field" data-name="gw_review.controls.gw">
+                <span>Gameweek</span>
+                <select id="gwrev-gw"></select>
+              </label>
+            </section>
+            <p class="perf-status" id="gwrev-status" data-name="gw_review.status"></p>
+            <div class="gwrev-board" id="gwrev-board" data-name="gw_review.board"></div>
+          </div>
         </section>
 
         <section class="page" id="page-attackers" hidden>
@@ -794,6 +819,7 @@
   <script src="./finishing.js?v=5"></script>
   <script src="./team-sides.js?v=5"></script>
   <script src="./fixture-proof.js?v=4"></script>
-  <script type="module" src="./app.js?v=17"></script>
+  <script src="./gw-review.js?v=10"></script>
+  <script type="module" src="./app.js?v=18"></script>
 </body>
 </html>

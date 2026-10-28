@@ -49,6 +49,7 @@ Hard-refresh after serving-shape changes. Understat JS/CSS/JSON use `?v=` cache 
 | `#insights-finishing` | SoT% vs shots/90 scatter (top N by total shots). Bubble = xG/90, colour = club; 2-col tooltip (incl. G/xG). |
 | `#insights-team-sides` | Table cells `value (%)`; sort by value or %. Dual vertical pitches (attack ↑ / concede ↓) with dropdowns above each, L/C/R band stats, circles sized by xG. Data: `us_team_side_channels.json`. |
 | `#insights-fixture-proof` | Dumbbell: npG+A/90 or npxG+xA/90 vs live-season top 5 · rest · bottom 5. Top N by separate rank metric (xG/xGI/…). Position multi-select; exclude/add players. |
+| `#gw-review` | Single-GW FPL social snapshot. Season + GW select. Four cards (Snapshot / Attack / Defence / Points XI pitch) each with Download for X. Attack pairs top-8 tables (xGI\|Goals, CC\|Assists). Defence: DEF+GK\|DefCon. Pitch XI: pts + ownership % + haul badges. Formation dynamic (DEF 3–5, MID 2–5, FWD 1–3). |
 | `#teams` | Club table with `-A` against metrics; click team → GW drawer with opponent |
 
 Standalone Understat: `web/understat-shots.html`.

@@ -27,6 +27,7 @@ const FILES = ["meta.json", "players_matches.json", "fixtures.json", "teams_gw.j
 const PAGES = [
   "home",
   "fixtures",
+  "gw-review",
   "attackers",
   "defenders",
   "gk",
@@ -66,6 +67,7 @@ async function loadData() {
 const PAGE_TITLES = {
   home: "Home",
   fixtures: "Fixtures",
+  "gw-review": "GW Review",
   attackers: "Attackers",
   defenders: "Defenders",
   gk: "Goalkeepers",
@@ -184,6 +186,16 @@ function showPage(id) {
       } catch (err) {
         const status = document.getElementById("fp-status");
         if (status) status.textContent = `Fixture Proof failed to start: ${err.message}`;
+      }
+    });
+  }
+  if (page === "gw-review") {
+    requestAnimationFrame(() => {
+      try {
+        window.initGwReview?.();
+      } catch (err) {
+        const status = document.getElementById("gwrev-status");
+        if (status) status.textContent = `GW Review failed to start: ${err.message}`;
       }
     });
   }

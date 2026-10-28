@@ -34,6 +34,7 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Shot sides | `#insights-team-sides` uses Understat Y thirds (low=Right, mid=Center, high=Left) for shots for/against. Serving: `us_team_side_channels.json` (aggregates + per-shot `points` with shooter/assister). Table cells show `value (%)`; sort mode Value vs %. Dual pitch: vertical (attack ↑ / concede ↓), team dropdowns above each pitch, L/C/R band stats near centre (attack blue / defend red), circle size = Understat xG. Assister xA on a shot = that shot’s xG. |
 | Finishing | Bubble fill = club colour. Per 90 (default on): X = Sh/90, bubble = xG/90; off: X = Sh, bubble = xG. Y = SoT% always. Axes auto-scale to cohort. |
 | Fixture Proof | `#insights-fixture-proof`. Live PL table in GW window: Top 5 by G or xG; Bottom 5 by GC or xGC among the rest (disjoint). Chart metric npG+A/90 or npxG+xA/90. Top N by separate rank metric. Position multi-select. Optional sample filter: ≥45 mins/app and ≥30% of that team’s PL matches in the GW window. Dots: top green · rest open · bottom red; connector yellow. |
+| GW Review | Top-level `#gw-review`. Season + GW filters. Four social cards (Snapshot, Attack, Defence, Points XI), each with ChartExport download. Snapshot KPI order: Goals → Team CS → 10+ pts Haul → Top haul → Best xGI (goals & team CS show Δ vs prior GW). Snapshot also pairs Points leaders \| compact Team of the Week pitch. Attack pairs (top 8): xGI\|Goals, CC\|BCC\|Assists, Over\|Under. Defence: DEF+GK\|DefCon (top 8). Points XI card keeps full pitch. PL-only; DGW rows summed. |
 | Players table drawer | Clicking a name on Attackers / Defenders / GK opens a side drawer of that player’s gameweeks for the **currently visible** metric columns, plus Total and Per 90 footer rows. Points/CS are one figure per GW. |
 | Metric controls | Metric-group chips are always visible; there is no redundant “More metrics” toggle. |
 | Understat CSS | Scoped under `.us-shots`. Site-wide accent green (`#3ddc97`) lives in `web/styles.css`. |
@@ -52,6 +53,60 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-10-27 — Snapshot embeds compact Team of the Week
+
+**Choice:** Snapshot card pairs Points leaders with a compact pitch (formation visual only — same XI as the dedicated card). Full Team of the Week card remains for social download.
+
+**Where:** `web/{gw-review.js,styles.css,index.html}`, docs.
+
+### 2026-10-27 — GW Review paired leader tables
+
+**Choice:** Attack restores Goals beside xGI; Chances | Assists; Over | Under. Defence keeps DEF+GK | DefCon. Each pair uses a bold vertical rule; every paired table shows top 8. Split tables fill their half-width.
+
+**Where:** `web/{gw-review.js,styles.css,index.html}`, docs.
+
+### 2026-10-27 — GW Review compact tables + pitch badges
+
+**Choice:** GW Review tables use content-width layout (metrics pack beside the player column, spare space on the right). Tighter row padding. Pitch XI adds the same haul badges (⚽/🅰️/🛡️/🧱) under pts · ownership %.
+
+**Where:** `web/{gw-review.js,styles.css,index.html}`, docs.
+
+### 2026-10-27 — GW Review goals Δ + pitch ownership
+
+**Choice:** Goals KPI meta stays “across the PL”; delta vs prior GW sits in the value as coloured `(▲+N)` / `(▼-N)`. Pitch XI shows `pts · selected_by_%` from `players_gw` (joined on `player_id` = match `pid`), not bonus.
+
+**Where:** `web/gw-review.js`, docs.
+
+### 2026-10-27 — GW Review snapshot KPI refresh
+
+**Choice:** Top haul / best xGI show attribute badges (goals ⚽×N, assists 🅰️, CS 🛡️, DefCon pts 🧱). Goals KPI includes vs prior GW delta (green/red). Assists + CS-assets KPIs replaced by team clean-sheet count from `teams_gw.clean_sheet` (distinct teams). Hauls label = “10+ pts Haul”. Table Player header size matches player name.
+
+**Where:** `web/{gw-review.js,styles.css,index.html}`, docs.
+
+### 2026-10-27 — GW Review attack board + dynamic XI
+
+**Choice:** Attack card: xGI full-width, then Chances created (CC + US BCC) left of Assists; Goals removed from this card. Bold rules between metric blocks. Team of the week picks the max-points valid formation (1 GK, DEF 3–5, MID 2–5, FWD 1–3, always 11) from that GW’s top scorers by position.
+
+**Why:** Creation board fits the attack story better than goals next to xGI; XI should flex with who actually hauled.
+
+**Where:** `web/{gw-review.js,styles.css,index.html}`, docs.
+
+### 2026-10-27 — GW Review layout polish + pitch XI
+
+**Choice:** Snapshot KPIs use a 3-column grid with separate label/value/meta nodes (fixes merged text). Points leaders show Bonus, not BPS. Team of the week on a pitch (no bench). Light emoji on section labels for social posts.
+
+**Why:** Linear left-column cards wasted space and labels collided with values; pitch XI matches the playing-11 share format.
+
+**Where:** `web/{gw-review.js,styles.css,index.html}`, docs.
+
+### 2026-10-27 — GW Review social snapshot page
+
+**Choice:** New shell nav page `#gw-review` for a single-GW FPL glimpse. Four downloadable cards: Snapshot (KPIs + points leaders), Attack (xGI/G/A + over/under), Defence (pts/CS/DefCon), Points XI (by pts). Built for X/Twitter via existing ChartExport caption + brand strip.
+
+**Why:** Weekly posting needs ready-made, segmented images rather than one overloaded graphic. Ownership omitted until serving includes it.
+
+**Where:** `web/{gw-review,app,index,styles}.{js,html,css}`, docs.
 
 ### 2026-10-27 — Fixture Proof GW + sample filter
 
