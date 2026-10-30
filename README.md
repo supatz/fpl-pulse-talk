@@ -2,6 +2,9 @@
 
 Static dashboard (`web/`) backed by a merged Premier League player-match table. FPL/Opta owns dimensions and default measures; Understat roster measures stay separately labeled `US` / `us_*`. Locked choices: [`docs/decision_log.md`](docs/decision_log.md). Doc index: [`docs/README.md`](docs/README.md).
 
+## Website
+Link: https://fpl-pulse-talk.netlify.app/#home
+
 ## Datasets
 
 | Dataset | Source | Powers |
