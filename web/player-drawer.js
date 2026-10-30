@@ -6,7 +6,7 @@ const SKIP = new Set(["player", "team", "pos", "Cost", "apps"]);
 const SUM = [
   "G", "A", "PenG", "xG", "xA", "xGI", "Sh", "SoT", "CC", "TiB", "BCM", "xGOT",
   "Sv", "Saves", "GC", "xGOTf", "xGP", "Tkl", "CBI", "DefCon", "npxG", "F3", "Dr", "YC",
-  "Aer", "Clr", "Int", "Blk", "Rec", "SiB", "HC", "SW", "Cr", "SPxG", "PS",
+  "Aer", "Clr", "Int", "Blk", "Rec", "SiB", "SvIB", "HC", "SW", "Cr", "SPxG", "PS",
   "USMin", "USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP", "BCC", "BCT", "BCS", "BCM",
 ];
 

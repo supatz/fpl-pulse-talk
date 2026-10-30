@@ -226,11 +226,12 @@ export function renderInsightList(el, rows, opts = {}) {
 const SUM_FIELDS = [
   "G", "A", "PenG", "xG", "xA", "xGI", "Sh", "SoT", "CC", "TiB", "BCM", "xGOT",
   "Sv", "GC", "xGOTf", "xGP", "Tkl", "CBI", "DefCon", "npxG", "F3", "Dr", "YC",
-  "Aer", "Clr", "Int", "Blk", "Rec", "SiB", "HC", "SW", "Cr", "SPxG", "PS",
+  "Aer", "Clr", "Int", "Blk", "Rec", "SiB", "SvIB", "HC", "SW", "Cr", "SPxG", "PS",
   "USMin", "USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP", "BCC", "BCT", "BCS", "BCM",
 ];
 
-const UNDERSTAT_RATE_FIELDS = new Set(["USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP", "BCC", "BCT", "BCS", "BCM"]);
+const UNDERSTAT_RATE_FIELDS = new Set(["USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP", "BCC", "BCT", "BCS", "BCM", "SiB"]);
+const PL = "Premier League";
 
 function inList(list, value) {
   if (list == null) return true;
@@ -238,8 +239,15 @@ function inList(list, value) {
   return list.includes(value);
 }
 
+/** Site is PL-only; treat missing competition as PL (legacy rows). */
+function isPremierLeague(row) {
+  const c = row?.c ?? row?.competition;
+  return c == null || c === PL;
+}
+
 export function filterMatches(matches, state) {
   return (matches || []).filter((r) => {
+    if (!isPremierLeague(r)) return false;
     if (!inList(state.seasons, r.s)) return false;
     if (!inList(state.competitions, r.c)) return false;
     const venue = r.h === true ? "H" : r.h === false ? "A" : null;
@@ -338,6 +346,7 @@ export function aggregatePlayers(matches, state, { prices = {} } = {}) {
 export function aggregateTeamRows(rows, state) {
   const filtered = (rows || []).filter((r) => {
     if (!r.finished) return false;
+    if (!isPremierLeague(r)) return false;
     if (!inList(state.seasons, r.season)) return false;
     if (!inList(state.competitions, r.competition)) return false;
     const venue = r.is_home === true ? "H" : r.is_home === false ? "A" : null;
@@ -379,6 +388,8 @@ export function aggregateTeamRows(rows, state) {
       "Sh-A": sum("shots_conceded"),
       SoT: sum("shots_on_target"),
       "SoT-A": sum("sot_conceded"),
+      SiB: sum("shots_inside_box"),
+      "SiB-A": sum("shots_inside_box_against"),
       CC: sum("CC"),
       "CC-A": sum("CC_A"),
       BCC: sum("big_chances"),
@@ -485,6 +496,7 @@ function matchKey(row) {
 export function computeMatchInsights(playerMatches, teamRows, state) {
   const teams = (teamRows || []).filter((r) => {
     if (!r.finished) return false;
+    if (!isPremierLeague(r)) return false;
     if (!inList(state.seasons, r.season)) return false;
     if (!inList(state.competitions, r.competition)) return false;
     if (state.gws?.length && !state.gws.includes(r.gw)) return false;
@@ -497,6 +509,7 @@ export function computeMatchInsights(playerMatches, teamRows, state) {
     byId.get(id).sides.push(r);
   }
   const players = (playerMatches || []).filter((r) => {
+    if (!isPremierLeague(r)) return false;
     if (!inList(state.seasons, r.s)) return false;
     if (!inList(state.competitions, r.c)) return false;
     if (state.gws?.length && !state.gws.includes(r.gw)) return false;
@@ -557,7 +570,9 @@ export function computeMatchInsights(playerMatches, teamRows, state) {
 }
 
 export function matchFilterOptions(teamRows, state) {
-  const teams = (teamRows || []).filter((r) => r.finished && inList(state.seasons, r.season) && inList(state.competitions, r.competition));
+  const teams = (teamRows || []).filter(
+    (r) => r.finished && isPremierLeague(r) && inList(state.seasons, r.season) && inList(state.competitions, r.competition)
+  );
   const gws = [...new Set(teams.map((r) => r.gw).filter((g) => g > 0))].sort((a, b) => a - b);
   const scoped = state.gws?.length ? teams.filter((r) => state.gws.includes(r.gw)) : teams;
   const seen = new Map();
@@ -756,7 +771,6 @@ export function makeTable(cfg) {
   const view = cfg.view;
   const persisted = loadState(view);
   const seasons = cfg.seasons || [];
-  const competitions = ["Premier League", ...(cfg.competitions || []).filter((c) => c !== "Premier League")];
   const state = {
     sort: persisted.sort || cfg.defaultSort,
     dir: persisted.dir || cfg.defaultDir || "desc",
@@ -764,7 +778,7 @@ export function makeTable(cfg) {
     search: persisted.search || "",
     per90: persisted.per90 ?? false,
     seasons: asArray(persisted.seasons || persisted.season, [cfg.season].filter(Boolean)),
-    competitions: asArray(persisted.competitions || persisted.competition, ["Premier League"]),
+    competitions: [PL],
     venues: asArray(persisted.venues || (persisted.venue && persisted.venue !== "all" ? persisted.venue : null), ["H", "A"]),
     posFilter: asArray(persisted.posFilter || persisted.position, cfg.positions || []),
     players: persisted.players || [],
@@ -795,17 +809,6 @@ export function makeTable(cfg) {
     selected: state.seasons,
     onChange: (v) => {
       state.seasons = v;
-      render();
-    },
-  });
-  const compMs = makeMultiSelect({
-    name: `${view}.filter.competition`,
-    label: "Competition",
-    tip: "Competition / tournament. Multi-select.",
-    options: competitions.map((c) => ({ value: c, label: c })),
-    selected: state.competitions,
-    onChange: (v) => {
-      state.competitions = v;
       render();
     },
   });
@@ -857,7 +860,7 @@ export function makeTable(cfg) {
   filterRow.className = "controls-row";
   const sliderRow = document.createElement("div");
   sliderRow.className = "controls-row";
-  filterRow.append(seasonMs.el, compMs.el, venueMs.el);
+  filterRow.append(seasonMs.el, venueMs.el);
   if (posMs) filterRow.appendChild(posMs.el);
   if (playerMs) filterRow.appendChild(playerMs.el);
   if (!cfg.hideSearch) filterRow.appendChild(searchControl(state, `${view}.filter.search`, render));

@@ -275,35 +275,11 @@ function renderHome() {
 
 function renderFixtures() {
   const fx = DATA.fixtures || {};
-  const { meta } = metaCtx();
   const host = document.getElementById("fixtures-cards");
   const bar = document.getElementById("fixtures-comp-host");
-  const persisted = loadState("fixtures");
-  const state = { competitions: persisted.competitions || ["Premier League"] };
-  if (bar && !bar.dataset.ready) {
-    const comps = ["Premier League", ...(meta.competitions || [])].filter((v, i, a) => a.indexOf(v) === i);
-    const ms = makeMultiSelect({
-      name: "fixtures.filter.competition",
-      label: "Competition",
-      tip: "Default is Premier League. Multi-select.",
-      options: comps.map((c) => ({ value: c, label: c })),
-      selected: state.competitions,
-      onChange: (v) => {
-        state.competitions = v;
-        saveState("fixtures", state);
-        paint();
-      },
-    });
-    bar.innerHTML = "";
-    bar.appendChild(ms.el);
-    bar.dataset.ready = "1";
-    decorateNames(bar);
-  }
-  function paint() {
-    const upcoming = (fx.upcoming || []).filter((f) => !state.competitions.length || state.competitions.includes(f.competition));
-    renderFixtureCards(host, upcoming, { competition: "all" });
-  }
-  paint();
+  if (bar) bar.replaceChildren(); // competition picker removed — site is PL-only
+  const upcoming = (fx.upcoming || []).filter((f) => !f.competition || f.competition === "Premier League");
+  renderFixtureCards(host, upcoming, { competition: "Premier League" });
   renderTicker("fixtures-ticker", fx.ticker);
   const link = document.getElementById("fdr-link");
   if (link) link.href = fx.fdr_url || FDR_URL;
@@ -360,21 +336,24 @@ function asList(v, fallback) {
 }
 
 function insightBaseState(key, extra = {}) {
-  const { meta, seasons, competitions, roster } = metaCtx();
+  const { meta, seasons, roster } = metaCtx();
   const persisted = loadState(key);
   const seasonsSel = asList(persisted.seasons || persisted.season, [meta.analysis_season].filter(Boolean));
   const venuesSel = asList(persisted.venues || persisted.venue, ["H", "A"]);
+  const fromPersist = Object.fromEntries(
+    Object.entries(persisted).filter(([k]) => ["gws", "matches", "gwFrom", "gwTo"].includes(k))
+  );
   return {
     seasons: seasonsSel.length ? seasonsSel : [meta.analysis_season].filter(Boolean),
-    competitions: asList(persisted.competitions || persisted.competition, ["Premier League"]),
     venues: venuesSel.length ? venuesSel : ["H", "A"],
     window: persisted.window || 5,
     currentOnly: true,
     roster,
     seasonsAll: seasons,
-    competitionsAll: ["Premier League", ...competitions.filter((c) => c !== "Premier League")],
+    competitionsAll: ["Premier League"],
     ...extra,
-    ...Object.fromEntries(Object.entries(persisted).filter(([k]) => ["gws", "matches", "gwFrom", "gwTo"].includes(k))),
+    ...fromPersist,
+    competitions: ["Premier League"], // site lock — ignore persisted cups/Europe
   };
 }
 
@@ -382,6 +361,7 @@ function mountGlobalInsightFilters(host, namePrefix, state, extras, render) {
   host.className = "insight-filters";
   host.dataset.name = `${namePrefix}.controls`;
   host.innerHTML = "";
+  state.competitions = ["Premier League"];
   const seasonMs = makeMultiSelect({
     name: `${namePrefix}.filter.season`,
     label: "Season",
@@ -390,17 +370,6 @@ function mountGlobalInsightFilters(host, namePrefix, state, extras, render) {
     selected: state.seasons,
     onChange: (v) => {
       state.seasons = v.length ? v : [state.seasonsAll.at(-1)].filter(Boolean);
-      render();
-    },
-  });
-  const compMs = makeMultiSelect({
-    name: `${namePrefix}.filter.competition`,
-    label: "Competition",
-    tip: "Competition / tournament. Multi-select.",
-    options: state.competitionsAll.map((c) => ({ value: c, label: c })),
-    selected: state.competitions,
-    onChange: (v) => {
-      state.competitions = v.length ? v : ["Premier League"];
       render();
     },
   });
@@ -418,7 +387,7 @@ function mountGlobalInsightFilters(host, namePrefix, state, extras, render) {
       render();
     },
   });
-  host.append(seasonMs.el, compMs.el, venueMs.el, ...extras);
+  host.append(seasonMs.el, venueMs.el, ...extras);
   decorateNames(host);
 }
 

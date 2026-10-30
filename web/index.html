@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=38" />
+  <link rel="stylesheet" href="./styles.css?v=41" />
   <link rel="stylesheet" href="./understat-shots.css?v=20" />
 </head>
 <body>
@@ -471,7 +471,12 @@
         <section class="page" id="page-insights-player-performance" hidden>
           <div class="page-head">
             <div class="name-row" data-name="insights.player_performance.title"><h1>Player performances</h1></div>
-            <p class="lede" data-name="insights.player_performance.lede">Choose X, Y, bubble size and sort metric, then take the top players in that window. Starting combinations — <strong>Goal threat:</strong> xG vs G · xGI vs GI · xG vs xGOT · TiB vs xG. <strong>Creativity:</strong> xA vs A · xA vs CC. <strong>Defence:</strong> DC vs CS · DC vs xGI.</p>
+            <div class="lede perf-lede" data-name="insights.player_performance.lede">
+              <p>Choose X, Y, bubble size and sort metric, then take the top players in that window. Starting combinations:</p>
+              <p><strong>Goal threat:</strong> xG vs G · xGI vs GI · xG vs xGOT · TiB vs xG.</p>
+              <p><strong>Creativity:</strong> xA vs A · xA vs CC.</p>
+              <p><strong>Defence:</strong> DC vs CS · DC vs xGI · GC vs xGC.</p>
+            </div>
           </div>
           <div class="perf" id="perf-root">
             <section class="perf-controls" aria-label="Player performance filters" data-name="player_performance.controls">
@@ -494,6 +499,13 @@
               <label class="perf-field" data-name="player_performance.controls.sort">
                 <span>Sort by</span>
                 <select id="perf-sort"></select>
+              </label>
+              <label class="perf-field" data-name="player_performance.controls.sort_dir">
+                <span>Sort order</span>
+                <select id="perf-sort-dir">
+                  <option value="desc" selected>Descending</option>
+                  <option value="asc">Ascending</option>
+                </select>
               </label>
               <label class="perf-field" data-name="player_performance.controls.top">
                 <span>Players</span>
@@ -533,6 +545,10 @@
               <label class="perf-field perf-check" data-name="player_performance.controls.min45">
                 <input id="perf-min45" type="checkbox" />
                 <span>45+ mins per appearance</span>
+              </label>
+              <label class="perf-field perf-check" data-name="player_performance.controls.trend">
+                <input id="perf-trend" type="checkbox" />
+                <span>Trend line</span>
               </label>
             </section>
             <p class="perf-status" id="perf-status" data-name="player_performance.status"></p>
@@ -639,14 +655,21 @@
             </div>
             <section class="side-pitch-compare" aria-label="Pitch compare" data-name="team_sides.pitch">
               <div class="name-row"><h2>Pitch compare</h2></div>
-              <p class="lede side-pitch-lede">Two teams side by side. Attack toward the top goal; conceded toward the bottom. Vertical bands = L / C / R with value (%) near centre (attack blue · defend red). Circle size = Understat xG (xGOT is not on Understat shots).</p>
-              <div class="side-pitches" id="side-pitches">
+              <p class="lede side-pitch-lede">Two teams side by side. Attack toward the top goal; conceded toward the bottom. Vertical bands = L / C / R with value (%) near centre (attack blue · defend red). Circle size = Understat xG (xGOT is not on Understat shots). Centre spider = Opta attack/defend volume for the same GW window.</p>
+              <div class="side-pitches side-pitches--trio" id="side-pitches">
                 <div class="side-pitch-col" data-name="team_sides.pitch.team_a">
                   <label class="perf-field">
                     <span>Team A</span>
                     <select id="side-team-a"></select>
                   </label>
                   <div class="side-pitch" data-pitch="a" role="img" aria-label="Team A pitch"></div>
+                </div>
+                <div class="side-radar-col" data-name="team_sides.pitch.radar">
+                  <div class="side-radar-head">
+                    <span>Compare</span>
+                    <button type="button" class="chart-dl" id="side-radar-dl" data-name="team_sides.pitch.radar.export">Download spider</button>
+                  </div>
+                  <div class="side-radar" id="side-radar" role="img" aria-label="Team A vs Team B spider chart"></div>
                 </div>
                 <div class="side-pitch-col" data-name="team_sides.pitch.team_b">
                   <label class="perf-field">
@@ -655,6 +678,9 @@
                   </label>
                   <div class="side-pitch" data-pitch="b" role="img" aria-label="Team B pitch"></div>
                 </div>
+              </div>
+              <div class="chart-dl-row">
+                <button type="button" class="chart-dl" id="side-pitches-dl" data-name="team_sides.pitch.export">Download pitches</button>
               </div>
               <div class="fpl-map-tip" id="side-tip" hidden></div>
             </section>
@@ -811,15 +837,15 @@
   </div>
   <script src="./vendor/d3.min.js"></script>
   <script src="./dual-range.js?v=1"></script>
-  <script src="./chart-export.js?v=5"></script>
-  <script src="./team-colors.js?v=3"></script>
+  <script src="./chart-export.js?v=6"></script>
+  <script src="./team-colors.js?v=4"></script>
   <script src="./understat-shots.js?v=22"></script>
   <script src="./fpl-treemap.js?v=16"></script>
-  <script src="./player-performance.js?v=17"></script>
+  <script src="./player-performance.js?v=21"></script>
   <script src="./finishing.js?v=5"></script>
-  <script src="./team-sides.js?v=5"></script>
+  <script src="./team-sides.js?v=9"></script>
   <script src="./fixture-proof.js?v=4"></script>
   <script src="./gw-review.js?v=10"></script>
-  <script type="module" src="./app.js?v=18"></script>
+  <script type="module" src="./app.js?v=20"></script>
 </body>
 </html>

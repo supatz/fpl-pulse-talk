@@ -13,12 +13,15 @@
     { id: "xGI", field: "xGI", short: "xGI", name: "Expected goal involvements", digits: 2 },
     { id: "DC", field: "DefCon", short: "DC", name: "Defensive contributions", digits: 0 },
     { id: "CS", field: "cs", short: "CS", name: "Clean sheets", digits: 0 },
+    { id: "GC", field: "GC", short: "GC", name: "Goals conceded", digits: 0 },
+    { id: "xGC", field: "xGC", short: "xGC", name: "Expected goals conceded (FPL on-pitch)", digits: 2 },
     { id: "xGOT", field: "xGOT", short: "xGOT", name: "Expected goals on target", digits: 2 },
     { id: "CC", field: "CC", short: "CC", name: "Chances created", digits: 0 },
     { id: "npxG", field: "npxG", short: "npxG", name: "Non-penalty xG", digits: 2 },
     { id: "Sh", field: "Sh", short: "Sh", name: "Shots", digits: 0 },
     { id: "SoT", field: "SoT", short: "SoT", name: "Shots on target", digits: 0 },
     { id: "TiB", field: "TiB", short: "TiB", name: "Touches in box", digits: 0 },
+    { id: "SiB", field: "SiB", short: "SiB", name: "Shots in box (US)", digits: 0 },
     { id: "BCC", field: "BCC", short: "BCC", name: "Big chances created (US)", digits: 0 },
     { id: "BCT", field: "BCT", short: "BCT", name: "Big chances taken (US)", digits: 0 },
     { id: "BCS", field: "BCS", short: "BCS", name: "Big chances scored (US)", digits: 0 },
@@ -26,7 +29,7 @@
   ];
   const METRIC_BY_ID = Object.fromEntries(METRICS.map((m) => [m.id, m]));
   const SUM_FIELDS = [
-    "G", "A", "xG", "xA", "xGI", "DefCon", "cs", "xGOT", "CC", "npxG", "Sh", "SoT", "TiB",
+    "G", "A", "xG", "xA", "xGI", "DefCon", "cs", "GC", "xGC", "xGOT", "CC", "npxG", "Sh", "SoT", "TiB", "SiB",
     "BCC", "BCT", "BCS", "BCM",
   ];
 
@@ -37,12 +40,14 @@
     yMetric: "G",
     sizeMetric: "SoT",
     sortMetric: "xGI",
+    sortDir: "desc",
     topN: 20,
     position: "ALL",
     gwFrom: 1,
     gwTo: 38,
     per90: false,
     min45: false,
+    trend: false,
     exclude: new Set(), // player keys (pc || pid)
     excludeQuery: "",
   };
@@ -83,6 +88,7 @@
     els.yMetric = $("perf-y");
     els.sizeMetric = $("perf-size");
     els.sortMetric = $("perf-sort");
+    els.sortDir = $("perf-sort-dir");
     els.top = $("perf-top");
     els.position = $("perf-position");
     els.gwRange = $("perf-gw-range");
@@ -90,6 +96,7 @@
     els.gwControl = null;
     els.per90 = $("perf-per90");
     els.min45 = $("perf-min45");
+    els.trend = $("perf-trend");
     els.excludeSearch = $("perf-exclude-search");
     els.excludeMenu = $("perf-exclude-menu");
     els.excludeChips = $("perf-exclude-chips");
@@ -141,6 +148,10 @@
       state.sortMetric = els.sortMetric.value;
       render();
     });
+    els.sortDir?.addEventListener("change", () => {
+      state.sortDir = els.sortDir.value === "asc" ? "asc" : "desc";
+      render();
+    });
     els.top.addEventListener("change", () => {
       state.topN = Number(els.top.value) || 20;
       render();
@@ -170,6 +181,10 @@
     });
     els.min45.addEventListener("change", () => {
       state.min45 = els.min45.checked;
+      render();
+    });
+    els.trend?.addEventListener("change", () => {
+      state.trend = !!els.trend.checked;
       render();
     });
 
@@ -215,8 +230,10 @@
     ];
     if (state.sortMetric && METRIC_BY_ID[state.sortMetric]) {
       const sort = METRIC_BY_ID[state.sortMetric];
-      gloss.push(`Ranked by ${sort.name}`);
+      const dir = state.sortDir === "asc" ? "ascending" : "descending";
+      gloss.push(`Ranked by ${sort.name} (${dir})`);
     }
+    if (state.trend) gloss.push("Trend line on");
     return {
       title: `${y.name} vs ${x.name}${rate}`,
       metrics: gloss.join(" · "),
@@ -346,9 +363,16 @@
       p.size = metricTotal(p, sizeM);
       p.sortVal = metricTotal(p, sortM) * factor;
     }
+    const asc = state.sortDir === "asc";
     return players
       .filter((p) => p.x > 0 || p.y > 0 || p.size > 0 || p.sortVal > 0)
-      .sort((a, b) => b.sortVal - a.sortVal || b.y - a.y || b.x - a.x)
+      .sort((a, b) => {
+        const primary = asc ? a.sortVal - b.sortVal : b.sortVal - a.sortVal;
+        if (primary) return primary;
+        const secondary = asc ? a.y - b.y : b.y - a.y;
+        if (secondary) return secondary;
+        return asc ? a.x - b.x : b.x - a.x;
+      })
       .slice(0, state.topN);
   }
 
@@ -429,8 +453,10 @@
     const unit = state.per90 ? " per 90" : "";
     const minsNote = state.min45 ? " · 45+ mins/app" : "";
     const exclNote = state.exclude.size ? ` · ${state.exclude.size} excluded` : "";
+    const dirNote = state.sortDir === "asc" ? " ↑" : " ↓";
+    const trendNote = state.trend ? " · trend line" : "";
     const position = els.position.options[els.position.selectedIndex]?.textContent || "All positions";
-    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · top ${players.length} by ${sortM.short}${unit}${minsNote}${exclNote} · X ${xM.short} · Y ${yM.short} · bubble ${sizeM.short}${state.per90 ? " (total)" : ""} · FPL-Core`;
+    els.status.textContent = `${state.season} · GW ${state.gwFrom}–${state.gwTo} · ${position} · top ${players.length} by ${sortM.short}${dirNote}${unit}${minsNote}${exclNote}${trendNote} · X ${xM.short} · Y ${yM.short} · bubble ${sizeM.short} (relative)${state.per90 ? " · size totals" : ""} · kit colours · FPL-Core`;
 
     const width = els.chart.clientWidth || 900;
     const height = els.chart.clientHeight || 600;
@@ -481,8 +507,20 @@
       .attr("text-anchor", "middle")
       .text(`${yM.short}${per90}`);
 
-    const maxSize = Math.max(...players.map((p) => p.size), 1);
-    const radius = d3.scaleSqrt().domain([0, maxSize]).range([5, 17]);
+    if (state.trend) drawTrendLine(g, players, x, y);
+
+    // Size relative to the displayed pool so top-N variance is visible.
+    const sizeVals = players.map((p) => p.size);
+    const sMin = d3.min(sizeVals);
+    const sMax = d3.max(sizeVals);
+    const radius =
+      sMax - sMin < 1e-9
+        ? () => 12
+        : d3.scaleSqrt().domain([sMin, sMax]).range([7, 24]).clamp(true);
+    const kitFill = (short) =>
+      window.TeamColors?.teamKitFill?.(short, 0.5) ||
+      window.TeamColors?.teamFill?.(short, 0.5) ||
+      "rgba(61, 220, 151, 0.5)";
     const dots = g
       .selectAll("g.perf-dot")
       .data(players)
@@ -493,12 +531,53 @@
     dots
       .append("circle")
       .attr("r", (d) => radius(d.size))
-      .attr("fill", "#3ddc97")
-      .attr("fill-opacity", 0.85)
+      .attr("fill", (d) => kitFill(d.team_short))
+      .attr("stroke", "rgba(255,255,255,0.35)")
+      .attr("stroke-width", 1)
       .on("mousemove", (event, d) => showTip(event, d, metrics))
       .on("mouseleave", hideTip);
 
     placeLabels(dots, players, x, y, plotW, plotH, radius);
+  }
+
+  function linearTrend(players) {
+    const n = players.length;
+    if (n < 2) return null;
+    let sx = 0;
+    let sy = 0;
+    let sxx = 0;
+    let sxy = 0;
+    for (const p of players) {
+      sx += p.x;
+      sy += p.y;
+      sxx += p.x * p.x;
+      sxy += p.x * p.y;
+    }
+    const den = n * sxx - sx * sx;
+    if (Math.abs(den) < 1e-12) return null;
+    const slope = (n * sxy - sx * sy) / den;
+    const intercept = (sy - slope * sx) / n;
+    return { slope, intercept };
+  }
+
+  function drawTrendLine(g, players, x, y) {
+    const fit = linearTrend(players);
+    if (!fit) return;
+    const [x0, x1] = x.domain();
+    const yAt = (xv) => fit.slope * xv + fit.intercept;
+    const yLo = Math.min(...y.domain());
+    const yHi = Math.max(...y.domain());
+    g.append("line")
+      .attr("class", "perf-trend")
+      .attr("x1", x(x0))
+      .attr("y1", y(Math.min(yHi, Math.max(yLo, yAt(x0)))))
+      .attr("x2", x(x1))
+      .attr("y2", y(Math.min(yHi, Math.max(yLo, yAt(x1)))))
+      .attr("stroke", "#f0c674")
+      .attr("stroke-width", 1.75)
+      .attr("stroke-dasharray", "6 4")
+      .attr("stroke-opacity", 0.9)
+      .attr("pointer-events", "none");
   }
 
   function axisTicks(axis, scale, m) {

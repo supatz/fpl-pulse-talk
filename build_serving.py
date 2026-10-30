@@ -153,6 +153,25 @@ def current_roster_and_prices(gw: pl.DataFrame, current_season: str) -> tuple[li
     return codes, prices
 
 
+def _us_shots_in_box() -> pl.DataFrame:
+    """Per Understat match+player count of shots in the box (six_yard + penalty_area)."""
+    shots = _load("understat/shot")
+    if shots.is_empty() or "shot_zone" not in shots.columns:
+        return pl.DataFrame()
+    needed = {"match_id", "player_id", "shot_zone"}
+    if not needed.issubset(set(shots.columns)):
+        return pl.DataFrame()
+    return (
+        shots.filter(pl.col("shot_zone").is_in(["six_yard", "penalty_area"]))
+        .with_columns(
+            pl.col("match_id").cast(pl.Utf8).alias("understat_match_id"),
+            pl.col("player_id").cast(pl.Utf8).alias("understat_player_id"),
+        )
+        .group_by("understat_match_id", "understat_player_id")
+        .agg(pl.len().cast(pl.UInt32).alias("us_sib"))
+    )
+
+
 def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame) -> list[dict]:
     if pm.is_empty():
         return []
@@ -172,6 +191,18 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
     ]
     pm = prepare_player_match(pm)
     pm = _f(pm, extra)
+    sib = _us_shots_in_box()
+    if (
+        not sib.is_empty()
+        and "understat_match_id" in pm.columns
+        and "understat_player_id" in pm.columns
+    ):
+        pm = pm.with_columns(
+            pl.col("understat_match_id").cast(pl.Utf8),
+            pl.col("understat_player_id").cast(pl.Utf8),
+        ).join(sib, on=["understat_match_id", "understat_player_id"], how="left")
+    elif "us_sib" not in pm.columns:
+        pm = pm.with_columns(pl.lit(None).cast(pl.UInt32).alias("us_sib"))
     if "np_xg" in pm.columns and "xg" in pm.columns:
         pen = pl.col("penalties_scored") if "penalties_scored" in pm.columns else pl.lit(0.0)
         pm = pm.with_columns(
@@ -197,6 +228,13 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
             gw_keep.append(pl.col("bps").cast(pl.Float64, strict=False).alias("bps"))
         if "penalties_saved" in gw.columns:
             gw_keep.append(pl.col("penalties_saved").cast(pl.Float64, strict=False).alias("ps_gw"))
+        # FPL player_gw has on-pitch GC / xGC for DEF/MID/FWD; Opta match GC is GK-only.
+        if "goals_conceded" in gw.columns:
+            gw_keep.append(pl.col("goals_conceded").cast(pl.Float64, strict=False).alias("gc_gw"))
+        if "expected_goals_conceded" in gw.columns:
+            gw_keep.append(
+                pl.col("expected_goals_conceded").cast(pl.Float64, strict=False).alias("xgc_gw")
+            )
         pts = gw.select(gw_keep).unique(subset=["season", "player_id", "gw"], keep="last")
         pm = pm.join(pts, on=["season", "player_id", "gw"], how="left")
     else:
@@ -205,6 +243,10 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         pm = pm.with_columns(pl.lit(None).alias("bon"))
     if "bps" not in pm.columns:
         pm = pm.with_columns(pl.lit(None).alias("bps"))
+    if "gc_gw" not in pm.columns:
+        pm = pm.with_columns(pl.lit(None, dtype=pl.Float64).alias("gc_gw"))
+    if "xgc_gw" not in pm.columns:
+        pm = pm.with_columns(pl.lit(None, dtype=pl.Float64).alias("xgc_gw"))
     if "penalties_saved" in pm.columns and "ps_gw" in pm.columns:
         pm = pm.with_columns(pl.coalesce(["penalties_saved", "ps_gw"]).alias("PS"))
     elif "penalties_saved" in pm.columns:
@@ -213,6 +255,47 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         pm = pm.with_columns(pl.col("ps_gw").alias("PS"))
     else:
         pm = pm.with_columns(pl.lit(None).alias("PS"))
+
+    # Goals conceded: Opta match GC is populated for GKs only. Prefer FPL player_gw
+    # (on-pitch) for single-match GWs; on DGW use per-match team_goals_conceded so we
+    # do not double-count the GW total across both fixtures.
+    gc_match = (
+        pl.col("goals_conceded").cast(pl.Float64, strict=False)
+        if "goals_conceded" in pm.columns
+        else pl.lit(None, dtype=pl.Float64)
+    )
+    gc_team = (
+        pl.col("team_goals_conceded").cast(pl.Float64, strict=False)
+        if "team_goals_conceded" in pm.columns
+        else pl.lit(None, dtype=pl.Float64)
+    )
+    is_dgw = pl.col("is_dgw").fill_null(False) if "is_dgw" in pm.columns else pl.lit(False)
+    mins = pl.col("minutes").cast(pl.Float64, strict=False).fill_null(0)
+    position = pl.col("position") if "position" in pm.columns else pl.lit(None, dtype=pl.Utf8)
+    pm = pm.with_columns(
+        pl.when(mins <= 0)
+        .then(pl.lit(0.0))
+        .when(position == "Goalkeeper")
+        .then(pl.coalesce([gc_match, gc_team, pl.lit(0.0)]))
+        .when(is_dgw)
+        .then(pl.coalesce([gc_team, pl.col("gc_gw"), gc_match, pl.lit(0.0)]))
+        .otherwise(pl.coalesce([pl.col("gc_gw"), gc_team, gc_match, pl.lit(0.0)]))
+        .alias("goals_conceded")
+    )
+    # xGC: FPL expected_goals_conceded (on-pitch). DGW uses GW value on first match only
+    # so summing match rows does not double-count; later matches get null → 0 in clients.
+    gw_match_index = (
+        pl.col("gw_match_index").fill_null(1) if "gw_match_index" in pm.columns else pl.lit(1)
+    )
+    pm = pm.with_columns(
+        pl.when(mins <= 0)
+        .then(pl.lit(0.0))
+        .when(is_dgw & (gw_match_index > 1))
+        .then(pl.lit(None, dtype=pl.Float64))
+        .otherwise(pl.col("xgc_gw"))
+        .alias("xGC")
+    )
+
     pm = pm.join(teams.select("team_code", "short"), on="team_code", how="left")
     if "opponent_code" in pm.columns:
         opp = teams.select(pl.col("team_code").alias("opponent_code"), pl.col("short").alias("opp"))
@@ -248,6 +331,7 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         "xgot": "xGOT",
         "saves": "Sv",
         "goals_conceded": "GC",
+        "xGC": "xGC",
         "xgot_faced": "xGOTf",
         "goals_prevented": "xGP",
         "tackles_num": "Tkl",
@@ -262,7 +346,8 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         "interceptions": "Int",
         "blocks": "Blk",
         "recoveries": "Rec",
-        "saves_inside_box": "SiB",
+        "us_sib": "SiB",
+        "saves_inside_box": "SvIB",
         "high_claim": "HC",
         "sweeper_actions": "SW",
         "pts": "pts",
@@ -553,6 +638,11 @@ def build_insights(attackers: list[dict], season: str) -> dict:
 def build_teams_gw(tm: pl.DataFrame, teams: pl.DataFrame, pm: pl.DataFrame | None = None) -> list[dict]:
     if tm.is_empty():
         return []
+    # Site is Premier League only — drop cups / Europe / friendlies from serving.
+    if "competition" in tm.columns:
+        tm = tm.filter(pl.col("competition") == PL)
+    if tm.is_empty():
+        return []
     metric_cols = [
         "goals_for",
         "goals_against",
@@ -563,6 +653,8 @@ def build_teams_gw(tm: pl.DataFrame, teams: pl.DataFrame, pm: pl.DataFrame | Non
         "shots_on_target",
         "shots_conceded",
         "sot_conceded",
+        "shots_inside_box",
+        "shots_inside_box_against",
         "big_chances",
         "big_chances_conceded",
         "points",
@@ -615,6 +707,8 @@ def build_teams_gw(tm: pl.DataFrame, teams: pl.DataFrame, pm: pl.DataFrame | Non
         "shots_on_target",
         "shots_conceded",
         "sot_conceded",
+        "shots_inside_box",
+        "shots_inside_box_against",
         "big_chances",
         "big_chances_conceded",
         "CC",
@@ -757,7 +851,10 @@ def build_fixtures(
 
     upcoming = []
     if not fx.is_empty():
-        rows = fx.filter(~pl.col("finished").fill_null(False)).sort(["kickoff_utc", "gw", "match_id"])
+        rows = fx.filter(~pl.col("finished").fill_null(False))
+        if "competition" in rows.columns:
+            rows = rows.filter(pl.col("competition") == PL)
+        rows = rows.sort(["kickoff_utc", "gw", "match_id"])
         for i, r in enumerate(rows.to_dicts()):
             h, a = r.get("home_team"), r.get("away_team")
             if h is None or a is None:
@@ -773,7 +870,7 @@ def build_fixtures(
                     {
                         "id": f"fx-{i+1}",
                         "season": r.get("season"),
-                        "competition": r.get("competition"),
+                        "competition": PL,
                         "gw": r.get("gw"),
                         "kickoff_utc": r.get("kickoff_utc"),
                         "match_id": r.get("match_id"),
@@ -899,7 +996,7 @@ def build_from_disk() -> dict:
         "windows": list(range(1, 39)),
         "insight_windows": list(range(1, 11)),
         "default_competition": PL,
-        "competitions": competitions,
+        "competitions": [PL],
         "roster_codes": roster,
         "prices": prices,
         "counts": {
@@ -909,10 +1006,12 @@ def build_from_disk() -> dict:
             "roster": len(roster),
         },
         "notes": [
+            "Site competition is Premier League only (players, teams_gw, fixtures). Cups / Europe are not served.",
             "Player pages use master/pl_merge/player_match (Premier League only). FPL/Opta fields keep their existing labels; Understat roster fields are labeled US.",
             "FPL minutes and Understat minutes are separate. US per-90 metrics use US minutes.",
             "FPL Pts/CS come from player_gw and are Premier League only.",
             "Team BCC / BCC-A are Opta big_chances / big_chances_conceded. Team CC is the sum of player chances_created; CC-A is the opponent's CC.",
+            "Team SiB / SiB-A are Opta shots_inside_box / shots_inside_box_against. Player SiB is Understat shots in box (six_yard + penalty_area); GK SvIB is Opta saves_inside_box.",
             "now_cost is already in £m. Price column is the current-season FPL price.",
             "Predicted xG blends a team's recent xG-for with the opponent's xG-against, with a small home nudge.",
             "Current-squad filter hides players who are not in this season's FPL list.",

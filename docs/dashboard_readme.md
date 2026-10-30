@@ -8,7 +8,7 @@ Static multi-file site. Presentation lives in `web/`. Data lives in `serving/*.j
 
 | Pages | JSON | Source |
 |---|---|---|
-| Home, Fixtures, Teams | `fixtures.json`, `teams_gw.json`, `meta.json`, … | FPL-Core |
+| Home, Fixtures, Teams | `fixtures.json`, `teams_gw.json`, `meta.json`, … | FPL-Core (Premier League only on site) |
 | Attackers, Defenders, GK, Insights Players / Matches | `players_matches.json` | PL merge: FPL-Core metrics plus Understat-only xGChain/xGBuildup |
 | Insights → FPL treemap (`#insights-fpl-treemap`), Player performances (`#insights-player-performance`) | `players_matches.json` | FPL-Core player-match only |
 | Insights → Understat (`#insights-understat`) | `us_shot_treemap.json`, `us_team_situation.json`, `us_player_situation.json` | Understat metrics with FPL team/player identity |
@@ -45,9 +45,9 @@ Hard-refresh after serving-shape changes. Understat JS/CSS/JSON use `?v=` cache 
 | `#insights-understat` | Player treemap + situation / last-action / against. Player drawer = that player’s shot mix; Against is team-only |
 | `#home` | Match Insights, Player Insights, and Team Insights boards (moved from former Insights nav pages) |
 | `#insights-fpl-treemap` | Nested player treemap: Top 10 / All / custom teams; All / MID / ATT / DEF + GK; Per 90 + 45+ mins. Size / sort includes BCC/BCT; Big chances metric group. Tiles show metric-pair lines plus the selected Size / sort value. Top six positive players per team; tooltip only, no drawer. Club colours from `web/team-colors.js` |
-| `#insights-player-performance` | Free X / Y / bubble / sort metrics (incl. BCC/BCT/BCS/BCM); top 10–40; exclude players; season / position / GW / Per 90 / 45+. Axes auto-scale |
+| `#insights-player-performance` | Free X / Y / bubble / sort (incl. GC, xGC, BCC…); sort asc/desc; top 10–40; kit-colour bubbles sized to the on-chart pool; optional trend line; exclude / season / position / GW / Per 90 / 45+. GC/xGC filled in serving from FPL player_gw (outfield Opta match GC is blank). |
 | `#insights-finishing` | SoT% vs shots/90 scatter (top N by total shots). Bubble = xG/90, colour = club; 2-col tooltip (incl. G/xG). |
-| `#insights-team-sides` | Table cells `value (%)`; sort by value or %. Dual vertical pitches (attack ↑ / concede ↓) with dropdowns above each, L/C/R band stats, circles sized by xG. Data: `us_team_side_channels.json`. |
+| `#insights-team-sides` | Table cells `value (%)`; sort by value or %. Dual vertical pitches (attack ↑ / concede ↓) with dropdowns above each, L/C/R band stats, six-yard boxes, circles sized by xG; centre Opta spider (xG/CC/BCC/SoT/xG-A/CC-A/BC-A/SoT-A) with ChartExport on table, spider, and pitches. Data: `us_team_side_channels.json` + `teams_gw.json`. |
 | `#insights-fixture-proof` | Dumbbell: npG+A/90 or npxG+xA/90 vs live-season top 5 · rest · bottom 5. Top N by separate rank metric (xG/xGI/…). Position multi-select; exclude/add players. |
 | `#gw-review` | Single-GW FPL social snapshot. Season + GW select. Four cards (Snapshot / Attack / Defence / Points XI pitch) each with Download for X. Attack pairs top-8 tables (xGI\|Goals, CC\|Assists). Defence: DEF+GK\|DefCon. Pitch XI: pts + ownership % + haul badges. Formation dynamic (DEF 3–5, MID 2–5, FWD 1–3). |
 | `#teams` | Club table with `-A` against metrics; click team → GW drawer with opponent |

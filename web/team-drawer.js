@@ -12,6 +12,8 @@ const SUM_RAW = [
   ["Sh-A", "shots_conceded"],
   ["SoT", "shots_on_target"],
   ["SoT-A", "sot_conceded"],
+  ["SiB", "shots_inside_box"],
+  ["SiB-A", "shots_inside_box_against"],
   ["CC", "CC"],
   ["CC-A", "CC_A"],
   ["BCC", "big_chances"],
@@ -119,6 +121,7 @@ function teamGwRows(matches, team, state) {
     if (!r.finished) return false;
     if (Number(r.team_code) !== code) return false;
     if (state.seasons?.length && !state.seasons.includes(r.season)) return false;
+    if (r.competition && r.competition !== "Premier League") return false;
     if (state.competitions?.length && !state.competitions.includes(r.competition)) return false;
     const venue = r.is_home === true ? "H" : r.is_home === false ? "A" : null;
     if (venue && state.venues?.length && !state.venues.includes(venue)) return false;

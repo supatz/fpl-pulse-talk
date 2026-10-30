@@ -291,6 +291,7 @@
       .perf-grid line { stroke-opacity: 0.45; }
       .perf-grid text, .perf-axis-title { fill: ${MUTED}; }
       .perf-parity { stroke: ${MUTED}; stroke-opacity: 0.5; }
+      .perf-trend { stroke: #f0c674; stroke-opacity: 0.9; }
       text {
         font-family: "Roboto", "Helvetica Neue", "Segoe UI", sans-serif;
         text-rendering: geometricPrecision;

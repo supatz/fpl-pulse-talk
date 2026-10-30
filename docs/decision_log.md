@@ -15,6 +15,7 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 
 | Topic | Choice |
 |---|---|
+| Site competition | **Premier League only** across the site. Serving (`teams_gw`, fixtures upcoming, player merge) and UI aggregations drop cups / Europe / friendlies. No competition picker. |
 | Merged site | Player pages read Premier League `master/pl_merge/player_match`. FPL/Opta and Understat measures remain separately labeled; never average or silently coalesce them. |
 | Metric precedence | When FPL-Core has the same player metric, the site shows FPL-Core only. Hide duplicate US minutes/xG/xA/npxG/shots/key passes; retain Understat-only xGChain/xGBuildup, BCC/BCT/BCS/BCM (xG > 0.27), and Understat-native insight views. |
 | Big chance (US) | Shots with `xg > 0.27`. **BCT** = taken (shooter); **BCS** = scored; **BCM** = missed (`BCT = BCS + BCM`); **BCC** = created (`player_assisted`, name→id). Match-level `us_*` → site `BCC`/`BCT`/`BCS`/`BCM`. Site **BCM** is Understat (not Opta `big_chances_missed`, kept as `BCM_opta`). Creativity = BCC; Threat = BCT/BCS/BCM. Per-90 uses Understat minutes. |
@@ -24,14 +25,16 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Player map | Curated under `data/pl_merge/maps/player_map.csv`. Fuzzy is a proposal; overrides win. Do not join on season-scoped FPL `player_id`. |
 | Insights → Understat | Same shell (`#insights-understat`). Match timing = shots × FPL GW. Attack tempo = season `attackSpeed` ribbons (`us_team_attack_speed.json`). Standalone `web/understat-shots.html` remains. |
 | FPL treemap | Separate `#insights-fpl-treemap`. Club/player area follow Size / sort. Metric groups include Big chances (BCT · BCS · BCM). Tiles show the metric-pair lines **and** the selected Size / sort value when it is not already in the pair. BCC/BCT/BCS/BCM available under every metric’s sort list. No drawer. Shares `web/team-colors.js`. |
-| Player performances | `#insights-player-performance`. Free X / Y / bubble / sort metrics (G, xG, A, xA, GI, xGI, DC, CS, xGOT, CC, npxG, Sh, SoT, TiB, BCC, BCT, BCS, BCM). Top 10–40 by sort metric. Exclude multi-search. Season / position / GW / Per 90 / 45+ kept. Axes auto-scale; bubble size stays on raw totals under Per 90. |
+| Player performances | `#insights-player-performance`. Free X / Y / bubble / sort (incl. GC + xGC). Sort order asc/desc. Bubble size scaled to the displayed top-N pool; fill = kit colours (`teamKitFill`, distinct reds/blues). Optional trend line (OLS on plotted points). GC/xGC from serving (see GC fill rule). Lede stacks Goal threat / Creativity / Defence lines. |
+| Player GC fill | Opta match `goals_conceded` is GK-only. Serving GC: GK keeps Opta match GC; outfield non-DGW prefers FPL `player_gw.goals_conceded` (on-pitch), else `team_goals_conceded`; DGW outfield uses per-match `team_goals_conceded` to avoid double-counting the GW total. xGC from `player_gw.expected_goals_conceded` (on DGW, stored on first match row only). |
 | Sidebar | Children of a nav parent are indented with a left guide rule (`.nav-kids`). Collapsed rail still hides them entirely. |
 | Local preview | `scripts/serve.command` (double-click) or `.venv/bin/python serve.py --port N`. Port defaults to 8765; `serve.py` has no persistent port setting. |
 | DefCon | `defcon` prefers upstream match-level `defensive_contributions`; when blank (2026-27 on) it derives CBIT for defenders, CBIT + recoveries for MID/FWD, and 0 for GK, using `coalesce(tackles, tackles_won)`. Derivation reproduces FPL gameweek totals exactly. |
 | Branding | Mark is option-A mint cartoon vintage mic + white ECG pulse + teal ring (animated in sidebar). Same mark in chart-export footer, `web/assets/fpl-pulse-mark.svg`, and square `web/assets/fpl-pulse-logo.png` (favicon). X still links to `https://x.com/fpl_pulse_talk`. |
 | Home hub | Match / Player / Team insight boards live on Home (not separate Insights nav pages). Legacy `#insights-players|matches|teams` hashes redirect to Home. |
-| Team metrics (-A) | Teams table against metrics use short + `-A` (`G-A`, `xG-A`, `Sh-A`, `SoT-A`, `CC-A`, `BCC-A`). BCC/BCC-A = Opta team big chances for/conceded; CC = sum of player chances_created; CC-A = opponent CC. |
-| Shot sides | `#insights-team-sides` uses Understat Y thirds (low=Right, mid=Center, high=Left) for shots for/against. Serving: `us_team_side_channels.json` (aggregates + per-shot `points` with shooter/assister). Table cells show `value (%)`; sort mode Value vs %. Dual pitch: vertical (attack ↑ / concede ↓), team dropdowns above each pitch, L/C/R band stats near centre (attack blue / defend red), circle size = Understat xG. Assister xA on a shot = that shot’s xG. |
+| Team metrics (-A) | Teams table against metrics use short + `-A` (`G-A`, `xG-A`, `Sh-A`, `SoT-A`, `SiB-A`, `CC-A`, `BCC-A`). BCC/BCC-A = Opta team big chances for/conceded; CC = sum of player chances_created; CC-A = opponent CC. SiB/SiB-A = Opta shots_inside_box for/against. |
+| SiB / SvIB | **SiB** = shots inside the box. Players: Understat `shot_zone` in `{six_yard, penalty_area}` (per-90 uses US minutes). Teams: Opta `shots_inside_box`. **SvIB** = Opta saves inside the box (GK only; formerly labeled SiB). |
+| Shot sides | `#insights-team-sides` uses Understat Y thirds (low=Right, mid=Center, high=Left) for shots for/against. Serving: `us_team_side_channels.json` (aggregates + per-shot `points` with shooter/assister). Table cells show `value (%)`; sort mode Value vs %. Dual pitch: vertical (attack ↑ / concede ↓), team dropdowns above each pitch, L/C/R band stats near centre (attack blue / defend red), six-yard boxes drawn, circle size = Understat xG. Centre spider (Opta): xG, CC, BCC, SoT, xG-A, CC-A, BC-A, SoT-A for Team A vs B; value grid under the chart; hover tip = Team A/B + Top 5 avg (by G in window) + League avg. ChartExport on table, spider, and pitches. Assister xA on a shot = that shot’s xG. |
 | Finishing | Bubble fill = club colour. Per 90 (default on): X = Sh/90, bubble = xG/90; off: X = Sh, bubble = xG. Y = SoT% always. Axes auto-scale to cohort. |
 | Fixture Proof | `#insights-fixture-proof`. Live PL table in GW window: Top 5 by G or xG; Bottom 5 by GC or xGC among the rest (disjoint). Chart metric npG+A/90 or npxG+xA/90. Top N by separate rank metric. Position multi-select. Optional sample filter: ≥45 mins/app and ≥30% of that team’s PL matches in the GW window. Dots: top green · rest open · bottom red; connector yellow. |
 | GW Review | Top-level `#gw-review`. Season + GW filters. Four social cards (Snapshot, Attack, Defence, Points XI), each with ChartExport download. Snapshot KPI order: Goals → Team CS → 10+ pts Haul → Top haul → Best xGI (goals & team CS show Δ vs prior GW). Snapshot also pairs Points leaders \| compact Team of the Week pitch. Attack pairs (top 8): xGI\|Goals, CC\|BCC\|Assists, Over\|Under. Defence: DEF+GK\|DefCon (top 8). Points XI card keeps full pitch. PL-only; DGW rows summed. |
@@ -53,6 +56,54 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-10-30 — Site locked to Premier League only
+
+**Choice:** Serving and UI are Premier League only. `teams_gw` and fixtures upcoming exclude cups/Europe; competition multi-selects removed; client aggregations hard-filter PL. Masters may still ingest other comps for offline use.
+
+**Why:** Spider (and any direct `teams_gw` consumer) could mix cups into totals while Teams stayed PL — site-wide PL removes that class of bug.
+
+**Where:** `build_serving.py`, `web/{app,components,team-drawer,team-sides}.js`, docs.
+
+### 2026-10-30 — Spider PL-only Opta totals
+
+**Choice:** Spider team totals (incl. xG-A) filter `teams_gw` to Premier League only, same as the Teams page default. Cups/Europe were previously included and inflated concede metrics (e.g. CHE).
+
+**Where:** `web/team-sides.js`.
+
+### 2026-10-30 — Spider tip + value grid
+
+**Choice:** Spider values sit in a rows×columns grid under the chart (not SVG text). Hover tip on axis / vertices / table cells shows Team A, Team B, Top 5 avg (by goals in the GW window), and League avg. Axis scale uses max of the two teams plus those benchmarks.
+
+**Where:** `web/{team-sides,styles,index}.*`, decision log.
+
+### 2026-10-30 — Team-sides spider + SiB / SvIB
+
+**Choice:** Pitch compare gains a centre dual-team spider (xG, CC, BCC, SoT, xGC, CC-A, BC-A, SoT-A from `teams_gw`), ChartExport for spider and pitches, and drawn six-yard boxes. Player **SiB** = Understat shots in box; GK saves-in-box renamed **SvIB**. Teams table adds Opta **SiB** / **SiB-A**.
+
+**Why:** Side pitches alone do not compare volume profiles; Opta box shots exist only at team grain; player Opta has no shots-in-box so Understat zones fill the player gap without inventing Opta.
+
+**Where:** `web/{team-sides,index,styles,registry,components,team-drawer,player-drawer,player-performance}.*`, `build_serving.py`, docs.
+
+**Drawback:** Player SiB and team SiB share a label but different sources (US vs Opta). Spider normalises each axis to the max of the two selected teams (not league-wide).
+
+### 2026-10-30 — Fill outfield GC from player_gw / team_goals_conceded
+
+**Choice:** Opta match-layer `goals_conceded` is GK-only (source, not a serving bug). Serving now fills GC for outfield from FPL `player_gw.goals_conceded` (on-pitch) when the GW is a single match; on DGW uses per-match `team_goals_conceded`. xGC from `player_gw.expected_goals_conceded` (DGW: first match row only).
+
+**Why:** Defenders/mids/forwards showed GC=0 on Defenders + Player performances despite FPL GW history having real concede figures.
+
+**Where:** `build_serving.py`, rebuilt `web/data/players_matches.json`, docs. Player-performance reads serving `xGC` (no teams_gw proxy).
+
+**Drawback:** DGW outfield GC is team goals against for that fixture, not a true on-pitch split of the GW total (no goal-event clock on the match layer).
+
+### 2026-10-30 — Player performances GC/xGC, sort dir, kit bubbles, trend
+
+**Choice:** Add GC and xGC to all metric selects; sort ascending/descending control; stack the page lede vertically; size bubbles from min–max of the on-chart pool; kit-colour fills via `TeamColors.teamKitFill` (distinct ARS/LIV/MUN reds); optional OLS trend line checkbox.
+
+**Why:** Defence views need concede metrics; top-N bubbles looked flat when sized from a 0→max domain; club identity and above/below-trend reads needed.
+
+**Where:** `web/{player-performance,team-colors,index,styles,chart-export}.{js,html,css}`, docs.
 
 ### 2026-10-27 — Snapshot embeds compact Team of the Week
 

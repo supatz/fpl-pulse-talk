@@ -66,6 +66,51 @@
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
+  /** Jersey-like fills for scatter bubbles — reds/blues kept distinct across clubs. */
+  const KIT = {
+    ARS: "#E31B23",
+    AVL: "#670E36",
+    BHA: "#0057B8",
+    BOU: "#DA291C",
+    BRE: "#E30613",
+    BUR: "#6C1D45",
+    CHE: "#034694",
+    CRY: "#1B458F",
+    EVE: "#003399",
+    FUL: "#000000",
+    IPS: "#0033A0",
+    LEE: "#FFCD00",
+    LIV: "#C8102E",
+    MCI: "#6CABDD",
+    MUN: "#DA291C",
+    NEW: "#241F20",
+    NFO: "#DD0000",
+    SUN: "#EB172B",
+    TOT: "#132257",
+    WHU: "#7A263A",
+    WOL: "#FDB913",
+    // slight offset for BOU vs MUN both #DA291C — BOU shifts warmer
+  };
+  // Differentiate same-family reds / dark blues
+  KIT.BOU = "#B50A1F";
+  KIT.BRE = "#D2000F";
+  KIT.NFO = "#9B0000";
+  KIT.SUN = "#F73B3B";
+  KIT.MUN = "#DA291C";
+  KIT.ARS = "#EF0107";
+  KIT.LIV = "#C8102E";
+
+  function teamKit(short) {
+    const s = String(short || "");
+    if (KIT[s]) return KIT[s];
+    return teamColor(s);
+  }
+
+  function teamKitFill(short, alpha = 1) {
+    const [r, g, b] = hexToRgb(teamKit(short));
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
   function textOnTeam(short) {
     const [r, g, b] = hexToRgb(teamColor(short));
     const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
@@ -76,9 +121,12 @@
   window.TeamColors = {
     PALETTE,
     TEAM_COLOR_INDEX,
+    KIT,
     teamColor,
+    teamKit,
     hexToRgb,
     teamFill,
+    teamKitFill,
     textOnTeam,
   };
 })();
