@@ -1,6 +1,6 @@
 # FPL master datasets — data dictionary
 
-Generated `2026-11-02T08:42:40Z`.
+Generated `2026-11-02T08:47:07Z`.
 
 Source: public [`olbauday/FPL-Core-Insights`](https://github.com/olbauday/FPL-Core-Insights).
 
