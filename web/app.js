@@ -1,4 +1,4 @@
-import { FDR_URL, INSIGHT_WINDOWS, VIEWS } from "./registry.js?v=13";
+import { FDR_URL, INSIGHT_WINDOWS, VIEWS } from "./registry.js?v=14";
 import {
   aggregatePlayers,
   aggregateTeamRows,
@@ -18,8 +18,8 @@ import {
   renderMatchBoard,
   renderTicker,
   saveState,
-} from "./components.js?v=15";
-import { bindPlayerDrawer, openPlayerDrawer } from "./player-drawer.js?v=4";
+} from "./components.js?v=17";
+import { bindPlayerDrawer, openPlayerDrawer } from "./player-drawer.js?v=6";
 import { openTeamDrawer } from "./team-drawer.js?v=1";
 
 const DATA = {};

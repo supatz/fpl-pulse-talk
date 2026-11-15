@@ -16,7 +16,8 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Topic | Choice |
 |---|---|
 | SofaScore stack | Parallel to Understat. Do not edit Understat ingest, PL-merge `us_*`, `#insights-understat`, `#insights-team-sides`, or `web/understat-shots.*`. New parquet `ss_*`, site `*_sf`. Never average or fill from Understat/Opta. Maps live in `data/sofascore/maps/` (not `data/pl_merge/`). |
-| SofaScore big chances | Native lineup `bigChancesCreated` / `bigChancesMissed` (and `bigChancesScored` if published). Do not rebuild from xG > 0.27. Player chips `BCC_sf` / `BCM_sf` / `SiB_sf` (optional `BCS_sf`). Null when unmapped — never 0 as a stand-in. Existing BCC/BCT/BCS/BCM stay Understat. |
+| SofaScore big chances | Native lineup `bigChancesCreated` / `bigChancesMissed` only. No `BCS_sf` / `BCT_sf` — SofaScore does not publish scored or taken (and shots have no big-chance flag). Do not rebuild from xG > 0.27. Player chips `BCC_sf` / `BCM_sf` / `SiB_sf`. Null when unmapped — never 0 as a stand-in. Existing BCC/BCT/BCS/BCM stay Understat. |
+| SofaScore player map | Auto-map unique club names (exact / last+initial / extra FPL surnames / same name tokens / fuzzy≥95). Duplicate FPL season rows do not block a unique `player_code`. Unmapped players stay on SofaScore visuals. Worksheet `suggested_player_code` is accepted as override when reviewed. |
 | SofaScore pages | `#insights-sofascore` (treemap, situation, against-situation, timing) and `#insights-sofascore-sides`. Situation legend uses SofaScore labels as-is. Omit last-action and attack tempo (no source). |
 | Site competition | **Premier League only** across the site. Serving (`teams_gw`, fixtures upcoming, player merge) and UI aggregations drop cups / Europe / friendlies. No competition picker. |
 | Merged site | Player pages read Premier League `master/pl_merge/player_match`. FPL/Opta and Understat measures remain separately labeled; never average or silently coalesce them. |
@@ -60,6 +61,34 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 
 ## Chronology
 
+### 2026-11-16 — Drop BCS_sf; City–Palace postponed listing is not a second map
+
+**Choice:** Site SofaScore chips are `BCC_sf` / `BCM_sf` / `SiB_sf` only. No `BCT_sf` (lineups have created + missed; shots have no big-chance flag). SofaScore event `14024019` (Man City vs Palace, 21 Mar 2026) is the unplayed postponed listing; the played match is `15999228` on **13 May 2026 20:00 BST** (Premier League / CPFC / City), already mapped to `25-26-prem-manchester-city-vs-crystal-palace`. Unfinished SofaScore events are not queued as unmapped matches.
+
+**Why:** `BCS_sf` was always null. Mapping the ghost event to the same FPL row would duplicate identity. 14 May was not the replay date.
+
+**Where:** `web/registry.js`, `pipeline/sofascore/player_metrics.py`, `pipeline/sofascore/maps.py` (`is_result` skip), `docs/sofascore_pipeline.md`.
+
+### 2026-11-16 — SofaScore worksheet suggestions accepted
+
+**Choice:** Reviewed `player_mapping_worksheet.csv` suggestions are overrides (`player_code` = `suggested_player_code`). Exception: SofaScore **Wataru Endo** → FPL **Endo** (`cand2`), not Amara Nallo (same fuzzy score; Nallo already mapped). Auto-map also accepts a unique extra FPL surname (`David Raya` → `David Raya Martín`) and the same name tokens in any order (`Kaoru Mitoma` / `Mitoma Kaoru`).
+
+**Why:** Compound Iberian/Brazilian names and Japanese name order sat below fuzzy 95 even when the club match was obvious.
+
+**Where:** `data/sofascore/maps/player_overrides.csv`, `pipeline/sofascore/maps.py`.
+
+**Drawbacks:** Extra-surname still requires uniqueness on that FPL club. Transfers mid-ingest still use the first SofaScore team_id.
+
+### 2026-11-16 — SofaScore BCC_sf from lineups; keep unmapped players
+
+**Choice:** Site `BCC_sf` / `BCM_sf` are SofaScore lineup totals joined on FPL `player_code` + `match_id`. Auto-map treats one `player_code` as unique even when FPL `players.csv` repeats across seasons. SofaScore treemap keeps unmapped shooters (SS name + lineup minutes). Manual map is `data/sofascore/review/player_mapping_worksheet.csv` (SofaScore / FPL / Understat ids); filled `player_code` becomes an override.
+
+**Why:** Blank `*_sf` chips were missing identity maps (e.g. Saliba / Ødegaard counted twice in the FPL pool), not missing SofaScore stats. Dropping unmapped players from visuals hid real shot/chance data.
+
+**Where:** `pipeline/sofascore/maps.py`, `player_metrics.py`, `shot_treemap.py`, `ingest.py`, `web/components.js` `SUM_FIELDS`, `build_sofascore.py --maps-only`, `docs/sofascore_pipeline.md`.
+
+**Drawbacks:** Player-table chips still need a `player_code` (FPL grain). Until the worksheet is filled, those rows stay null while Insights → SofaScore still shows the player.
+
 ### 2026-11-16 — SofaScore parallel pipeline (Understat pages unchanged)
 
 **Choice:** Separate unofficial `api.sofascore.com` ingest (PL 2025-2026 and 2026-2027), curated team/match/player maps, `serving/ss_*.json`, duplicate Insights pages, and optional `*_sf` player chips. Native SofaScore big chances. No last-action/tempo. Refresh is non-blocking after FPL serving.
@@ -68,7 +97,7 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 
 **Where:** `pipeline/sofascore/`, `build_sofascore.py`, `data/sofascore/maps/`, `web/sofascore-shots.js`, `web/sofascore-sides.js`, `#insights-sofascore`, `#insights-sofascore-sides`, `build_serving.py` left join, `scripts/refresh.sh`.
 
-**Drawbacks:** Unofficial API can 403/rate-limit; unmapped shots/players are dropped from site JSON rather than guessed.
+**Drawbacks:** Unofficial API can 403/rate-limit; unmapped player-table `*_sf` chips stay null until `player_code` is set (treemap no longer drops those shooters).
 
 ### 2026-11-02 — Understat refresh keeps stale index on DNS failure
 

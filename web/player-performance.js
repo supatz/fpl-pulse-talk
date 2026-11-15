@@ -30,7 +30,7 @@
   const METRIC_BY_ID = Object.fromEntries(METRICS.map((m) => [m.id, m]));
   const SUM_FIELDS = [
     "G", "A", "xG", "xA", "xGI", "DefCon", "cs", "GC", "xGC", "xGOT", "CC", "npxG", "Sh", "SoT", "TiB", "SiB",
-    "BCC", "BCT", "BCS", "BCM",
+    "BCC", "BCT", "BCS", "BCM", "BCC_sf", "BCM_sf", "SiB_sf",
   ];
 
   const state = {

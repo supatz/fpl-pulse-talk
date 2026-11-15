@@ -9,9 +9,10 @@ from pipeline.sofascore.ingest import read_master
 
 
 def sofascore_player_match_metrics(seasons: list[str] | None = None) -> pl.DataFrame:
-    """season, player_code, match_id, BCC_sf, BCM_sf, optional BCS_sf, SiB_sf.
+    """season, player_code, match_id, BCC_sf, BCM_sf, SiB_sf.
 
     Unmapped players are omitted (site join leaves null, not 0).
+    SofaScore lineups publish created + missed only — no taken/scored.
     """
     seasons = seasons or list(SEASONS.keys())
     pmap_path = MAPS_DIR / "player_map.csv"
@@ -23,7 +24,6 @@ def sofascore_player_match_metrics(seasons: list[str] | None = None) -> pl.DataF
             "match_id": pl.Utf8,
             "BCC_sf": pl.Float64,
             "BCM_sf": pl.Float64,
-            "BCS_sf": pl.Float64,
             "SiB_sf": pl.Float64,
         }
     )
@@ -54,7 +54,7 @@ def sofascore_player_match_metrics(seasons: list[str] | None = None) -> pl.DataF
     shots = read_master("shot", seasons)
     out = empty
     if lineups.height:
-        lu = (
+        out = (
             lineups.with_columns(pl.col("player_id").cast(pl.Utf8), pl.col("event_id").cast(pl.Utf8))
             .join(pmap, on="player_id", how="inner")
             .join(mmap.drop("season"), on="event_id", how="inner")
@@ -62,11 +62,8 @@ def sofascore_player_match_metrics(seasons: list[str] | None = None) -> pl.DataF
             .agg(
                 pl.col("big_chances_created").sum().alias("BCC_sf"),
                 pl.col("big_chances_missed").sum().alias("BCM_sf"),
-                pl.col("big_chances_scored").sum().alias("BCS_sf"),
             )
         )
-        # If SofaScore never publishes scored, every BCS_sf is null — keep the column for join.
-        out = lu
     if shots.height:
         in_box = (
             shots.filter(pl.col("shot_zone").is_in(["six_yard", "penalty_area"]))
@@ -84,8 +81,6 @@ def sofascore_player_match_metrics(seasons: list[str] | None = None) -> pl.DataF
         out = out.with_columns(pl.lit(None).cast(pl.Float64).alias("BCC_sf"))
     if "BCM_sf" not in out.columns:
         out = out.with_columns(pl.lit(None).cast(pl.Float64).alias("BCM_sf"))
-    if "BCS_sf" not in out.columns:
-        out = out.with_columns(pl.lit(None).cast(pl.Float64).alias("BCS_sf"))
     if "SiB_sf" not in out.columns:
         out = out.with_columns(pl.lit(None).cast(pl.Float64).alias("SiB_sf"))
-    return out.select("season", "player_code", "match_id", "BCC_sf", "BCM_sf", "BCS_sf", "SiB_sf")
+    return out.select("season", "player_code", "match_id", "BCC_sf", "BCM_sf", "SiB_sf")

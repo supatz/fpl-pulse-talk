@@ -111,7 +111,7 @@ def build_shot_treemap_serving(*, fpl_seasons: list[str] | None = None, top_play
         shots.with_columns(pl.col("team_id").cast(pl.Utf8), pl.col("player_id").cast(pl.Utf8))
         .join(team_map, on="team_id", how="left")
         .join(identity, on="player_id", how="left")
-        .filter(pl.col("team_code").is_not_null() & pl.col("player_code").is_not_null())
+        .filter(pl.col("team_code").is_not_null())
     )
     if s.is_empty():
         payload = {
@@ -119,7 +119,7 @@ def build_shot_treemap_serving(*, fpl_seasons: list[str] | None = None, top_play
             "source": "sofascore.com",
             "built_at_utc": now_utc(),
             "teams": [],
-            "notes": {"missing": "SofaScore shots did not join FPL team/player maps"},
+            "notes": {"missing": "SofaScore shots did not join FPL team_map"},
         }
         _write_json(SERVING_DIR / "ss_shot_treemap.json", payload)
         return payload
@@ -138,20 +138,20 @@ def build_shot_treemap_serving(*, fpl_seasons: list[str] | None = None, top_play
         )
 
     xa_src = pl.DataFrame()
-    if lineups.height and identity.height:
-        xa_src = (
+    ss_mins = pl.DataFrame()
+    if lineups.height:
+        lu = (
             lineups.with_columns(pl.col("player_id").cast(pl.Utf8), pl.col("team_id").cast(pl.Utf8))
-            .join(identity, on="player_id", how="left")
             .join(team_map, on="team_id", how="left")
-            .filter(pl.col("player_code").is_not_null() & pl.col("team_code").is_not_null())
-            .group_by(["season", "team_code", "player_code"])
-            .agg(pl.col("expected_assists").sum().alias("xa"))
+            .filter(pl.col("team_code").is_not_null())
         )
+        xa_src = lu.group_by(["season", "team_code", "player_id"]).agg(pl.col("expected_assists").sum().alias("xa"))
+        ss_mins = lu.group_by(["season", "team_code", "player_id"]).agg(pl.col("minutes").sum().alias("minutes_ss"))
 
     player_sit = s.group_by(["season", "team_code", "player_id", "situation"]).agg(
         pl.col("xg").sum().alias("xg"), pl.len().alias("shots"), pl.col("is_sot").sum().alias("sot")
     )
-    player_matches = s.group_by(["season", "team_code", "player_code"]).agg(
+    player_matches = s.group_by(["season", "team_code", "player_id"]).agg(
         pl.col("event_id").n_unique().alias("shot_matches")
     )
     taker = (
@@ -163,10 +163,13 @@ def build_shot_treemap_serving(*, fpl_seasons: list[str] | None = None, top_play
             pl.col("is_goal").fill_null(False).sum().alias("goals"),
         )
         .join(minutes, on=["season", "team_code", "player_code"], how="left")
-        .join(player_matches, on=["season", "team_code", "player_code"], how="left")
+        .join(player_matches, on=["season", "team_code", "player_id"], how="left")
     )
+    if ss_mins.height:
+        taker = taker.join(ss_mins, on=["season", "team_code", "player_id"], how="left")
+        taker = taker.with_columns(pl.coalesce("minutes", "minutes_ss").alias("minutes"))
     if xa_src.height:
-        taker = taker.join(xa_src, on=["season", "team_code", "player_code"], how="left")
+        taker = taker.join(xa_src, on=["season", "team_code", "player_id"], how="left")
     else:
         taker = taker.with_columns(pl.lit(None).cast(pl.Float64).alias("xa"))
     taker = taker.with_columns(_p90("xg"), _p90("shots"), _p90("sot"), _p90("goals"), _p90("xa"))
@@ -215,6 +218,7 @@ def build_shot_treemap_serving(*, fpl_seasons: list[str] | None = None, top_play
             "player_id": p.get("player_id"),
             "player_code": p.get("player_code"),
             "player_name": p.get("fpl_web_name") or html.unescape(p.get("player_name") or "") or None,
+            "mapped": p.get("player_code") is not None,
             "xg": _round(p.get("xg") or 0),
             "shots": int(p.get("shots") or 0),
             "sot": int(p.get("sot") or 0),
@@ -306,7 +310,7 @@ def build_shot_treemap_serving(*, fpl_seasons: list[str] | None = None, top_play
             "source": "Shot model metrics from SofaScore (not Understat / Opta / FPL expected_goals).",
             "sot": "On target = goal + save + post. Own goals excluded.",
             "xa": "xA_sf is lineup expectedAssists (match totals), not per-shot assister.",
-            "per90_player": "Player per-90 uses FPL/Opta Premier League minutes after player_code map.",
+            "per90_player": "Player per-90 prefers FPL/Opta Premier League minutes after player_code map; unmapped players use SofaScore lineup minutes so they stay on the treemap.",
             "situations": "Native SofaScore situation labels. Penalty shots are only in the penalty slice.",
         },
         "seasons": sorted({t["season"] for t in teams_out}),

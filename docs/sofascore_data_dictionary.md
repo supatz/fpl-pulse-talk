@@ -1,6 +1,6 @@
 # SofaScore data dictionary
 
-Generated `2026-11-15T19:01:40Z`. Parallel to Understat; never coalesced.
+Generated `2026-11-15T19:37:10Z`. Parallel to Understat; never coalesced.
 
 | Table | Grain | Notes | Rows |
 |---|---|---|---|
@@ -14,4 +14,4 @@ Generated `2026-11-15T19:01:40Z`. Parallel to Understat; never coalesced.
 
 **player_match columns:** `event_id`, `season`, `team_id`, `is_home`, `player_id`, `player_name`, `position`, `minutes`, `expected_goals`, `expected_assists`, `big_chances_created`, `big_chances_missed`, `big_chances_scored`, `key_passes`, `total_shots`, `rating`, `ingested_at_utc`, `source`
 
-Site player chips `BCC_sf` / `BCM_sf` / `SiB_sf` left-join this `player_match` + shot zone onto FPL `player_code`. Null when unmapped.
+Site player chips `BCC_sf` / `BCM_sf` / `SiB_sf` left-join this `player_match` + shot zone onto FPL `player_code`. Null when unmapped. No BCS/BCT from SofaScore. Unmapped players remain on SofaScore treemap. Fill `data/sofascore/review/player_mapping_worksheet.csv`.

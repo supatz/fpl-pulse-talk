@@ -15,11 +15,15 @@ from pipeline.sofascore.maps import (
     MATCH_MAP_COLS,
     PLAYER_MAP_COLS,
     TEAM_MAP_COLS,
+    combine_player_overrides,
     load_fpl_pl_fixtures,
     load_fpl_players,
     load_team_map,
+    load_worksheet_overrides,
     pair_matches,
     pair_players,
+    persist_worksheet_overrides,
+    write_player_mapping_worksheet,
 )
 from pipeline.sofascore.normalize import (
     lineup_player_rows,
@@ -295,8 +299,7 @@ def rebuild_identity_maps(fpl_seasons: list[str] | None = None) -> None:
     mapped, unmatched = pair_matches(events, fpl, overrides_m)
     write_csv(MAPS_DIR / "match_map.csv", mapped.select(list(MATCH_MAP_COLS)) if mapped.height else mapped)
     REVIEW_DIR.mkdir(parents=True, exist_ok=True)
-    if unmatched.height:
-        write_csv(REVIEW_DIR / "unmapped_matches.csv", unmatched)
+    write_csv(REVIEW_DIR / "unmapped_matches.csv", unmatched)
     log.info("match_map rows=%s unmatched=%s", mapped.height, unmatched.height)
 
     pm = read_master("player_match", seasons)
@@ -305,31 +308,52 @@ def rebuild_identity_maps(fpl_seasons: list[str] | None = None) -> None:
     team_map = load_team_map()
     tm = team_map.select(
         pl.col("sofascore_team_id").cast(pl.Utf8).alias("team_id"),
+        pl.col("sofascore_name"),
         pl.col("team_code"),
+        pl.col("fpl_name"),
+        pl.col("fpl_short"),
     )
-    players = (
-        pm.with_columns(pl.col("team_id").cast(pl.Utf8))
-        .join(tm, on="team_id", how="left")
-        .group_by("player_id")
-        .agg(
-            pl.col("player_name").first(),
-            pl.col("team_code").drop_nulls().first(),
-            pl.col("season").first(),
-        )
+    joined = pm.with_columns(pl.col("team_id").cast(pl.Utf8), pl.col("player_id").cast(pl.Utf8)).join(
+        tm, on="team_id", how="left"
     )
-    overrides_p = ensure_csv(MAPS_DIR / "player_overrides.csv", PLAYER_MAP_COLS)
+    players = joined.group_by("player_id").agg(
+        pl.col("player_name").first(),
+        pl.col("team_code").drop_nulls().first(),
+        pl.col("season").first(),
+    )
+    ss_detail = joined.group_by("player_id").agg(
+        pl.col("player_name").first(),
+        pl.col("team_id").drop_nulls().first(),
+        pl.col("sofascore_name").drop_nulls().first().alias("sofascore_team_name"),
+        pl.col("team_code").drop_nulls().first(),
+        pl.col("season").min().alias("seasons"),
+        pl.col("event_id").n_unique().alias("ss_appearances"),
+        pl.col("minutes").sum().alias("ss_minutes"),
+        pl.col("big_chances_created").sum().alias("ss_bcc"),
+        pl.col("big_chances_missed").sum().alias("ss_bcm"),
+    )
+    file_ov = ensure_csv(MAPS_DIR / "player_overrides.csv", PLAYER_MAP_COLS)
+    sheet_ov = load_worksheet_overrides()
+    persist_worksheet_overrides(file_ov, sheet_ov)
+    overrides_p = combine_player_overrides(file_ov, sheet_ov)
     fpl_p = load_fpl_players(seasons)
     accepted, unmatched_p, amb = pair_players(players, fpl_p, overrides_p)
     write_csv(MAPS_DIR / "player_map.csv", accepted.select(list(PLAYER_MAP_COLS)) if accepted.height else accepted)
-    if unmatched_p.height:
-        write_csv(REVIEW_DIR / "unmapped_players.csv", unmatched_p)
-    if amb.height:
-        write_csv(REVIEW_DIR / "ambiguous_players.csv", amb)
+    write_csv(REVIEW_DIR / "unmapped_players.csv", unmatched_p)
+    write_csv(REVIEW_DIR / "ambiguous_players.csv", amb)
+    sheet = write_player_mapping_worksheet(
+        unmatched=unmatched_p,
+        ambiguous=amb,
+        ss_detail=ss_detail,
+        fpl_players=fpl_p,
+        team_map=team_map,
+    )
     log.info(
-        "player_map rows=%s unmatched=%s ambiguous=%s",
+        "player_map rows=%s unmatched=%s ambiguous=%s worksheet=%s",
         accepted.height,
         unmatched_p.height,
         amb.height,
+        sheet.height,
     )
 
 

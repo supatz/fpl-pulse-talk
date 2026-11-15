@@ -88,7 +88,6 @@ def _attach_sofascore_player_metrics(pm: pl.DataFrame) -> pl.DataFrame:
         return pm.with_columns(
             pl.lit(None).cast(pl.Float64).alias("BCC_sf"),
             pl.lit(None).cast(pl.Float64).alias("BCM_sf"),
-            pl.lit(None).cast(pl.Float64).alias("BCS_sf"),
             pl.lit(None).cast(pl.Float64).alias("SiB_sf"),
         )
     ss = ss.with_columns(
@@ -402,7 +401,6 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         "us_bcm": "BCM",
         "BCC_sf": "BCC_sf",
         "BCM_sf": "BCM_sf",
-        "BCS_sf": "BCS_sf",
         "SiB_sf": "SiB_sf",
     }
     exprs = []

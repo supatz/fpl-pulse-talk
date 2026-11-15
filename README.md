@@ -48,6 +48,7 @@ Enable the Monday / Thursday schedule (08:00 local time):
 | Ignore cache, rebuild all | `.venv/bin/python build.py --full` |
 | Dashboard JSON only | `.venv/bin/python build.py --serving-only` |
 | SofaScore ingest + serving | `.venv/bin/python build_sofascore.py --refresh` |
+| SofaScore maps + worksheet | `.venv/bin/python build_sofascore.py --maps-only` then `build_serving.py` |
 | PL merge (maps + player-match parquet) | `.venv/bin/python build_pl_merge.py` |
 
 `--refresh` is incremental: unchanged gameweek folders are reused. Source data is updated twice daily (07:30 and 17:30 UTC); twice a week is enough.

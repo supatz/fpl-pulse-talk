@@ -11,7 +11,7 @@ from pathlib import Path
 
 from pipeline.sofascore.config import LOGS_DIR, SEASONS
 from pipeline.sofascore.dictionary import write_data_dictionary
-from pipeline.sofascore.ingest import ingest_seasons
+from pipeline.sofascore.ingest import ingest_seasons, rebuild_identity_maps
 from pipeline.sofascore.serve import build_all_serving
 
 
@@ -23,6 +23,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--skip-shots", action="store_true")
     p.add_argument("--ingest-only", action="store_true")
     p.add_argument("--serving-only", action="store_true")
+    p.add_argument("--maps-only", action="store_true", help="Rebuild identity maps + worksheet from existing masters")
     p.add_argument("--dict-only", action="store_true")
     args = p.parse_args(argv)
 
@@ -40,6 +41,12 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.dict_only:
             print(f"Dictionary → {write_data_dictionary()}")
+            return 0
+        if args.maps_only:
+            rebuild_identity_maps(args.seasons)
+            payloads = build_all_serving()
+            dict_path = write_data_dictionary()
+            print(f"SofaScore maps rebuilt | dict={Path(dict_path).name} | serving refreshed")
             return 0
         if not args.serving_only:
             ingest_seasons(

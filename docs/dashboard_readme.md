@@ -12,7 +12,7 @@ Static multi-file site. Presentation lives in `web/`. Data lives in `serving/*.j
 | Attackers, Defenders, GK, Insights Players / Matches | `players_matches.json` | PL merge: FPL-Core metrics plus Understat-only xGChain/xGBuildup |
 | Insights → FPL treemap (`#insights-fpl-treemap`), Player performances (`#insights-player-performance`) | `players_matches.json` | FPL-Core player-match only |
 | Insights → Understat (`#insights-understat`) | `us_shot_treemap.json`, `us_team_situation.json`, `us_player_situation.json` | Understat metrics with FPL team/player identity |
-| Insights → SofaScore (`#insights-sofascore`, `#insights-sofascore-sides`) | `ss_shot_treemap.json`, `ss_team_timing.json`, `ss_team_side_channels.json` | SofaScore only; never coalesced with Understat |
+| Insights → SofaScore (`#insights-sofascore`, `#insights-sofascore-sides`) | `ss_shot_treemap.json`, `ss_team_timing.json`, `ss_team_side_channels.json` | SofaScore only; never coalesced with Understat. Unmapped shooters stay on the treemap. Player chips `BCC_sf`/`BCM_sf` need `data/sofascore/review/player_mapping_worksheet.csv`. |
 
 When the same metric exists in both providers, the site displays FPL-Core. Duplicate US minutes/xG/xA/npxG/shots/key passes remain in parquet/JSON for audit but are hidden. Understat-only xGChain/xGBuildup stay available.
 

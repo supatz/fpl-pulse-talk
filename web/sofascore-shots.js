@@ -1,6 +1,6 @@
 /* SofaScore shot explore — treemap + situation + match timing (no last-action / tempo). */
 (() => {
-const DATA_URL = "./data/ss_shot_treemap.json?v=1";
+const DATA_URL = "./data/ss_shot_treemap.json?v=2";
 const TIMING_URL = "./data/ss_team_timing.json?v=1";
 const TEMPO_URL = "./data/ss_missing_tempo.json";
 const TOP_N = 5;
@@ -1364,7 +1364,7 @@ function fillDefs() {
     <div class="def-block"><h3>SoT</h3><p>${notes.sot || "Goal + SavedShot + ShotOnPost. Blocked shots excluded."}</p></div>
     <div class="def-block"><h3>xA_sf</h3><p>${notes.xa || "Lineup expectedAssists totals — not per-shot assister. Last-action and attack tempo are omitted (SofaScore does not publish them)."}</p></div>
     <div class="def-block"><h3>Per 90</h3><p>${notes.per90_team || ""} ${notes.per90_player || ""}</p></div>
-    <div class="def-block"><h3>45+ mins</h3><p>Hides players with under 45 FPL/Opta Premier League minutes (<code>league_player.time</code>). No FPL minutes join — there is no curated player map yet.</p></div>
+    <div class="def-block"><h3>45+ mins</h3><p>Hides players with under 45 minutes. Mapped players use FPL/Opta Premier League minutes; unmapped SofaScore players stay in the view using SofaScore lineup minutes.</p></div>
     <div class="def-block"><h3>Situations</h3><p>Native SofaScore labels: regular, assisted, fast-break, corner, set-piece, throw-in-set-piece, free-kick, penalty. Penalty shots are only in the penalty slice.</p></div>
     <div class="def-block" hidden><h3>Last-action groups</h3><p>Preceding action before the shot, rolled into readable groups:</p></div>
   ${lagHtml || "<div class='def-block'><p>Combination, Through ball, Crosses, Dribble, Turnover, Second ball, Unknown.</p></div>"}

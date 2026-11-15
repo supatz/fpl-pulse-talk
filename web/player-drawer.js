@@ -8,6 +8,7 @@ const SUM = [
   "Sv", "Saves", "GC", "xGOTf", "xGP", "Tkl", "CBI", "DefCon", "npxG", "F3", "Dr", "YC",
   "Aer", "Clr", "Int", "Blk", "Rec", "SiB", "SvIB", "HC", "SW", "Cr", "SPxG", "PS",
   "USMin", "USxG", "USxA", "USnpxG", "USxGC", "USxGB", "USSh", "USKP", "BCC", "BCT", "BCS", "BCM",
+  "BCC_sf", "BCM_sf", "SiB_sf",
 ];
 
 let bound = false;

@@ -33,6 +33,6 @@ def write_data_dictionary() -> str:
             lines.append("")
             lines.append(f"**{table} columns:** {cols}{more}")
     lines.append("")
-    lines.append("Site player chips `BCC_sf` / `BCM_sf` / `SiB_sf` left-join this `player_match` + shot zone onto FPL `player_code`. Null when unmapped.")
+    lines.append("Site player chips `BCC_sf` / `BCM_sf` / `SiB_sf` left-join this `player_match` + shot zone onto FPL `player_code`. Null when unmapped. No BCS/BCT from SofaScore. Unmapped players remain on SofaScore treemap. Fill `data/sofascore/review/player_mapping_worksheet.csv`.")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return str(path)
