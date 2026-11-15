@@ -7,6 +7,8 @@
 | [data_dictionary.md](./data_dictionary.md) | FPL-Core master columns (generated on FPL build). |
 | [element_registry.md](./element_registry.md) | `data-name` labels for the italic **i** copier. |
 | [understat_pipeline.md](./understat_pipeline.md) | Understat commands, layout, Insights page. |
+| [sofascore_pipeline.md](./sofascore_pipeline.md) | SofaScore parallel ingest, maps, Insights pages. |
+| [sofascore_data_dictionary.md](./sofascore_data_dictionary.md) | SofaScore master columns (generated on SofaScore build). |
 | [understat_data_dictionary.md](./understat_data_dictionary.md) | Understat master columns (generated on Understat build). |
 | [pl_merge.md](./pl_merge.md) | Premier League FPL × Understat maps + player-match merge (not on the site). |
 | [understat_dataset_plan.md](./understat_dataset_plan.md) | Original plan + current build status. |

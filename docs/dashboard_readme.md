@@ -12,6 +12,7 @@ Static multi-file site. Presentation lives in `web/`. Data lives in `serving/*.j
 | Attackers, Defenders, GK, Insights Players / Matches | `players_matches.json` | PL merge: FPL-Core metrics plus Understat-only xGChain/xGBuildup |
 | Insights → FPL treemap (`#insights-fpl-treemap`), Player performances (`#insights-player-performance`) | `players_matches.json` | FPL-Core player-match only |
 | Insights → Understat (`#insights-understat`) | `us_shot_treemap.json`, `us_team_situation.json`, `us_player_situation.json` | Understat metrics with FPL team/player identity |
+| Insights → SofaScore (`#insights-sofascore`, `#insights-sofascore-sides`) | `ss_shot_treemap.json`, `ss_team_timing.json`, `ss_team_side_channels.json` | SofaScore only; never coalesced with Understat |
 
 When the same metric exists in both providers, the site displays FPL-Core. Duplicate US minutes/xG/xA/npxG/shots/key passes remain in parquet/JSON for audit but are hidden. Understat-only xGChain/xGBuildup stay available.
 
@@ -21,6 +22,7 @@ When the same metric exists in both providers, the site displays FPL-Core. Dupli
 .venv/bin/python build_pl_merge.py              # maps + merged PL player-match
 .venv/bin/python build_serving.py               # merged player table → JSON
 .venv/bin/python build_understat.py --serving-only
+.venv/bin/python build_sofascore.py --serving-only
 .venv/bin/python serve.py                      # http://127.0.0.1:8765/
 .venv/bin/python serve.py --port 8770          # any other port
 ```
@@ -43,6 +45,8 @@ Hard-refresh after serving-shape changes. Understat JS/CSS/JSON use `?v=` cache 
 | `#teams` | FPL-Core team-match |
 | `#insights-players` / `#insights-matches` | Merged player-match; `#insights-teams` remains FPL team-match |
 | `#insights-understat` | Player treemap + situation / last-action / against. Player drawer = that player’s shot mix; Against is team-only |
+| `#insights-sofascore` | SofaScore treemap + situation / against (situation) / match timing. No last-action or tempo. |
+| `#insights-sofascore-sides` | SofaScore L/C/R table + dual pitch; Opta spider unchanged. |
 | `#home` | Match Insights, Player Insights, and Team Insights boards (moved from former Insights nav pages) |
 | `#insights-fpl-treemap` | Nested player treemap: Top 10 / All / custom teams; All / MID / ATT / DEF + GK; Per 90 + 45+ mins. Size / sort includes BCC/BCT; Big chances metric group. Tiles show metric-pair lines plus the selected Size / sort value. Top six positive players per team; tooltip only, no drawer. Club colours from `web/team-colors.js` |
 | `#insights-player-performance` | Free X / Y / bubble / sort (incl. GC, xGC, BCC…); sort asc/desc; top 10–40; kit-colour bubbles sized to the on-chart pool; optional trend line; exclude / season / position / GW / Per 90 / 45+. GC/xGC filled in serving from FPL player_gw (outfield Opta match GC is blank). |

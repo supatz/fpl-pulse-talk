@@ -70,7 +70,38 @@ def _load_site_player_match() -> pl.DataFrame:
     missing = required - set(pm.columns)
     if missing:
         raise RuntimeError(f"Merged player_match missing columns: {sorted(missing)}")
-    return pm
+    return _attach_sofascore_player_metrics(pm)
+
+
+def _attach_sofascore_player_metrics(pm: pl.DataFrame) -> pl.DataFrame:
+    """Left-join SofaScore BCC_sf / BCM_sf / SiB_sf. Unmapped stays null, never 0."""
+    for c in ("BCC_sf", "BCM_sf", "BCS_sf", "SiB_sf"):
+        if c in pm.columns:
+            pm = pm.drop(c)
+    try:
+        from pipeline.sofascore.player_metrics import sofascore_player_match_metrics
+
+        ss = sofascore_player_match_metrics()
+    except Exception:
+        ss = pl.DataFrame()
+    if ss.is_empty():
+        return pm.with_columns(
+            pl.lit(None).cast(pl.Float64).alias("BCC_sf"),
+            pl.lit(None).cast(pl.Float64).alias("BCM_sf"),
+            pl.lit(None).cast(pl.Float64).alias("BCS_sf"),
+            pl.lit(None).cast(pl.Float64).alias("SiB_sf"),
+        )
+    ss = ss.with_columns(
+        pl.col("season").cast(pl.Utf8),
+        pl.col("player_code").cast(pl.Int64),
+        pl.col("match_id").cast(pl.Utf8),
+    )
+    pm = pm.with_columns(
+        pl.col("season").cast(pl.Utf8),
+        pl.col("player_code").cast(pl.Int64),
+        pl.col("match_id").cast(pl.Utf8),
+    )
+    return pm.join(ss, on=["season", "player_code", "match_id"], how="left")
 
 
 def _f(df: pl.DataFrame, cols: list[str]) -> pl.DataFrame:
@@ -369,6 +400,10 @@ def build_player_matches(pm: pl.DataFrame, gw: pl.DataFrame, teams: pl.DataFrame
         "us_bct": "BCT",
         "us_bcs": "BCS",
         "us_bcm": "BCM",
+        "BCC_sf": "BCC_sf",
+        "BCM_sf": "BCM_sf",
+        "BCS_sf": "BCS_sf",
+        "SiB_sf": "SiB_sf",
     }
     exprs = []
     for src, dest in keep.items():

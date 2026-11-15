@@ -7,7 +7,7 @@ from pathlib import Path
 
 import polars as pl
 
-from pipeline.understat.cache import cache_path
+from pipeline.understat.cache import cache_path, read_json, write_json
 from pipeline.understat.client import UnderstatFetcher
 from pipeline.understat.config import MASTER_DIR, SEASONS
 from pipeline.understat.maps import load_team_map
@@ -25,6 +25,9 @@ from pipeline.understat.normalize import (
 )
 
 log = logging.getLogger("understat")
+
+# Network / DNS failures talking to understat.com (do not wipe caches on these).
+_NETWORK_ERRORS = (OSError, ConnectionError, TimeoutError)
 
 
 def _write_partition(table: str, season_fpl: str, df: pl.DataFrame) -> Path:
@@ -44,21 +47,7 @@ def _stamp(df: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def ingest_season_matches(
-    fetcher: UnderstatFetcher,
-    understat_season: str,
-    *,
-    force_index: bool = False,
-) -> pl.DataFrame:
-    # Refresh fixture list when asked (so new results appear); individual match
-    # shot pulls still hit cache unless force.
-    if force_index:
-        from pipeline.understat.cache import cache_path
-
-        p = cache_path("league", "EPL", understat_season, "matches.json")
-        if p.exists():
-            p.unlink()
-    raw = fetcher.league_matches(understat_season)
+def _matches_from_raw(raw: list, understat_season: str) -> pl.DataFrame:
     rows = [normalize_match(m, understat_season=understat_season) for m in raw]
     df = _stamp(matches_frame(rows))
     path = _write_partition("match", SEASONS[understat_season], df)
@@ -70,6 +59,51 @@ def ingest_season_matches(
         path,
     )
     return df
+
+
+def ingest_season_matches(
+    fetcher: UnderstatFetcher,
+    understat_season: str,
+    *,
+    force_index: bool = False,
+) -> pl.DataFrame:
+    """Pull league match index. On network failure, reuse disk cache or existing master."""
+    # Refresh fixture list when asked (so new results appear); individual match
+    # shot pulls still hit cache unless force. Never delete the only copy before
+    # a successful live pull — DNS / understat.com outages used to wipe the index.
+    p = cache_path("league", "EPL", understat_season, "matches.json")
+    bak = p.with_suffix(".json.bak")
+    stale = read_json(p) if p.exists() else (read_json(bak) if bak.exists() else None)
+    if force_index and p.exists():
+        p.replace(bak)
+        stale = read_json(bak)
+
+    try:
+        raw = fetcher.league_matches(understat_season)
+    except _NETWORK_ERRORS as err:
+        log.warning(
+            "Understat league index unreachable for %s (%s). Falling back to cache/master.",
+            understat_season,
+            err,
+        )
+        if stale is not None:
+            write_json(p, stale)
+            if bak.exists():
+                bak.unlink(missing_ok=True)
+            return _matches_from_raw(stale, understat_season)
+        existing = read_master("match", [SEASONS[understat_season]])
+        if not existing.is_empty():
+            log.warning(
+                "Using existing master/understat/match for %s (%s rows)",
+                SEASONS[understat_season],
+                existing.height,
+            )
+            return existing
+        raise
+
+    if bak.exists():
+        bak.unlink(missing_ok=True)
+    return _matches_from_raw(raw, understat_season)
 
 
 def ingest_season_shots(

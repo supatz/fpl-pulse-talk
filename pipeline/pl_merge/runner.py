@@ -24,10 +24,21 @@ def _ensure_roster(seasons_us: list[str], *, force: bool, skip_roster: bool) -> 
     # Revisit every requested season. UnderstatFetcher reuses cached roster JSON,
     # so only newly finished matches hit the network; each season partition is
     # then rewritten with all cached + new appearances.
-    with UnderstatFetcher(force=force) as fetcher:
-        for us in seasons_us:
-            matches = ingest_season_matches(fetcher, us, force_index=False)
-            ingest_season_roster(fetcher, us, matches)
+    try:
+        with UnderstatFetcher(force=force) as fetcher:
+            for us in seasons_us:
+                matches = ingest_season_matches(fetcher, us, force_index=False)
+                ingest_season_roster(fetcher, us, matches)
+    except (OSError, ConnectionError, TimeoutError) as err:
+        if existing.is_empty():
+            raise
+        log.warning(
+            "Understat unreachable during roster refresh (%s). "
+            "Continuing PL merge with existing roster master (%s rows).",
+            err,
+            existing.height,
+        )
+        return existing
     return read_master("roster", fpl_seasons)
 
 

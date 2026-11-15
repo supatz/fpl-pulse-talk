@@ -11,6 +11,7 @@ Link: https://fpl-pulse-talk.netlify.app/#home
 |---|---|---|
 | **FPL-Core** | Public [`olbauday/FPL-Core-Insights`](https://github.com/olbauday/FPL-Core-Insights) (cached under `.cache/FPL-Core-Insights/data/`) | Dimensions, FPL/Opta metrics, fixtures, teams |
 | **Understat** | understat.com → `master/understat/` | `US …` metrics on player pages plus Insights → Understat |
+| **SofaScore** | unofficial `api.sofascore.com` → `master/sofascore/` | Insights → SofaScore / SofaScore sides; player chips `*_sf`. [`docs/sofascore_pipeline.md`](docs/sofascore_pipeline.md) |
 | **PL merge** | FPL PL `player_match` left-joined to Understat roster via curated maps | Player pages and player insights. [`docs/pl_merge.md`](docs/pl_merge.md) |
 
 The merge table keeps FPL `minutes` and adds `us_minutes`; the site never silently substitutes one for the other.
@@ -46,6 +47,7 @@ Enable the Monday / Thursday schedule (08:00 local time):
 | Scheduled (after install) | Monday and Thursday 08:00 **dataset only**, or `launchctl start com.fpl.masterdataset.refresh` |
 | Ignore cache, rebuild all | `.venv/bin/python build.py --full` |
 | Dashboard JSON only | `.venv/bin/python build.py --serving-only` |
+| SofaScore ingest + serving | `.venv/bin/python build_sofascore.py --refresh` |
 | PL merge (maps + player-match parquet) | `.venv/bin/python build_pl_merge.py` |
 
 `--refresh` is incremental: unchanged gameweek folders are reused. Source data is updated twice daily (07:30 and 17:30 UTC); twice a week is enough.

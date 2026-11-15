@@ -6,7 +6,7 @@ The italic **i** appears only when you hover a named label (not on changing valu
 |---|---|
 | `nav.*` | Sidebar and page links |
 | `nav.collapse` / `nav.topbar` | Collapse control and workspace bar |
-| `nav.insights.players` / `.matches` / `.teams` / `.understat` / `.fpl_treemap` | Insights subpages |
+| `nav.insights.players` / `.matches` / `.teams` / `.understat` / `.sofascore` / `.sofascore_sides` / `.fpl_treemap` | Insights subpages |
 | `home.title` / `home.meta` / `home.jumps` | Home |
 | `fixtures.title` / `fixtures.gwlabel` / `fixtures.controls` | Fixtures heading and GW note |
 | `fixtures.filter.competition` | Fixtures competition (multi-select) |
@@ -31,7 +31,9 @@ The italic **i** appears only when you hover a named label (not on changing valu
 | `insights.players.*` / `insights.matches.*` / `insights.teams.*` | Insight filters and titles |
 | `insights.matches.board` / `insights.matches.grid` | Match insight containers |
 | `insights.understat.title` | Understat page heading |
+| `insights.sofascore.title` / `insights.sofascore_sides.title` | SofaScore explore headings |
 | `shots.*` | Understat explore chrome (views, filters, chart) |
+| `ss.shots.*` / `ss.team_sides.*` | SofaScore explore chrome |
 | `shots.drawer` | Player/team shot-mix drawer |
 | `us-tip` / `.tip` | Treemap hover (moved to `document.body` for positioning) |
 | `insights.fpl_treemap.title` | FPL player treemap heading |

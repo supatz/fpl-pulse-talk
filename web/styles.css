@@ -154,7 +154,7 @@ a:hover { text-decoration: underline; }
   border-left: 1px solid var(--line);
   transition: max-height 240ms var(--ease);
 }
-.nav-block.is-open .nav-kids { max-height: 360px; }
+.nav-block.is-open .nav-kids { max-height: 520px; }
 .nav-kids .nav-link { min-height: 36px; font-size: 14px; }
 .nav-kids .nav-link svg, .nav-kids .nav-dot { width: 16px; height: 16px; flex-basis: 16px; opacity: 0.8; }
 #sidebar-collapse { margin-top: 8px; }

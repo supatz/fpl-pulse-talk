@@ -2,7 +2,7 @@
 
 Living record of **locked product and data decisions**. Update this file in the **same change** as the code or serving JSON that implements the decision. Newest entries at the top of the chronological list.
 
-Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [FPL dictionary](./data_dictionary.md) · [Understat pipeline](./understat_pipeline.md) · [PL merge](./pl_merge.md) · [Understat plan](./understat_dataset_plan.md)
+Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [FPL dictionary](./data_dictionary.md) · [Understat pipeline](./understat_pipeline.md) · [SofaScore pipeline](./sofascore_pipeline.md) · [PL merge](./pl_merge.md) · [Understat plan](./understat_dataset_plan.md)
 
 ## How to add an entry
 
@@ -15,6 +15,9 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 
 | Topic | Choice |
 |---|---|
+| SofaScore stack | Parallel to Understat. Do not edit Understat ingest, PL-merge `us_*`, `#insights-understat`, `#insights-team-sides`, or `web/understat-shots.*`. New parquet `ss_*`, site `*_sf`. Never average or fill from Understat/Opta. Maps live in `data/sofascore/maps/` (not `data/pl_merge/`). |
+| SofaScore big chances | Native lineup `bigChancesCreated` / `bigChancesMissed` (and `bigChancesScored` if published). Do not rebuild from xG > 0.27. Player chips `BCC_sf` / `BCM_sf` / `SiB_sf` (optional `BCS_sf`). Null when unmapped — never 0 as a stand-in. Existing BCC/BCT/BCS/BCM stay Understat. |
+| SofaScore pages | `#insights-sofascore` (treemap, situation, against-situation, timing) and `#insights-sofascore-sides`. Situation legend uses SofaScore labels as-is. Omit last-action and attack tempo (no source). |
 | Site competition | **Premier League only** across the site. Serving (`teams_gw`, fixtures upcoming, player merge) and UI aggregations drop cups / Europe / friendlies. No competition picker. |
 | Merged site | Player pages read Premier League `master/pl_merge/player_match`. FPL/Opta and Understat measures remain separately labeled; never average or silently coalesce them. |
 | Metric precedence | When FPL-Core has the same player metric, the site shows FPL-Core only. Hide duplicate US minutes/xG/xA/npxG/shots/key passes; retain Understat-only xGChain/xGBuildup, BCC/BCT/BCS/BCM (xG > 0.27), and Understat-native insight views. |
@@ -41,7 +44,7 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Players table drawer | Clicking a name on Attackers / Defenders / GK opens a side drawer of that player’s gameweeks for the **currently visible** metric columns, plus Total and Per 90 footer rows. Points/CS are one figure per GW. |
 | Metric controls | Metric-group chips are always visible; there is no redundant “More metrics” toggle. |
 | Understat CSS | Scoped under `.us-shots`. Site-wide accent green (`#3ddc97`) lives in `web/styles.css`. |
-| Refresh | `refresh.command` opens the menu: 1 dataset, 2 git push, 3 both. Dataset = FPL → Understat → PL merge/roster → both serving layers. Publish is `git add -A` + commit + push so Netlify redeploys. Non-tty runs (launchd) still fall through to dataset only. |
+| Refresh | `refresh.command` opens the menu: 1 dataset, 2 git push, 3 both. Dataset = FPL → Understat ingest → PL merge → FPL serving → Understat serving → SofaScore (non-blocking). Publish is `git add -A` + commit + push so Netlify redeploys. Non-tty runs (launchd) still fall through to dataset only. |
 | Runtime / cloud | Keep data refresh local on the personal Mac. Cloud compute is optional only for unattended refresh while the Mac is off; Netlify remains the third-party static-site host. |
 | Attackers npxG | FPL-Core only. Prefer shot-joined `np_xg`; else `xG − 0.79 × penalties_scored` (`PENALTY_XG` in `build_serving.py`). Does not fix SPxG. |
 | Understat Top / Bottom 10 | Rank **selected season + selected metric** (and Per 90). Against = bottom 10 by that metric **conceded**. Changing metric resets the preset unless “All teams”. |
@@ -56,6 +59,24 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-11-16 — SofaScore parallel pipeline (Understat pages unchanged)
+
+**Choice:** Separate unofficial `api.sofascore.com` ingest (PL 2025-2026 and 2026-2027), curated team/match/player maps, `serving/ss_*.json`, duplicate Insights pages, and optional `*_sf` player chips. Native SofaScore big chances. No last-action/tempo. Refresh is non-blocking after FPL serving.
+
+**Why:** understat.com outages should not remove shot-explore while we keep the original Understat UI and numbers intact.
+
+**Where:** `pipeline/sofascore/`, `build_sofascore.py`, `data/sofascore/maps/`, `web/sofascore-shots.js`, `web/sofascore-sides.js`, `#insights-sofascore`, `#insights-sofascore-sides`, `build_serving.py` left join, `scripts/refresh.sh`.
+
+**Drawbacks:** Unofficial API can 403/rate-limit; unmapped shots/players are dropped from site JSON rather than guessed.
+
+### 2026-11-02 — Understat refresh keeps stale index on DNS failure
+
+**Choice:** League-index `--refresh` no longer deletes `matches.json` before a successful live pull. On connection/DNS errors, reuse `.bak`/cache or existing `master/understat/match`. PL merge falls back to existing roster master. `refresh.sh` continues FPL serving with a clear partial-refresh warning.
+
+**Why:** `nodename nor servname` for understat.com wiped the 2025 index and failed PL merge even though FPL masters had updated.
+
+**Where:** `pipeline/understat/ingest.py`, `pipeline/pl_merge/runner.py`, `scripts/refresh.sh`.
 
 ### 2026-10-30 — Site locked to Premier League only
 

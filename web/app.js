@@ -1,4 +1,4 @@
-import { FDR_URL, INSIGHT_WINDOWS, VIEWS } from "./registry.js?v=12";
+import { FDR_URL, INSIGHT_WINDOWS, VIEWS } from "./registry.js?v=13";
 import {
   aggregatePlayers,
   aggregateTeamRows,
@@ -32,6 +32,8 @@ const PAGES = [
   "defenders",
   "gk",
   "insights-understat",
+  "insights-sofascore",
+  "insights-sofascore-sides",
   "insights-fpl-treemap",
   "insights-player-performance",
   "insights-finishing",
@@ -43,6 +45,8 @@ const PAGES = [
 ];
 const INSIGHT_PAGES = [
   "insights-understat",
+  "insights-sofascore",
+  "insights-sofascore-sides",
   "insights-fpl-treemap",
   "insights-player-performance",
   "insights-finishing",
@@ -72,6 +76,8 @@ const PAGE_TITLES = {
   defenders: "Defenders",
   gk: "Goalkeepers",
   "insights-understat": "Insights · Understat",
+  "insights-sofascore": "Insights · SofaScore",
+  "insights-sofascore-sides": "Insights · SofaScore sides",
   "insights-fpl-treemap": "Insights · FPL treemap",
   "insights-player-performance": "Insights · Player performances",
   "insights-finishing": "Insights · Finishing",
@@ -139,6 +145,16 @@ function showPage(id) {
       }
     });
   }
+  if (page === "insights-sofascore") {
+    requestAnimationFrame(() => {
+      try {
+        window.initSofaScoreShots?.();
+      } catch (err) {
+        const status = document.getElementById("ss-status");
+        if (status) status.textContent = `SofaScore view failed to start: ${err.message}`;
+      }
+    });
+  }
   if (page === "insights-fpl-treemap") {
     requestAnimationFrame(() => {
       try {
@@ -176,6 +192,16 @@ function showPage(id) {
       } catch (err) {
         const status = document.getElementById("side-status");
         if (status) status.textContent = `Team shot sides failed to start: ${err.message}`;
+      }
+    });
+  }
+  if (page === "insights-sofascore-sides") {
+    requestAnimationFrame(() => {
+      try {
+        window.initSofaScoreSides?.();
+      } catch (err) {
+        const status = document.getElementById("ss-side-status");
+        if (status) status.textContent = `SofaScore sides failed to start: ${err.message}`;
       }
     });
   }

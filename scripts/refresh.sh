@@ -13,17 +13,45 @@ refresh_dataset() {
     return 1
   fi
   mkdir -p "$ROOT/logs"
+  local us_ok=1
+  local merge_ok=1
+  local ss_ok=1
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] refresh start" | tee -a "$ROOT/logs/refresh.log"
   "$ROOT/.venv/bin/python" "$ROOT/build.py" --refresh --skip-serving
+
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] understat refresh start" | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/understat_refresh.log"
-  "$ROOT/.venv/bin/python" "$ROOT/build_understat.py" --refresh --ingest-only
-  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] understat refresh done" | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/understat_refresh.log"
+  if ! "$ROOT/.venv/bin/python" "$ROOT/build_understat.py" --refresh --ingest-only; then
+    us_ok=0
+    echo "WARNING: Understat ingest failed (often DNS/network to understat.com). Will rebuild serving from existing Understat masters." | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/understat_refresh.log"
+  else
+    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] understat refresh done" | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/understat_refresh.log"
+  fi
+
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] PL merge start" | tee -a "$ROOT/logs/refresh.log"
-  "$ROOT/.venv/bin/python" "$ROOT/build_pl_merge.py"
+  if ! "$ROOT/.venv/bin/python" "$ROOT/build_pl_merge.py"; then
+    merge_ok=0
+    echo "WARNING: PL merge failed. Site player pages may keep the previous merge until understat.com is reachable." | tee -a "$ROOT/logs/refresh.log"
+  fi
+
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] site serving rebuild start" | tee -a "$ROOT/logs/refresh.log"
   "$ROOT/.venv/bin/python" "$ROOT/build_serving.py"
   "$ROOT/.venv/bin/python" "$ROOT/build_understat.py" --serving-only
+
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] sofascore refresh start" | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/sofascore_refresh.log"
+  if ! "$ROOT/.venv/bin/python" "$ROOT/build_sofascore.py" --refresh; then
+    ss_ok=0
+    echo "WARNING: SofaScore ingest/serving failed. FPL and Understat serving were already written. Insights → SofaScore may be stale." | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/sofascore_refresh.log"
+  else
+    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] sofascore refresh done" | tee -a "$ROOT/logs/refresh.log" | tee -a "$ROOT/logs/sofascore_refresh.log"
+    "$ROOT/.venv/bin/python" "$ROOT/build_serving.py"
+  fi
+
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] refresh done" | tee -a "$ROOT/logs/refresh.log"
+  if [[ "$us_ok" -eq 0 || "$merge_ok" -eq 0 || "$ss_ok" -eq 0 ]]; then
+    echo
+    echo "Partial refresh: FPL serving updated; Understat, PL merge, and/or SofaScore did not fully succeed."
+    echo "Check network (understat.com / api.sofascore.com), then re-run option 1 or 3."
+  fi
 }
 
 publish_git() {

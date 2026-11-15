@@ -1,0 +1,1966 @@
+/* SofaScore shot explore — treemap + situation + match timing (no last-action / tempo). */
+(() => {
+const DATA_URL = "./data/ss_shot_treemap.json?v=1";
+const TIMING_URL = "./data/ss_team_timing.json?v=1";
+const TEMPO_URL = "./data/ss_missing_tempo.json";
+const TOP_N = 5;
+const TOP_TEAMS = 10;
+const HEADER_H = 42;
+const MIN_FONT = 5;
+const TIMING_INTERVALS = ["1-15", "16-30", "31-45", "46-60", "61-75", "76+"];
+const TEMPO_SPEEDS = ["Fast", "Standard", "Normal", "Slow"];
+const TIMING_UNIFORM = 1 / TIMING_INTERVALS.length;
+/** Cap for deviation fill: ±this share (≈16.7pp) maps to a full half-bar. */
+const TIMING_DEV_SCALE = TIMING_UNIFORM;
+const TIMING_METRIC_NAMES = {
+  G: "Goals scored",
+  xG: "Expected goals",
+  Sh: "Shots taken",
+  ShC: "Shots conceded",
+  GC: "Goals conceded",
+  xGC: "Expected goals against",
+};
+
+/** Soft pastel palette from design swatch (16), shared with the FPL treemap. */
+const { PALETTE, TEAM_COLOR_INDEX, teamColor, hexToRgb, teamFill, textOnTeam } = window.TeamColors;
+const TILE_FONT = "Roboto, Helvetica Neue, Segoe UI, sans-serif";
+
+/** Soft categorical palette for mix slices — higher contrast pastels. */
+const SLICE_COLORS = [
+  "#6ea0f0",
+  "#3dba9a",
+  "#e0a050",
+  "#9b7ed9",
+  "#e07a8a",
+  "#5aa6b5",
+  "#8f9a6a",
+  "#c48a6a",
+];
+
+const state = {
+  data: null,
+  timingData: null,
+  tempoData: null,
+  view: "treemap",
+  season: "2026-2027",
+  metric: "xg",
+  timingMetric: "G",
+  timingSort: "total",
+  tempoSort: "total",
+  gwFrom: 1,
+  gwTo: 38,
+  situations: new Set(), // empty = all situations
+  per90: false,
+  min45: false,
+  againstDim: "situation",
+  teams: new Set(),
+  teamMode: "preset",
+  drawer: null,
+  focusTeam: null,
+  focusSlices: new Set(), // multi-select legend filters on linked mix
+};
+
+const els = {};
+let started = false;
+let eventsBound = false;
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+async function init() {
+  if (started) {
+    if (els.chart && els.chart.clientWidth) render();
+    return;
+  }
+  bindEls();
+  if (!els.chart) return;
+  started = true;
+  bindEvents();
+  if (!$("app")) decorateNames(document.querySelector(".ss-shots") || document);
+  try {
+    const [shots, timing] = await Promise.all([
+      fetch(DATA_URL).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }),
+      fetch(TIMING_URL)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+    ]);
+    state.data = shots;
+    state.timingData = timing;
+    state.tempoData = null;
+    if (!shots?.teams?.length) {
+      const why = shots?.notes?.missing || "SofaScore not ingested yet";
+      if (els.status) els.status.textContent = why;
+    }
+    populateSeasons();
+    populateSituations();
+    syncTimingGwRange({ resetDefaults: true });
+    resetPresetTeams();
+    populateTeams();
+    if (typeof d3 === "undefined") throw new Error("Chart library missing (vendor/d3.min.js).");
+    setView("treemap");
+  } catch (err) {
+    if (els.status) els.status.textContent = `SofaScore not ingested yet — failed to load ${DATA_URL}: ${err.message}`;
+  }
+}
+
+window.initSofaScoreShots = init;
+if (document.body?.classList.contains("ss-shots-standalone")) {
+  document.addEventListener("DOMContentLoaded", init);
+}
+
+function bindEls() {
+  const root = document.querySelector(".ss-shots") || document;
+  els.root = root.classList?.contains("ss-shots") ? root : document.querySelector(".ss-shots");
+  els.season = $("ss-season");
+  els.metric = $("ss-metric");
+  els.metricLabel = $("ss-metric-label");
+  els.sitToggle = $("ss-situations-toggle");
+  els.sitMenu = $("ss-situations-menu");
+  els.sitDrop = $("ss-situations-drop");
+  els.per90 = $("ss-per90");
+  els.min45 = $("ss-min45");
+  els.againstDim = $("ss-against-dim");
+  els.againstWrap = $("ss-against-dim-wrap");
+  els.timingMetric = $("ss-timing-metric");
+  els.timing = $("ss-timing");
+  els.tempo = $("ss-tempo");
+  els.gwRange = $("ss-gw-range");
+  els.gwLabel = $("ss-timing-gw-label");
+  els.gwControl = null;
+  els.teams = $("ss-team-pills");
+  els.topTeamsBtn = $("ss-top-teams");
+  els.chart = $("ss-chart");
+  els.matrix = $("ss-matrix");
+  els.status = $("ss-status");
+  els.footnote = $("ss-footnote");
+  els.drawer = $("ss-drawer");
+  els.drawerTitle = $("ss-drawer-title");
+  els.drawerBody = $("ss-drawer-body");
+  els.tip = $("ss-tip");
+  els.defs = $("ss-defs");
+  els.chartDl = $("ss-chart-dl");
+  els.tabs = [...root.querySelectorAll("[data-view]")];
+}
+
+function bindEvents() {
+  if (eventsBound) return;
+  eventsBound = true;
+  els.tabs.forEach((btn) => btn.addEventListener("click", () => setView(btn.dataset.view)));
+  els.season.addEventListener("change", () => {
+    state.season = els.season.value;
+    state.focusTeam = null;
+    state.focusSlices.clear();
+    syncTimingGwRange({ resetDefaults: true });
+    if (state.teamMode !== "custom") applyTeamMode();
+    else {
+      populateTeams();
+      render();
+    }
+  });
+  els.metric.addEventListener("change", () => {
+    state.metric = els.metric.value;
+    if (state.teamMode === "all") {
+      updateAgainstControls();
+      populateTeams();
+      render();
+    } else {
+      state.teamMode = "preset";
+      applyTeamMode();
+    }
+    if (state.drawer && !els.drawer.hidden) openDrawer(state.drawer.team, state.drawer.player);
+  });
+  els.per90.addEventListener("change", () => {
+    state.per90 = els.per90.checked;
+    if (state.teamMode === "all") {
+      render();
+    } else {
+      state.teamMode = "preset";
+      applyTeamMode();
+    }
+    if (state.drawer && !els.drawer.hidden) openDrawer(state.drawer.team, state.drawer.player);
+  });
+  els.min45?.addEventListener("change", () => {
+    state.min45 = els.min45.checked;
+    render();
+    if (state.drawer && !els.drawer.hidden) openDrawer(state.drawer.team, state.drawer.player);
+  });
+  els.againstDim.addEventListener("change", () => {
+    state.againstDim = els.againstDim.value;
+    if (state.view === "against") render();
+  });
+  els.timingMetric?.addEventListener("change", () => {
+    state.timingMetric = els.timingMetric.value;
+    if (state.teamMode !== "custom") {
+      state.teamMode = "preset";
+      applyTeamMode();
+    } else render();
+  });
+  if (els.gwRange && window.mountDualRange && !els.gwControl) {
+    els.gwControl = window.mountDualRange(els.gwRange, {
+      min: 1,
+      max: 38,
+      step: 1,
+      from: state.gwFrom || 1,
+      to: state.gwTo || 38,
+      onInput: (a, b) => {
+        state.gwFrom = a;
+        state.gwTo = b;
+        if (els.gwLabel) els.gwLabel.textContent = `GW ${a}–${b}`;
+        if (state.teamMode !== "custom") {
+          state.teamMode = "preset";
+          applyTeamMode();
+        } else if (state.view === "timing") renderTiming();
+        else if (state.view === "tempo") renderTempo();
+      },
+    });
+  }
+  if (els.chartDl && window.ChartExport && !els.chartDl.dataset.bound) {
+    els.chartDl.dataset.bound = "1";
+    window.ChartExport.bindChartDownload(
+      els.chartDl,
+      () =>
+        window.ChartExport.visiblePanel([els.chart, els.matrix, els.timing, els.tempo]),
+      () => `fpl-pulse-talk-sofascore-${state.view || "chart"}`,
+      exportCaption
+    );
+  }
+  els.sitToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = els.sitMenu.hidden;
+    els.sitMenu.hidden = !open;
+    els.sitToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  document.addEventListener("click", (e) => {
+    if (!els.sitDrop.contains(e.target)) {
+      els.sitMenu.hidden = true;
+      els.sitToggle.setAttribute("aria-expanded", "false");
+    }
+  });
+  $("ss-all-teams").addEventListener("click", () => {
+    state.teamMode = "all";
+    applyTeamMode();
+  });
+  els.topTeamsBtn.addEventListener("click", () => {
+    state.teamMode = "preset";
+    applyTeamMode();
+  });
+  $("ss-help-open").addEventListener("click", () => {
+    fillDefs();
+    els.defs.showModal();
+  });
+  $("ss-drawer-close").addEventListener("click", () => {
+    els.drawer.hidden = true;
+    state.drawer = null;
+  });
+  window.addEventListener("resize", debounce(() => {
+    if (state.view === "timing") renderTiming();
+    else if (state.view === "tempo") renderTempo();
+    else if (els.chart && els.chart.clientWidth) render();
+  }, 120));
+}
+
+function decorateNames(root) {
+  root.querySelectorAll("[data-name]").forEach((el) => {
+    if (el.querySelector(":scope > .name-dot")) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "name-dot";
+    btn.title = el.dataset.name;
+    btn.setAttribute("aria-label", `Copy element name ${el.dataset.name}`);
+    btn.textContent = "i";
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      try {
+        await navigator.clipboard.writeText(el.dataset.name);
+        btn.classList.add("copied");
+        setTimeout(() => btn.classList.remove("copied"), 900);
+      } catch {
+        /* ignore */
+      }
+    });
+    el.insertBefore(btn, el.firstChild);
+  });
+}
+
+function populateSeasons() {
+  const seasons = state.data.seasons || [];
+  els.season.innerHTML = seasons.map((s) => `<option value="${s}">${s}</option>`).join("");
+  state.season = state.data.default_season || state.season;
+  if (!seasons.includes(state.season)) state.season = seasons[0] || state.season;
+  els.season.value = state.season;
+}
+
+function populateSituations() {
+  const order = state.data.situation_order || [];
+  const allOn = !state.situations.size;
+  els.sitMenu.innerHTML =
+    `<label class="ms-opt"><input type="checkbox" data-sit="all" ${allOn ? "checked" : ""}/> All situations</label>` +
+    order
+      .map((s) => {
+        const on = !allOn && state.situations.has(s);
+        return `<label class="ms-opt"><input type="checkbox" data-sit="${s}" ${on ? "checked" : ""}/> ${s}</label>`;
+      })
+      .join("");
+
+  updateSituationsToggleLabel();
+
+  els.sitMenu.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("change", () => {
+      const sit = input.dataset.sit;
+      if (sit === "all") {
+        state.situations.clear();
+      } else if (input.checked) {
+        state.situations.add(sit);
+      } else {
+        state.situations.delete(sit);
+      }
+      populateSituations();
+      render();
+      if (state.drawer && !els.drawer.hidden) openDrawer(state.drawer.team, state.drawer.player);
+    });
+  });
+}
+
+function updateSituationsToggleLabel() {
+  if (!state.situations.size) {
+    els.sitToggle.textContent = "All situations";
+    return;
+  }
+  const list = [...state.situations];
+  els.sitToggle.textContent =
+    list.length <= 2 ? list.join(", ") : `${list.length} situations`;
+}
+
+function shortSit(s) {
+  return (
+    {
+      DirectFreekick: "FK",
+      FromCorner: "Corner",
+      OpenPlay: "Open",
+      Penalty: "Pen",
+      SetPiece: "SP",
+    }[s] || s
+  );
+}
+
+/** Active situation filter set; empty means all. */
+function activeSituations() {
+  if (!state.situations.size) return null;
+  return state.situations;
+}
+
+/** All teams in the selected season (for filter pills). */
+function seasonTeamsAll() {
+  if (isTimingView()) return timingTeamsAll();
+  if (isTempoView()) return tempoTeamsAll();
+  return (state.data.teams || []).filter((t) => t.season === state.season);
+}
+
+function timingTeamsAll() {
+  return (state.timingData?.teams || []).filter((t) => t.season === state.season);
+}
+
+function tempoTeamsAll() {
+  return (state.tempoData?.teams || []).filter((t) => t.season === state.season);
+}
+
+function isAgainstView() {
+  return state.view === "against";
+}
+
+function isTimingView() {
+  return state.view === "timing";
+}
+
+function isTempoView() {
+  return state.view === "tempo";
+}
+
+function isContextView() {
+  return isTimingView() || isTempoView();
+}
+
+/** Season-to-date team value for the selected metric (creation or conceded). */
+function playerPassesMins(p) {
+  if (!state.min45) return true;
+  return (Number(p.minutes) || 0) >= 45;
+}
+
+function teamRankValue(t) {
+  if (isTimingView()) {
+    return Number(aggregateTimingTeam(t).totals?.[state.timingMetric]) || 0;
+  }
+  if (isTempoView()) {
+    return Number(t.totals?.[state.timingMetric]) || 0;
+  }
+  if (isAgainstView()) {
+    const rows = t.against_situation || [];
+    const m = state.metric;
+    let raw = 0;
+    if (m === "shots") raw = rows.reduce((a, r) => a + (Number(r.shots_faced) || 0), 0);
+    else if (m === "sot") raw = rows.reduce((a, r) => a + (Number(r.sot_faced) || 0), 0);
+    else raw = rows.reduce((a, r) => a + (Number(r.xga) || 0), 0);
+    if (state.per90 && t.matches) return raw / t.matches;
+    return raw;
+  }
+  return Number(t[metricKey()]) || 0;
+}
+
+function presetTeamCodes() {
+  return seasonTeamsAll()
+    .slice()
+    .sort((a, b) => teamRankValue(b) - teamRankValue(a))
+    .slice(0, TOP_TEAMS)
+    .map((t) => String(t.team_code));
+}
+
+function resetPresetTeams() {
+  state.teamMode = "preset";
+  state.teams = new Set(presetTeamCodes());
+}
+
+function applyTeamMode() {
+  updateAgainstControls();
+  if (state.teamMode === "all") {
+    state.teams = new Set(seasonTeamsAll().map((t) => String(t.team_code)));
+  } else if (state.teamMode === "preset") {
+    state.teams = new Set(presetTeamCodes());
+  } else {
+    const live = new Set(seasonTeamsAll().map((t) => String(t.team_code)));
+    state.teams = new Set([...state.teams].filter((c) => live.has(c)));
+    if (!state.teams.size) {
+      state.teamMode = "preset";
+      state.teams = new Set(presetTeamCodes());
+    }
+  }
+  populateTeams();
+  render();
+}
+
+function rankMetricLabel() {
+  if (isContextView()) return TIMING_METRIC_NAMES[state.timingMetric] || state.timingMetric;
+  const lab = metricLabel();
+  return isAgainstView() ? `${lab} conceded` : lab;
+}
+
+function updateAgainstControls() {
+  const against = isAgainstView();
+  if (els.metricLabel) els.metricLabel.textContent = against ? "Metric (Against)" : "Metric";
+  if (els.topTeamsBtn) {
+    els.topTeamsBtn.textContent = against ? "Bottom 10" : "Top 10";
+    els.topTeamsBtn.title = against
+      ? `10 teams with the most ${rankMetricLabel()} in ${state.season}`
+      : `10 teams with the most ${rankMetricLabel()} in ${state.season}`;
+  }
+}
+
+function populateTeams() {
+  const teams = seasonTeamsAll()
+    .slice()
+    .sort((a, b) => a.team_short.localeCompare(b.team_short));
+  const preset = new Set(presetTeamCodes());
+  els.teams.innerHTML = teams
+    .map((t) => {
+      const code = String(t.team_code);
+      const on = state.teams.has(code);
+      const isPreset = preset.has(code);
+      const tip = isPreset
+        ? `${isAgainstView() ? "Bottom" : "Top"} 10 by ${rankMetricLabel()} (${fmt(teamRankValue(t))})`
+        : t.team || t.team_short;
+      return `<button type="button" class="pill ${on ? "on" : ""} ${isPreset ? "is-top" : ""}" data-code="${code}" title="${tip}">${t.team_short}</button>`;
+    })
+    .join("");
+  els.teams.querySelectorAll(".pill").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const code = btn.dataset.code;
+      if (state.teams.has(code)) state.teams.delete(code);
+      else state.teams.add(code);
+      state.teamMode = state.teams.size ? "custom" : "preset";
+      if (!state.teams.size) state.teams = new Set(presetTeamCodes());
+      populateTeams();
+      render();
+    });
+  });
+}
+
+/** Teams currently shown in charts (selected pills; default top/bottom 10). */
+function visibleTeams() {
+  const all = seasonTeamsAll();
+  if (!state.teams.size) {
+    const preset = new Set(presetTeamCodes());
+    return all.filter((t) => preset.has(String(t.team_code)));
+  }
+  return all.filter((t) => state.teams.has(String(t.team_code)));
+}
+
+function metricKey() {
+  const m = state.metric;
+  if (state.per90) {
+    if (m === "xg") return "xg_p90";
+    if (m === "shots") return "shots_p90";
+    if (m === "sot") return "sot_p90";
+    if (m === "cc") return "cc_p90";
+    if (m === "cc_xg") return "cc_xg_p90";
+    if (m === "xa") return "xa_p90";
+  }
+  return m;
+}
+
+function metricLabel() {
+  const opt = els.metric.selectedOptions[0];
+  return `${opt?.textContent || state.metric}${state.per90 ? " /90" : ""}`;
+}
+
+function metricShort() {
+  const m = state.metric;
+  if (m === "xg") return state.per90 ? "xG/90" : "xG";
+  if (m === "shots") return state.per90 ? "Sh/90" : "Sh";
+  if (m === "sot") return state.per90 ? "SoT/90" : "SoT";
+  if (m === "cc") return state.per90 ? "CC/90" : "CC";
+  if (m === "cc_xg") return state.per90 ? "xGA/90" : "xG assisted";
+  if (m === "xa") return state.per90 ? "xA_sf/90" : "xA_sf";
+  return metricLabel();
+}
+
+function metricFullName(key) {
+  const map = {
+    xg: "Expected goals",
+    shots: "Shots",
+    sot: "Shots on target",
+    cc: "Chances created",
+    cc_xg: "Expected goals from assists",
+  };
+  return map[key] || metricLabel();
+}
+
+function exportCaption() {
+  const rate = state.per90 ? " / 90 mins" : "";
+  const short = metricShort().replace(/\/90$/, "");
+  const shotGloss = `${short} = ${metricFullName(state.metric)}${rate}`;
+  const views = {
+    treemap: {
+      title: "Which players drive each team's shot threat?",
+      metrics: `${shotGloss} · Bigger tile = more of this metric`,
+    },
+    situation: {
+      title: "How each team builds its chances — by situation",
+      metrics: shotGloss,
+    },
+    last_action: {
+      title: "What last action sets up each team's shots?",
+      metrics: shotGloss,
+    },
+    against: {
+      title:
+        state.againstDim === "last_action"
+          ? "How teams concede — by the last action against them"
+          : "How teams concede — by situation",
+      metrics: `${shotGloss} · Lower on the chart is better for defence`,
+    },
+    timing: {
+      title: "When in the match teams score and create",
+      metrics: Object.entries(TIMING_METRIC_NAMES)
+        .map(([k, name]) => `${k} = ${name}`)
+        .join(" · "),
+    },
+    tempo: {
+      title: "How quickly teams attack",
+      metrics: "Share of attacks by speed: Fast · Standard · Normal · Slow",
+    },
+  };
+  const cap = views[state.view] || {
+    title: "Shot creation explorer",
+    metrics: shotGloss,
+  };
+  const metaBits = [state.season];
+  if (state.view === "timing" || state.view === "tempo") {
+    metaBits.push(`GW ${state.gwFrom}–${state.gwTo}`);
+  }
+  if (state.view === "timing") {
+    const tm = state.timingMetric;
+    metaBits.push(`${tm} = ${TIMING_METRIC_NAMES[tm] || tm}`);
+  }
+  return { ...cap, meta: metaBits.filter(Boolean).join(" · ") };
+}
+
+function setView(view) {
+  const wasAgainst = state.view === "against";
+  const wasTiming = state.view === "timing";
+  const wasTempo = state.view === "tempo";
+  state.view = view;
+  els.tabs.forEach((b) => b.classList.toggle("on", b.dataset.view === view));
+  const againstOnly = view === "against";
+  const timingOnly = view === "timing";
+  const tempoOnly = view === "tempo";
+  const contextOnly = timingOnly || tempoOnly;
+  if (els.root) {
+    els.root.dataset.mode = timingOnly ? "timing" : tempoOnly ? "tempo" : "shots";
+  }
+  els.againstWrap.hidden = !againstOnly;
+  if (againstOnly) els.againstWrap.removeAttribute("hidden");
+  else els.againstWrap.setAttribute("hidden", "");
+  els.againstWrap.setAttribute("aria-hidden", againstOnly ? "false" : "true");
+  updateAgainstControls();
+  if (wasAgainst !== againstOnly || wasTiming !== timingOnly || wasTempo !== tempoOnly) {
+    if (state.teamMode !== "custom") state.teamMode = "preset";
+    resetPresetTeams();
+    populateTeams();
+    state.focusSlices.clear();
+  }
+  const treemap = view === "treemap";
+  els.chart.hidden = !treemap;
+  els.matrix.hidden = treemap || contextOnly;
+  if (els.timing) els.timing.hidden = !timingOnly;
+  if (els.tempo) els.tempo.hidden = !tempoOnly;
+  if (timingOnly) syncTimingGwRange();
+  if (els.drawer && contextOnly) {
+    els.drawer.hidden = true;
+    state.drawer = null;
+  }
+  render();
+}
+
+function dimMap(rows, labelKey) {
+  const out = {};
+  for (const row of rows || []) {
+    const k = row[labelKey];
+    if (!k) continue;
+    out[k] = row;
+  }
+  return out;
+}
+
+function teamDim(team, mode) {
+  if (mode === "situation") return dimMap(team.by_situation, "situation");
+  if (mode === "last_action") return dimMap(team.by_last_action_group, "group");
+  if (state.againstDim === "last_action") return dimMap(team.against_last_action_group, "group");
+  return dimMap(team.against_situation, "situation");
+}
+
+function render() {
+  if (state.view === "treemap") renderTreemap();
+  else if (state.view === "situation") renderLinked("situation");
+  else if (state.view === "last_action") renderLinked("last_action");
+  else if (state.view === "timing") renderTiming();
+  else if (state.view === "tempo") renderTempo();
+  else renderLinked("against");
+}
+
+function renderTreemap() {
+  const teams = visibleTeams();
+  const key = metricKey();
+  const label = metricLabel();
+  const sitActive = activeSituations();
+
+  const nodes = teams
+    .map((t) => {
+      const players = (t.players || [])
+        .slice()
+        .filter(playerPassesMins)
+        .sort((a, b) => val(b, key) - val(a, key))
+        .filter((p) => val(p, key) > 0)
+        .slice(0, TOP_N)
+        .map((p) => ({
+          ...p,
+          name: shortName(p.player_name),
+          fullName: decodeHtml(p.player_name),
+          value: Math.max(val(p, key), 0.0001),
+          team_code: t.team_code,
+          team_short: t.team_short,
+        }));
+
+      let teamValue = players.reduce((a, p) => a + p.value, 0);
+      if (sitActive) {
+        teamValue = (t.by_situation || [])
+          .filter((r) => sitActive.has(r.situation))
+          .reduce((a, r) => a + situationCellValue(r, false), 0);
+        teamValue = Math.max(teamValue, 0.0001);
+      }
+
+      return { ...t, value: Math.max(teamValue, 0.0001), players };
+    })
+    .filter((t) => t.players.length);
+
+  const nAll = seasonTeamsAll().length;
+  const sitNote = sitActive ? ` · ${[...sitActive].join(", ")}` : "";
+  const presetNote = isAgainstView() ? `bottom ${TOP_TEAMS}` : `top ${TOP_TEAMS}`;
+  els.status.textContent = `Showing ${nodes.length} of ${nAll} teams · ${presetNote} by ${state.season} ${rankMetricLabel()} · ${label}${sitNote}`;
+  els.footnote.textContent = `Sh = shots · SoT = on target. Top / Bottom ${TOP_TEAMS} uses the selected season and metric, and updates as matches are added. Source: Understat · ${state.data.built_at_utc || ""}`;
+
+  const width = els.chart.clientWidth || 1000;
+  const height = els.chart.clientHeight || 640;
+  els.chart.innerHTML = "";
+  const svg = d3.select(els.chart).append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+
+  if (!nodes.length) {
+    svg
+      .append("text")
+      .attr("x", width / 2)
+      .attr("y", height / 2)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#8fa59a")
+      .text("No data for this filter — try another season/metric or clear team filters.");
+    return;
+  }
+
+  const root = d3
+    .hierarchy({ name: "root", children: nodes })
+    .sum((d) => d.value)
+    .sort((a, b) => (b.value || 0) - (a.value || 0));
+
+  d3.treemap().size([width, height]).paddingInner(6).paddingOuter(4).round(true)(root);
+
+  const teamNodes = root.children || [];
+  const playerLeaves = [];
+
+  for (const tn of teamNodes) {
+    const tw = Math.max(0, tn.x1 - tn.x0);
+    const th = Math.max(0, tn.y1 - tn.y0);
+    const contentX0 = tn.x0 + 3;
+    const contentY0 = tn.y0 + HEADER_H;
+    const contentW = Math.max(1, tw - 6);
+    const contentH = Math.max(1, th - HEADER_H - 3);
+
+    const innerRoot = d3
+      .hierarchy({ name: tn.data.team_short, children: tn.data.players })
+      .sum((d) => d.value)
+      .sort((a, b) => (b.value || 0) - (a.value || 0));
+
+    d3.treemap()
+      .size([contentW, contentH])
+      .paddingInner(2)
+      .paddingOuter(0)
+      .round(true)(innerRoot);
+
+    for (const leaf of innerRoot.leaves()) {
+      playerLeaves.push({
+        ...leaf,
+        x0: contentX0 + leaf.x0,
+        x1: contentX0 + leaf.x1,
+        y0: contentY0 + leaf.y0,
+        y1: contentY0 + leaf.y1,
+        teamNode: tn,
+        teamMax: Math.max(...tn.data.players.map((p) => p.value)),
+      });
+    }
+  }
+
+  const gTeams = svg.append("g");
+  gTeams
+    .selectAll("rect.team-shell")
+    .data(teamNodes)
+    .join("rect")
+    .attr("class", "team-shell")
+    .attr("x", (d) => d.x0)
+    .attr("y", (d) => d.y0)
+    .attr("width", (d) => Math.max(0, d.x1 - d.x0))
+    .attr("height", (d) => Math.max(0, d.y1 - d.y0))
+    .attr("rx", 14)
+    .attr("ry", 14)
+    .attr("fill", (d) => teamFill(d.data.team_short, 0.55))
+    .on("click", (_, d) => openDrawer(d.data))
+    .on("mousemove", (event, d) => showTip(event, teamTip(d.data, teams)))
+    .on("mouseleave", hideTip);
+
+  // Subtle header wash — light tint of team pastel
+  gTeams
+    .selectAll("rect.team-band")
+    .data(teamNodes.filter((d) => d.y1 - d.y0 > 40 && d.x1 - d.x0 > 56))
+    .join("rect")
+    .attr("class", "team-band")
+    .attr("x", (d) => d.x0 + 3)
+    .attr("y", (d) => d.y0 + 3)
+    .attr("width", (d) => Math.max(0, d.x1 - d.x0 - 6))
+    .attr("height", HEADER_H - 6)
+    .attr("rx", 8)
+    .attr("ry", 8)
+    .attr("fill", (d) => teamFill(d.data.team_short, 0.78))
+    .attr("pointer-events", "none");
+
+  gTeams
+    .selectAll("text.team-label")
+    .data(teamNodes.filter((d) => d.x1 - d.x0 > 48))
+    .join("text")
+    .attr("class", "team-label")
+    .attr("x", (d) => d.x0 + 12)
+    .attr("y", (d) => d.y0 + 18)
+    .attr("font-family", TILE_FONT)
+    .attr("font-size", 13)
+    .attr("font-weight", 600)
+    .attr("fill", (d) => textOnTeam(d.data.team_short))
+    .text((d) => d.data.team_short);
+
+  gTeams
+    .selectAll("text.team-sub")
+    .data(teamNodes.filter((d) => d.x1 - d.x0 > 100 && d.y1 - d.y0 > 48))
+    .join("text")
+    .attr("class", "team-sub")
+    .attr("x", (d) => d.x0 + 12)
+    .attr("y", (d) => d.y0 + 34)
+    .attr("font-family", TILE_FONT)
+    .attr("font-size", 10)
+    .attr("font-weight", 400)
+    .attr("fill", (d) => textOnTeam(d.data.team_short))
+    .text((d) => teamMeta(d.data, key));
+
+  const gPlayers = svg.append("g");
+  gPlayers
+    .selectAll("g.player")
+    .data(playerLeaves)
+    .join("g")
+    .attr("class", "player")
+    .each(function (d) {
+      const g = d3.select(this);
+      const w = d.x1 - d.x0;
+      const h = d.y1 - d.y0;
+      const intensity = d.teamMax > 0 ? d.data.value / d.teamMax : 0.5;
+      const fill = teamFill(d.data.team_short, 0.72 + intensity * 0.28);
+      const ink = textOnTeam(d.data.team_short);
+
+      g.append("rect")
+        .attr("class", "player")
+        .attr("x", d.x0)
+        .attr("y", d.y0)
+        .attr("width", Math.max(0, w))
+        .attr("height", Math.max(0, h))
+        .attr("rx", 6)
+        .attr("ry", 6)
+        .attr("fill", fill)
+        .on("click", () => openDrawer(d.teamNode.data, d.data))
+        .on("mousemove", (event) => showTip(event, playerTip(resolvePlayer(d.teamNode.data, d.data), d.teamNode.data)))
+        .on("mouseleave", hideTip);
+
+      // Name medium; value smaller / regular.
+      const ratio = d.teamMax > 0 ? d.data.value / d.teamMax : 1;
+      const idealName = MIN_FONT + ratio * 12;
+      const tileCap = Math.min(w / 4.6, h / 2.4);
+      const nameFs = Math.max(MIN_FONT + 1, Math.min(idealName, tileCap));
+      const valFs = Math.max(MIN_FONT, Math.min(nameFs * 0.58, nameFs - 3));
+      const cx = d.x0 + w / 2;
+      const showVal = h >= nameFs + valFs + 3 && w >= 18;
+
+      g.append("text")
+        .attr("class", "player-name")
+        .attr("x", cx)
+        .attr("y", showVal ? d.y0 + h / 2 - valFs * 0.35 : d.y0 + h / 2 + nameFs * 0.35)
+        .attr("text-anchor", "middle")
+        .attr("font-family", TILE_FONT)
+        .attr("font-size", nameFs)
+        .attr("font-weight", 500)
+        .attr("fill", ink)
+        .text(truncate(d.data.name, Math.max(2, Math.floor(w / (nameFs * 0.5)))));
+
+      if (showVal) {
+        g.append("text")
+          .attr("class", "player-val")
+          .attr("x", cx)
+          .attr("y", d.y0 + h / 2 + valFs + 1)
+          .attr("text-anchor", "middle")
+          .attr("font-family", TILE_FONT)
+          .attr("font-size", valFs)
+          .attr("font-weight", 400)
+          .attr("fill", ink)
+          .attr("opacity", 0.92)
+          .text(fmt(d.data.value));
+      }
+    });
+}
+
+/**
+ * Linked rank → mix → detail for situation / last-action / against tabs.
+ */
+function renderLinked(mode) {
+  const teams = visibleTeams();
+  const label = metricLabel();
+  const against = mode === "against";
+  const title = against
+    ? `Against (${state.againstDim})`
+    : mode === "situation"
+      ? `Situation mix`
+      : `Last-action mix`;
+
+  const order =
+    (against
+      ? state.againstDim === "last_action"
+        ? state.data.last_action_group_order
+        : state.data.situation_order
+      : mode === "last_action"
+        ? state.data.last_action_group_order
+        : state.data.situation_order) || [];
+
+  const dims = new Set();
+  teams.forEach((t) => Object.keys(teamDim(t, mode)).forEach((k) => dims.add(k)));
+  let cols = [...order.filter((c) => dims.has(c)), ...[...dims].filter((c) => !order.includes(c)).sort()];
+
+  const sitMode =
+    mode === "situation" || (mode === "against" && state.againstDim === "situation");
+  const sitActive = activeSituations();
+  if (sitMode && sitActive) {
+    cols = cols.filter((c) => sitActive.has(c));
+  }
+
+  const nAll = seasonTeamsAll().length;
+  const presetNote = isAgainstView() ? `bottom ${TOP_TEAMS}` : `top ${TOP_TEAMS}`;
+  els.status.textContent = `Showing ${teams.length} of ${nAll} · ${title} · ${against ? mixShortLabel(true) : label} · click rank or mix to link panes`;
+  els.footnote.textContent = `Rank = who leads · Mix = how share breaks down · Detail = absolute values + top players. ${presetNote} by ${state.season} ${rankMetricLabel()}. Source: Understat · ${state.data.built_at_utc || ""}`;
+
+  if (!teams.length || !cols.length) {
+    els.matrix.innerHTML = `<p class="empty">No data for this filter.</p>`;
+    return;
+  }
+
+  const rows = teams
+    .map((t) => {
+      const map = teamDim(t, mode);
+      const cells = cols.map((c) => {
+        const cell = map[c] || {};
+        return { col: c, value: situationCellValue(cell, against), cell };
+      });
+      const total = cells.reduce((a, c) => a + c.value, 0);
+      const focusVal = sliceMetric(cells, state.focusSlices);
+      const focusPct = total > 0 ? (focusVal / total) * 100 : 0;
+      return { team: t, cells, total, focusVal, focusPct, code: String(t.team_code) };
+    });
+
+  // Sort: with legend multi-select → by slice metric (rank) / by % (mix uses same order)
+  if (state.focusSlices.size) {
+    rows.sort((a, b) => b.focusVal - a.focusVal || b.focusPct - a.focusPct);
+  } else {
+    rows.sort((a, b) => b.total - a.total);
+  }
+
+  // Keep focus valid
+  if (state.focusTeam && !rows.some((r) => r.code === state.focusTeam)) {
+    state.focusTeam = rows[0]?.code || null;
+  }
+  if (!state.focusTeam) state.focusTeam = rows[0]?.code || null;
+  // Drop invalid legend selections
+  for (const s of [...state.focusSlices]) {
+    if (!cols.includes(s)) state.focusSlices.delete(s);
+  }
+
+  const unit = against ? mixShortLabel(true) : mixShortLabel(false);
+  const focusRow = rows.find((r) => r.code === state.focusTeam) || rows[0];
+
+  els.matrix.innerHTML = `
+    <div class="linked" data-name="shots.linked">
+      <section class="linked-pane" data-name="shots.linked.rank">
+        <header class="linked-head">
+          <h3>Rank</h3>
+          <p>${unit} ${state.focusSlices.size ? "· selected slices" : "total"} · click a team</p>
+        </header>
+        <div id="linked-rank" class="linked-rank"></div>
+      </section>
+      <section class="linked-pane" data-name="shots.linked.mix">
+        <header class="linked-head">
+          <h3>Mix</h3>
+          <p>100% share · multi-select legend to sort</p>
+        </header>
+        <div id="linked-mix" class="linked-mix"></div>
+        <div id="linked-legend" class="linked-legend"></div>
+      </section>
+      <section class="linked-pane linked-detail-pane" data-name="shots.linked.detail">
+        <header class="linked-head">
+          <h3>Detail</h3>
+          <p id="linked-detail-title">${focusRow?.team.team_short || "—"}</p>
+        </header>
+        <div id="linked-detail" class="linked-detail"></div>
+      </section>
+    </div>`;
+
+  decorateNames(els.matrix);
+  drawRank(rows, unit);
+  drawMix(rows, cols, unit);
+  drawDetail(focusRow, cols, unit, against, mode);
+}
+
+function sliceMetric(cells, focusSet) {
+  if (!focusSet.size) return cells.reduce((a, c) => a + c.value, 0);
+  return cells.filter((c) => focusSet.has(c.col)).reduce((a, c) => a + c.value, 0);
+}
+
+function drawRank(rows, unit) {
+  const host = document.getElementById("linked-rank");
+  const focused = state.focusSlices.size > 0;
+  const max = Math.max(0.0001, ...rows.map((r) => (focused ? r.focusVal : r.total)));
+  host.innerHTML = rows
+    .map((r) => {
+      const on = r.code === state.focusTeam ? "on" : "";
+      const show = focused ? r.focusVal : r.total;
+      const widthPct = (show / max) * 100;
+      return `
+        <button type="button" class="rank-row ${on}" data-code="${r.code}">
+          <span class="rank-label" style="color:${teamSolid(r.team.team_short)}">${r.team.team_short}</span>
+          <span class="rank-track"><i style="width:${Math.max(2, widthPct)}%;background:${teamFill(r.team.team_short, 0.92)}"></i></span>
+          <span class="rank-val">${fmt(show)}</span>
+        </button>`;
+    })
+    .join("");
+
+  host.querySelectorAll(".rank-row").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.focusTeam = btn.dataset.code;
+      render();
+    });
+  });
+}
+
+function drawMix(rows, cols, unit) {
+  const host = document.getElementById("linked-mix");
+  const legend = document.getElementById("linked-legend");
+  const color = (i) => SLICE_COLORS[i % SLICE_COLORS.length];
+  const focused = state.focusSlices.size > 0;
+
+  // Mix list sorted by % of selected slices when filtering
+  const mixRows = rows.slice();
+  if (focused) mixRows.sort((a, b) => b.focusPct - a.focusPct || b.focusVal - a.focusVal);
+
+  legend.innerHTML = cols
+    .map(
+      (c, i) => `
+      <button type="button" class="leg ${state.focusSlices.has(c) ? "on" : ""}" data-slice="${c}">
+        <i style="background:${color(i)}"></i>${c}
+      </button>`
+    )
+    .join("");
+
+  host.innerHTML = mixRows
+    .map((r) => {
+      const on = r.code === state.focusTeam ? "on" : "";
+      const total = r.total || 0.0001;
+      const segs = r.cells
+        .map((c, i) => {
+          const pct = (c.value / total) * 100;
+          if (pct <= 0) return "";
+          const hi = !focused || state.focusSlices.has(c.col);
+          return `<i class="seg ${hi ? "" : "dim"}" data-slice="${c.col}" data-code="${r.code}" style="width:${pct}%;background:${color(i)}" title="${c.col}: ${unit} ${fmt(c.value)} (${pct.toFixed(0)}%)"></i>`;
+        })
+        .join("");
+      const pctLabel = focused ? `${r.focusPct.toFixed(0)}%` : "";
+      return `
+        <div class="mix-row-chart ${on}" data-code="${r.code}">
+          <span class="mix-lab">${r.team.team_short}</span>
+          <div class="mix-stack">${segs}</div>
+          <span class="mix-pct">${pctLabel}</span>
+        </div>`;
+    })
+    .join("");
+
+  legend.querySelectorAll(".leg").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const s = btn.dataset.slice;
+      if (state.focusSlices.has(s)) state.focusSlices.delete(s);
+      else state.focusSlices.add(s);
+      // Deselect all → reset to initial sort
+      render();
+    });
+  });
+
+  host.querySelectorAll(".mix-row-chart").forEach((row) => {
+    row.addEventListener("click", () => {
+      state.focusTeam = row.dataset.code;
+      render();
+    });
+  });
+
+  host.querySelectorAll(".seg").forEach((seg) => {
+    seg.addEventListener("mouseenter", (e) => {
+      showTip(e, `<strong>${seg.dataset.slice}</strong><br>${seg.getAttribute("title") || ""}`);
+      host.querySelectorAll(".seg").forEach((s) => {
+        s.classList.toggle("dim", s.dataset.slice !== seg.dataset.slice);
+      });
+    });
+    seg.addEventListener("mousemove", (e) =>
+      showTip(e, `<strong>${seg.dataset.slice}</strong><br>${seg.getAttribute("title") || ""}`)
+    );
+    seg.addEventListener("mouseleave", () => {
+      hideTip();
+      host.querySelectorAll(".seg").forEach((s) => {
+        s.classList.toggle("dim", !!(state.focusSlices.size && !state.focusSlices.has(s.dataset.slice)));
+      });
+    });
+    seg.addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.focusTeam = seg.dataset.code;
+      const s = seg.dataset.slice;
+      if (state.focusSlices.has(s)) state.focusSlices.delete(s);
+      else state.focusSlices.add(s);
+      render();
+    });
+  });
+}
+
+function drawDetail(focusRow, cols, unit, against, mode) {
+  const host = document.getElementById("linked-detail");
+  const title = document.getElementById("linked-detail-title");
+  if (!focusRow) {
+    host.innerHTML = `<p class="empty">Select a team</p>`;
+    return;
+  }
+  const t = focusRow.team;
+  title.textContent = `${t.team_short} · ${unit}`;
+
+  // Always sort detail rows by metric value (high → low)
+  const detailCells = focusRow.cells.slice().sort((a, b) => b.value - a.value);
+  const max = Math.max(0.0001, ...detailCells.map((c) => c.value));
+  const total = focusRow.total || 0.0001;
+  const key = metricKey();
+  const focused = state.focusSlices.size > 0;
+
+  const players = (t.players || [])
+    .slice()
+    .filter(playerPassesMins)
+    .sort((a, b) => val(b, key) - val(a, key))
+    .filter((p) => val(p, key) > 0)
+    .slice(0, TOP_N);
+
+  const sliceNote = focused
+    ? `<p class="detail-note">Highlighting <strong>${[...state.focusSlices].join(", ")}</strong> across rank & mix.</p>`
+    : "";
+
+  const colIndex = Object.fromEntries(cols.map((c, i) => [c, i]));
+
+  host.innerHTML = `
+    ${sliceNote}
+    <div class="detail-abs">
+      ${detailCells
+        .map((c) => {
+          const i = colIndex[c.col] ?? 0;
+          const pct = ((c.value / total) * 100).toFixed(0);
+          const hi = !focused || state.focusSlices.has(c.col);
+          return `
+          <button type="button" class="detail-row ${hi ? "" : "dim"} ${state.focusSlices.has(c.col) ? "on" : ""}" data-slice="${c.col}">
+            <span class="swatch" style="background:${SLICE_COLORS[i % SLICE_COLORS.length]}"></span>
+            <span class="dl">${c.col}</span>
+            <span class="dv">${unit} ${fmt(c.value)} <em>(${pct}%)</em></span>
+            <span class="dbar"><i style="width:${(c.value / max) * 100}%;background:${SLICE_COLORS[i % SLICE_COLORS.length]}"></i></span>
+          </button>`;
+        })
+        .join("")}
+    </div>
+    <h4>Top players · ${metricShort()}</h4>
+    <div class="detail-players">
+      ${players
+        .map(
+          (p) => `
+        <button type="button" class="player-chip" data-id="${p.player_id}">
+          <span>${shortName(p.player_name)}</span>
+          <b>${fmt(val(p, key))}</b>
+        </button>`
+        )
+        .join("") || "<p class='empty'>No players</p>"}
+    </div>
+    <button type="button" class="ghost detail-open" id="detail-open-drawer">Open full drawer</button>
+  `;
+
+  host.querySelectorAll(".detail-row").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const s = btn.dataset.slice;
+      if (state.focusSlices.has(s)) state.focusSlices.delete(s);
+      else state.focusSlices.add(s);
+      render();
+    });
+  });
+
+  host.querySelectorAll(".player-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const p = players.find((x) => String(x.player_id) === btn.dataset.id);
+      if (p) openDrawer(t, { ...p, fullName: decodeHtml(p.player_name) });
+    });
+  });
+
+  document.getElementById("detail-open-drawer")?.addEventListener("click", () => openDrawer(t));
+}
+
+function situationCellValue(cell, against) {
+  if (!cell) return 0;
+  const m = state.metric;
+  if (against) {
+    if (m === "shots") return Number(cell.shots_faced) || 0;
+    if (m === "sot") return Number(cell.sot_faced) || 0;
+    return Number(cell.xga) || 0;
+  }
+  if (m === "shots") return Number(cell.shots) || 0;
+  if (m === "sot") return Number(cell.sot) || 0;
+  return Number(cell.xg) || 0;
+}
+
+function mixShortLabel(against) {
+  const m = state.metric;
+  if (against) {
+    if (m === "shots") return "Sh faced";
+    if (m === "sot") return "SoT faced";
+    return "xGA";
+  }
+  if (m === "shots") return "Sh";
+  if (m === "sot") return "SoT";
+  if (m === "cc" || m === "cc_xg") return "xG";
+  return "xG";
+}
+
+function resolveTeam(team) {
+  if (!team || !state.data?.teams) return team;
+  const season = team.season || state.season;
+  return (
+    state.data.teams.find(
+      (t) =>
+        t.season === season &&
+        (team.team_code != null ? t.team_code === team.team_code : t.team_short === team.team_short)
+    ) || team
+  );
+}
+
+function resolvePlayer(team, player) {
+  if (!player) return null;
+  const srcTeam = resolveTeam(team);
+  const list = srcTeam?.players || team.players || [];
+  const pid = player.player_id;
+  const name = decodeHtml(player.player_name || player.fullName || "");
+  const found =
+    (pid != null && pid !== "" && list.find((p) => String(p.player_id) === String(pid))) ||
+    (name && list.find((p) => decodeHtml(p.player_name) === name)) ||
+    (name && list.find((p) => shortName(p.player_name) === shortName(name))) ||
+    player;
+  return withPlayerRates(found);
+}
+
+function withPlayerRates(p) {
+  if (!p) return p;
+  const out = { ...p };
+  if (out.matches == null) out.matches = out.games ?? out.shot_matches ?? null;
+  if (out.mins_per90 == null && out.minutes != null && out.matches) {
+    out.mins_per90 = out.minutes / out.matches;
+  }
+  return out;
+}
+
+function openDrawer(team, player) {
+  const srcTeam = resolveTeam(team);
+  const src = player ? resolvePlayer(srcTeam, player) : srcTeam;
+  state.drawer = { team: srcTeam, player: player ? src : null };
+  els.drawer.hidden = false;
+  els.drawerTitle.textContent = player
+    ? `${src.fullName || decodeHtml(src.player_name)} · ${srcTeam.team_short}`
+    : `${srcTeam.team || srcTeam.team_name || srcTeam.team_short}`;
+
+  const key = metricKey();
+  const short = metricShort();
+  const mixLabel = mixShortLabel(false);
+  const againstLabel = mixShortLabel(true);
+  const sitActive = activeSituations();
+  const isPlayer = Boolean(player);
+
+  let sit = (src.by_situation || []).slice();
+  if (sitActive) sit = sit.filter((v) => sitActive.has(v.situation));
+  sit.sort((a, b) => situationCellValue(b, false) - situationCellValue(a, false));
+
+  const lag = (src.by_last_action_group || [])
+    .slice()
+    .sort((a, b) => situationCellValue(b, false) - situationCellValue(a, false));
+
+  const ag = isPlayer
+    ? []
+    : (srcTeam.against_situation || [])
+        .slice()
+        .sort((a, b) => situationCellValue(b, true) - situationCellValue(a, true));
+
+  const sitTotal = sit.reduce((a, v) => a + situationCellValue(v, false), 0) || 0.0001;
+  const lagTotal = lag.reduce((a, v) => a + situationCellValue(v, false), 0) || 0.0001;
+  const agTotal = ag.reduce((a, v) => a + situationCellValue(v, true), 0) || 0.0001;
+  const maxSit = Math.max(0.0001, ...sit.map((v) => situationCellValue(v, false)));
+  const maxLag = Math.max(0.0001, ...lag.map((v) => situationCellValue(v, false)));
+  const maxAg = Math.max(0.0001, ...ag.map((v) => situationCellValue(v, true)));
+
+  const matches = isPlayer ? src.matches : srcTeam.matches;
+  const mins90 = isPlayer ? src.mins_per90 : null;
+  const metaCells = [
+    { label: short, value: fmt(val(src, key)) },
+    { label: "Sh", value: Math.round(src.shots || 0) },
+    { label: "SoT", value: Math.round(src.sot || 0) },
+    { label: "Matches", value: matches ?? "—" },
+  ];
+  if (isPlayer) metaCells.push({ label: "Avg mins/90", value: mins90 != null ? fmt(mins90) : "—" });
+
+  const splitNote = isPlayer
+    ? `<p class="drawer-note">Player shot mix only. Against (conceded) is a team view. xA_sf is lineup expectedAssists (totals), not a per-shot assister.</p>`
+    : state.metric === "xa"
+      ? `<p class="drawer-note">Situation splits use xG (xA_sf is not split per shot).</p>`
+      : "";
+
+  els.drawerBody.innerHTML = `
+    <div class="drawer-meta tip-row cols-${metaCells.length}">${tipCells(metaCells)}</div>
+    ${splitNote}
+    <h4>Situation mix (attack) · ${mixLabel}</h4>
+    ${
+      mixRows(
+        sit.map((v) => ({
+          label: v.situation,
+          value: situationCellValue(v, false),
+          max: maxSit,
+          total: sitTotal,
+        })),
+        mixLabel
+      ) || '<p class="empty">No shot mix for this player</p>'
+    }
+    ${
+      ""
+    }
+    ${
+      isPlayer
+        ? ""
+        : `<h4>Against — situation conceded · ${againstLabel}</h4>
+    ${
+      mixRows(
+        ag.map((v) => ({
+          label: v.situation,
+          value: situationCellValue(v, true),
+          max: maxAg,
+          total: agTotal,
+        })),
+        againstLabel
+      ) || '<p class="empty">No data</p>'
+    }`
+    }
+  `;
+}
+
+function mixRows(rows, unit) {
+  if (!rows.length) return "";
+  return rows
+    .map((r) => {
+      const pct = ((r.value / r.total) * 100).toFixed(0);
+      return `
+      <div class="mix-row">
+        <span>${r.label}</span>
+        <b>${unit} ${fmt(r.value)} <em>(${pct}%)</em></b>
+        <div class="bar" style="grid-column:1/-1"><i style="width:${(r.value / r.max) * 100}%"></i></div>
+      </div>`;
+    })
+    .join("");
+}
+
+function fillDefs() {
+  const notes = state.data?.notes || {};
+  const groups = state.data?.last_action_groups || [];
+  const lagHtml = groups
+    .map(
+      (g) =>
+        `<div class="def-block"><h3>${g.group}</h3><p>${g.definition}</p><code>${(g.values || []).join(", ")}</code></div>`
+    )
+    .join("");
+
+  const body = $("ss-defs-body");
+  body.innerHTML = `
+    <div class="def-block"><h3>Teams filter</h3><p>All clubs stay in the pill list. <em>Top 10</em> / <em>Bottom 10</em> uses the selected season and metric (highest value). Against view ranks by that metric conceded. The list updates as new gameweeks are ingested.</p></div>
+    <div class="def-block"><h3>Linked panes</h3><p>Rank → Mix → Detail. Multi-select mix legends to sort Rank by absolute metric and Mix by %; clear all legends to reset.</p></div>
+    <div class="def-block"><h3>Match timing</h3><p>Each row is a 90-minute clock split into 15-minute intervals (<code>1-15</code> … <code>76+</code>). Built from SofaScore <strong>shots</strong> joined to FPL Premier League gameweeks. The From/To GW slider filters which matches are summed. Fill is <strong>deviation from a uniform clock</strong> (~16.7% per bucket). Numbers stay absolute value + %. Gold = peak interval for that team (by share). Click a clock header or Total to sort teams.</p></div>
+    <div class="def-block" hidden><h3>Attack tempo</h3><p>Season Understat <code>attackSpeed</code> mix: Fast → Standard → Normal → Slow (how quickly possession moved before the shot). Same metrics as timing. <strong>Not GW-filterable</strong> — Understat only publishes this as a season profile. Fill = share of the team’s season total; gold = dominant tempo. Click speed headers / Total to sort (Fast share is useful for transition threat).</p></div>
+    <div class="def-block"><h3>Timing metrics</h3><p>G = goals scored · xG = SofaScore xG · Sh = shots · ShC = shots conceded · GC = goals conceded · xGC = xG conceded. From <code>team_context_season</code> where <code>context_family=timing</code>.</p></div>
+    <div class="def-block"><h3>Source</h3><p>${notes.source || "SofaScore shot model metrics."}</p></div>
+    <div class="def-block"><h3>SoT</h3><p>${notes.sot || "Goal + SavedShot + ShotOnPost. Blocked shots excluded."}</p></div>
+    <div class="def-block"><h3>xA_sf</h3><p>${notes.xa || "Lineup expectedAssists totals — not per-shot assister. Last-action and attack tempo are omitted (SofaScore does not publish them)."}</p></div>
+    <div class="def-block"><h3>Per 90</h3><p>${notes.per90_team || ""} ${notes.per90_player || ""}</p></div>
+    <div class="def-block"><h3>45+ mins</h3><p>Hides players with under 45 FPL/Opta Premier League minutes (<code>league_player.time</code>). No FPL minutes join — there is no curated player map yet.</p></div>
+    <div class="def-block"><h3>Situations</h3><p>Native SofaScore labels: regular, assisted, fast-break, corner, set-piece, throw-in-set-piece, free-kick, penalty. Penalty shots are only in the penalty slice.</p></div>
+    <div class="def-block" hidden><h3>Last-action groups</h3><p>Preceding action before the shot, rolled into readable groups:</p></div>
+  ${lagHtml || "<div class='def-block'><p>Combination, Through ball, Crosses, Dribble, Turnover, Second ball, Unknown.</p></div>"}
+    <div class="def-block"><h3>Against (defence)</h3><p>Shots / xG conceded (xGC), split by situation or last-action of the attacking side. Metric label becomes Metric (Against).</p></div>
+    <div class="def-block"><h3>Labels</h3><p>Sh = shots · SoT = shots on target · xGC = xG conceded. Hover <em>i</em> copies <code>data-name</code>.</p></div>
+  `;
+}
+
+function timingGwMeta() {
+  return state.timingData?.gw_meta?.[state.season] || { min: 1, max: 38, default_from: 1, default_to: 38 };
+}
+
+function syncTimingGwRange({ resetDefaults = false } = {}) {
+  const meta = timingGwMeta();
+  const min = Number(meta.min) || 1;
+  const max = Number(meta.max) || 38;
+  if (resetDefaults) {
+    state.gwFrom = Number(meta.default_from) || min;
+    state.gwTo = Number(meta.default_to) || max;
+  } else {
+    state.gwFrom = Math.min(max, Math.max(min, Number(state.gwFrom) || min));
+    state.gwTo = Math.min(max, Math.max(min, Number(state.gwTo) || max));
+  }
+  if (state.gwFrom > state.gwTo) [state.gwFrom, state.gwTo] = [state.gwTo, state.gwFrom];
+  if (els.gwControl) {
+    els.gwControl.setBounds(min, max);
+    els.gwControl.set(state.gwFrom, state.gwTo);
+  }
+  if (els.gwLabel) els.gwLabel.textContent = `GW ${state.gwFrom}–${state.gwTo}`;
+}
+
+function emptyTimingIntervals() {
+  const values = {};
+  const share = {};
+  for (const mid of Object.keys(TIMING_METRIC_NAMES)) {
+    values[mid] = 0;
+    share[mid] = 0;
+  }
+  const intervals = {};
+  for (const iv of TIMING_INTERVALS) intervals[iv] = { values: { ...values }, share: { ...share } };
+  return { intervals, totals: { ...values } };
+}
+
+/** Sum shot-built GW slices into the ribbon shape (values + shares). */
+function aggregateTimingTeam(team) {
+  const out = emptyTimingIntervals();
+  if (!team?.gws) {
+    // legacy schema_version 1 fallback
+    if (team?.intervals) {
+      return {
+        intervals: team.intervals,
+        totals: team.totals || emptyTimingIntervals().totals,
+      };
+    }
+    return out;
+  }
+  const from = Number(state.gwFrom) || 1;
+  const to = Number(state.gwTo) || 38;
+  for (let gw = from; gw <= to; gw += 1) {
+    const slice = team.gws[String(gw)];
+    if (!slice) continue;
+    for (const iv of TIMING_INTERVALS) {
+      const cell = slice[iv];
+      if (!cell) continue;
+      for (const mid of Object.keys(TIMING_METRIC_NAMES)) {
+        out.intervals[iv].values[mid] += Number(cell[mid]) || 0;
+        out.totals[mid] += Number(cell[mid]) || 0;
+      }
+    }
+  }
+  for (const iv of TIMING_INTERVALS) {
+    const vals = out.intervals[iv].values;
+    const share = out.intervals[iv].share;
+    for (const mid of Object.keys(TIMING_METRIC_NAMES)) {
+      const tot = out.totals[mid];
+      share[mid] = tot ? vals[mid] / tot : 0;
+      if (mid === "xG" || mid === "xGC") vals[mid] = Math.round(vals[mid] * 1000) / 1000;
+      else vals[mid] = Math.round(vals[mid] * 100) / 100;
+    }
+  }
+  for (const mid of Object.keys(TIMING_METRIC_NAMES)) {
+    if (mid === "xG" || mid === "xGC") out.totals[mid] = Math.round(out.totals[mid] * 1000) / 1000;
+    else out.totals[mid] = Math.round(out.totals[mid] * 100) / 100;
+  }
+  return out;
+}
+
+function timingSortValue(t) {
+  const m = state.timingMetric;
+  const agg = aggregateTimingTeam(t);
+  if (TIMING_INTERVALS.includes(state.timingSort)) {
+    return Number(agg.intervals?.[state.timingSort]?.values?.[m]) || 0;
+  }
+  return Number(agg.totals?.[m]) || 0;
+}
+
+function fmtTimingVal(v, metric) {
+  if (v == null || Number.isNaN(Number(v))) return "—";
+  if (metric === "xG" || metric === "xGC") return Number(v).toFixed(1);
+  return String(Math.round(Number(v)));
+}
+
+function fmtTimingPct(share) {
+  return `${Math.round((Number(share) || 0) * 100)}%`;
+}
+
+function timingDevFill(share) {
+  const dev = (Number(share) || 0) - TIMING_UNIFORM;
+  const mag = Math.min(1, Math.abs(dev) / TIMING_DEV_SCALE);
+  if (mag < 0.04) return { dir: "flat", fill: 0, dev };
+  return { dir: dev >= 0 ? "above" : "below", fill: mag, dev };
+}
+
+function timingCellHtml(interval, cell, metric, opts = {}) {
+  const { rowPeak = false } = opts;
+  const val = cell?.values?.[metric];
+  const share = Number(cell?.share?.[metric]) || 0;
+  const { dir, fill } = timingDevFill(share);
+  const cls = ["timing-cell", `is-${dir}`];
+  if (rowPeak) cls.push("is-row-peak");
+  const tipBits = [
+    `${interval}: ${fmtTimingVal(val, metric)} ${metric}`,
+    `${fmtTimingPct(share)} of selected GWs`,
+    dir === "flat" ? "near uniform (~16.7%)" : `${devLabel(share)} vs uniform`,
+  ];
+  if (rowPeak) tipBits.push("peak interval for team");
+  return `<div class="${cls.join(" ")}" style="--fill:${fill.toFixed(4)}" title="${tipBits.join(" · ")}">
+    <div class="rail" aria-hidden="true"></div>
+    <div class="pulse" aria-hidden="true"></div>
+    <div class="nums"><span class="v">${fmtTimingVal(val, metric)}</span><span class="p">${fmtTimingPct(share)}</span></div>
+  </div>`;
+}
+
+function devLabel(share) {
+  const pp = ((Number(share) || 0) - TIMING_UNIFORM) * 100;
+  const sign = pp >= 0 ? "+" : "";
+  return `${sign}${pp.toFixed(1)}pp`;
+}
+
+function timingRibbonHtml(intervalsMap, metric, opts = {}) {
+  const { showTicks = false, rowPeakIv = null } = opts;
+  const parts = [];
+  TIMING_INTERVALS.forEach((iv, i) => {
+    if (i === 3) parts.push(`<div class="timing-ht" title="Half-time" aria-hidden="true"></div>`);
+    if (showTicks) {
+      const on = state.timingSort === iv ? "on" : "";
+      parts.push(
+        `<button type="button" class="timing-tick ${on}" data-timing-sort="${iv}" title="Sort by ${iv}">${iv}</button>`
+      );
+    } else {
+      const cell = intervalsMap?.[iv];
+      const share = Number(cell?.share?.[metric]) || 0;
+      const rowPeak = rowPeakIv != null && iv === rowPeakIv && share > 0;
+      parts.push(timingCellHtml(iv, cell, metric, { rowPeak }));
+    }
+  });
+  return `<div class="timing-ribbon">${parts.join("")}</div>`;
+}
+
+function timingRowPeakInterval(intervalsMap, metric) {
+  let bestIv = null;
+  let bestShare = -1;
+  for (const iv of TIMING_INTERVALS) {
+    const share = Number(intervalsMap?.[iv]?.share?.[metric]) || 0;
+    if (share > bestShare) {
+      bestShare = share;
+      bestIv = iv;
+    }
+  }
+  return bestShare > 0 ? bestIv : null;
+}
+
+function setTimingSort(sort) {
+  if (!sort || state.timingSort === sort) return;
+  state.timingSort = sort;
+  if (state.view === "timing") renderTiming();
+}
+
+function bindTimingBoardEvents() {
+  if (!els.timing || els.timing.dataset.bound === "1") return;
+  els.timing.dataset.bound = "1";
+  els.timing.addEventListener("click", (e) => {
+    const tick = e.target.closest("[data-timing-sort]");
+    if (!tick || !els.timing.contains(tick)) return;
+    setTimingSort(tick.dataset.timingSort);
+  });
+}
+
+function renderTiming() {
+  const host = els.timing;
+  if (!host) return;
+  bindTimingBoardEvents();
+  syncTimingGwRange();
+  const metric = state.timingMetric;
+  const metricName = TIMING_METRIC_NAMES[metric] || metric;
+  if (!state.timingData?.teams?.length) {
+    host.innerHTML = `<p class="status">Timing data missing. Rebuild with <code>build_understat.py --serving-only</code>.</p>`;
+    els.status.textContent = "Timing serving JSON not loaded";
+    return;
+  }
+
+  if (els.timingMetric && els.timingMetric.value !== state.timingMetric) {
+    els.timingMetric.value = state.timingMetric;
+  }
+
+  const selected = new Set(state.teams.size ? [...state.teams] : presetTeamCodes());
+  let teams = timingTeamsAll()
+    .filter((t) => selected.has(String(t.team_code)))
+    .map((t) => ({ ...t, ...aggregateTimingTeam(t) }));
+  teams.sort((a, b) => {
+    const av = TIMING_INTERVALS.includes(state.timingSort)
+      ? Number(a.intervals?.[state.timingSort]?.values?.[metric]) || 0
+      : Number(a.totals?.[metric]) || 0;
+    const bv = TIMING_INTERVALS.includes(state.timingSort)
+      ? Number(b.intervals?.[state.timingSort]?.values?.[metric]) || 0
+      : Number(b.totals?.[metric]) || 0;
+    return bv - av || String(a.team_short).localeCompare(String(b.team_short));
+  });
+
+  const nAll = timingTeamsAll().length;
+  const sortLab =
+    state.timingSort === "total" ? `GW ${state.gwFrom}–${state.gwTo} total` : `${state.timingSort} ${metric}`;
+  els.status.textContent = `Match clock · GW ${state.gwFrom}–${state.gwTo} · ${teams.length} of ${nAll} teams · ${metric} (${metricName}) · sorted by ${sortLab}`;
+  els.footnote.textContent = `Shot minutes × FPL PL gameweeks. Fill = deviation from uniform (~${fmtTimingPct(TIMING_UNIFORM)}). Gold = peak interval (share). Click clock headers / Total to sort. Source: Understat · ${state.timingData.built_at_utc || ""}`;
+
+  const leagueIntervals = {};
+  for (const iv of TIMING_INTERVALS) {
+    let shareSum = 0;
+    let valSum = 0;
+    let n = 0;
+    for (const t of teams) {
+      const cell = t.intervals?.[iv];
+      if (!cell) continue;
+      shareSum += Number(cell.share?.[metric]) || 0;
+      valSum += Number(cell.values?.[metric]) || 0;
+      n += 1;
+    }
+    leagueIntervals[iv] = {
+      values: { [metric]: n ? valSum / n : 0 },
+      share: { [metric]: n ? shareSum / n : 0 },
+    };
+  }
+
+  const totalOn = state.timingSort === "total" ? "on" : "";
+  const axis = `
+    <div class="timing-axis">
+      <div class="timing-label">Clock</div>
+      ${timingRibbonHtml(null, metric, { showTicks: true })}
+      <button type="button" class="timing-total timing-total-btn ${totalOn}" data-timing-sort="total" title="Sort by selected GW total">
+        <span>Total</span>${metric}
+      </button>
+    </div>`;
+
+  const leagueRow = `
+    <div class="timing-row is-league">
+      <div class="timing-team" title="Average share across shown teams">League</div>
+      ${timingRibbonHtml(leagueIntervals, metric, {
+        rowPeakIv: timingRowPeakInterval(leagueIntervals, metric),
+      })}
+      <div class="timing-total"><span>avg</span>—</div>
+    </div>`;
+
+  const rows = teams
+    .map((t) => {
+      const total = t.totals?.[metric];
+      return `<div class="timing-row" data-team="${t.team_code}">
+        <div class="timing-team" title="${t.team || t.team_short}">${t.team_short}</div>
+        ${timingRibbonHtml(t.intervals, metric, {
+          rowPeakIv: timingRowPeakInterval(t.intervals, metric),
+        })}
+        <div class="timing-total"><span>${metric}</span>${fmtTimingVal(total, metric)}</div>
+      </div>`;
+    })
+    .join("");
+
+  host.innerHTML = `
+    <div class="timing-legend">
+      <span class="timing-swatch timing-swatch-above"><i></i> Above uniform</span>
+      <span class="timing-swatch timing-swatch-below"><i></i> Below uniform</span>
+      <span class="timing-swatch timing-swatch-row"><i></i> Peak interval (team)</span>
+      <span>GW ${state.gwFrom}–${state.gwTo}</span>
+    </div>
+    <div class="timing-grid">
+      ${axis}
+      ${leagueRow}
+      ${rows || `<div class="timing-row"><div class="timing-team">—</div><div>No teams selected</div><div></div></div>`}
+    </div>`;
+}
+
+function setTempoSort(sort) {
+  if (!sort || state.tempoSort === sort) return;
+  state.tempoSort = sort;
+  if (state.view === "tempo") renderTempo();
+}
+
+function bindTempoBoardEvents() {
+  if (!els.tempo || els.tempo.dataset.bound === "1") return;
+  els.tempo.dataset.bound = "1";
+  els.tempo.addEventListener("click", (e) => {
+    const tick = e.target.closest("[data-tempo-sort]");
+    if (!tick || !els.tempo.contains(tick)) return;
+    setTempoSort(tick.dataset.tempoSort);
+  });
+}
+
+function tempoPeakSpeed(speedsMap, metric) {
+  let best = null;
+  let bestShare = -1;
+  for (const sp of TEMPO_SPEEDS) {
+    const share = Number(speedsMap?.[sp]?.share?.[metric]) || 0;
+    if (share > bestShare) {
+      bestShare = share;
+      best = sp;
+    }
+  }
+  return bestShare > 0 ? best : null;
+}
+
+function tempoCellHtml(speed, cell, metric, rowPeak) {
+  const val = cell?.values?.[metric];
+  const share = Number(cell?.share?.[metric]) || 0;
+  const cls = ["timing-cell"];
+  if (rowPeak) cls.push("is-row-peak");
+  const tip = `${speed}: ${fmtTimingVal(val, metric)} ${metric} · ${fmtTimingPct(share)} of season${rowPeak ? " · peak tempo" : ""}`;
+  return `<div class="${cls.join(" ")}" style="--share:${Math.max(0, Math.min(1, share)).toFixed(4)}" title="${tip}">
+    <div class="pulse" aria-hidden="true"></div>
+    <div class="nums"><span class="v">${fmtTimingVal(val, metric)}</span><span class="p">${fmtTimingPct(share)}</span></div>
+  </div>`;
+}
+
+function tempoRibbonHtml(speedsMap, metric, opts = {}) {
+  const { showTicks = false, peakSpeed = null } = opts;
+  const parts = [];
+  for (const sp of TEMPO_SPEEDS) {
+    if (showTicks) {
+      const on = state.tempoSort === sp ? "on" : "";
+      parts.push(
+        `<button type="button" class="timing-tick ${on}" data-tempo-sort="${sp}" title="Sort by ${sp}">${sp}</button>`
+      );
+    } else {
+      const cell = speedsMap?.[sp];
+      const share = Number(cell?.share?.[metric]) || 0;
+      const rowPeak = peakSpeed != null && sp === peakSpeed && share > 0;
+      parts.push(tempoCellHtml(sp, cell, metric, rowPeak));
+    }
+  }
+  return `<div class="timing-ribbon">${parts.join("")}</div>`;
+}
+
+function renderTempo() {
+  const host = els.tempo;
+  if (!host) return;
+  bindTempoBoardEvents();
+  const metric = state.timingMetric;
+  const metricName = TIMING_METRIC_NAMES[metric] || metric;
+  if (!state.tempoData?.teams?.length) {
+    host.innerHTML = `<p class="status">Attack tempo data missing. Rebuild with <code>build_understat.py --serving-only</code>.</p>`;
+    els.status.textContent = "Attack speed serving JSON not loaded";
+    return;
+  }
+  if (els.timingMetric && els.timingMetric.value !== state.timingMetric) {
+    els.timingMetric.value = state.timingMetric;
+  }
+
+  const selected = new Set(state.teams.size ? [...state.teams] : presetTeamCodes());
+  let teams = tempoTeamsAll().filter((t) => selected.has(String(t.team_code)));
+  teams.sort((a, b) => {
+    const av = TEMPO_SPEEDS.includes(state.tempoSort)
+      ? Number(a.speeds?.[state.tempoSort]?.values?.[metric]) || 0
+      : Number(a.totals?.[metric]) || 0;
+    const bv = TEMPO_SPEEDS.includes(state.tempoSort)
+      ? Number(b.speeds?.[state.tempoSort]?.values?.[metric]) || 0
+      : Number(b.totals?.[metric]) || 0;
+    return bv - av || String(a.team_short).localeCompare(String(b.team_short));
+  });
+
+  const nAll = tempoTeamsAll().length;
+  const sortLab =
+    state.tempoSort === "total" ? "season total" : `${state.tempoSort} ${metric}`;
+  els.status.textContent = `Attack tempo · ${teams.length} of ${nAll} teams · ${metric} (${metricName}) · sorted by ${sortLab}`;
+  els.footnote.textContent = `Understat attackSpeed (season-only). Fill = share of season ${metric}. Fast≈direct/transition · Slow≈build-up. Gold = dominant tempo. Source: Understat · ${state.tempoData.built_at_utc || ""}`;
+
+  const leagueSpeeds = {};
+  for (const sp of TEMPO_SPEEDS) {
+    let shareSum = 0;
+    let valSum = 0;
+    let n = 0;
+    for (const t of teams) {
+      const cell = t.speeds?.[sp];
+      if (!cell) continue;
+      shareSum += Number(cell.share?.[metric]) || 0;
+      valSum += Number(cell.values?.[metric]) || 0;
+      n += 1;
+    }
+    leagueSpeeds[sp] = {
+      values: { [metric]: n ? valSum / n : 0 },
+      share: { [metric]: n ? shareSum / n : 0 },
+    };
+  }
+
+  const totalOn = state.tempoSort === "total" ? "on" : "";
+  const axis = `
+    <div class="timing-axis">
+      <div class="timing-label">Tempo</div>
+      ${tempoRibbonHtml(null, metric, { showTicks: true })}
+      <button type="button" class="timing-total timing-total-btn ${totalOn}" data-tempo-sort="total" title="Sort by season total">
+        <span>Total</span>${metric}
+      </button>
+    </div>`;
+
+  const leagueRow = `
+    <div class="timing-row is-league">
+      <div class="timing-team" title="Average share across shown teams">League</div>
+      ${tempoRibbonHtml(leagueSpeeds, metric, { peakSpeed: tempoPeakSpeed(leagueSpeeds, metric) })}
+      <div class="timing-total"><span>avg</span>—</div>
+    </div>`;
+
+  const rows = teams
+    .map((t) => {
+      const total = t.totals?.[metric];
+      return `<div class="timing-row" data-team="${t.team_code}">
+        <div class="timing-team" title="${t.team || t.team_short}">${t.team_short}</div>
+        ${tempoRibbonHtml(t.speeds, metric, { peakSpeed: tempoPeakSpeed(t.speeds, metric) })}
+        <div class="timing-total"><span>${metric}</span>${fmtTimingVal(total, metric)}</div>
+      </div>`;
+    })
+    .join("");
+
+  host.innerHTML = `
+    <div class="timing-legend">
+      <span class="timing-swatch timing-swatch-above"><i></i> Higher fill = larger share</span>
+      <span class="timing-swatch timing-swatch-row"><i></i> Peak tempo (team)</span>
+      <span>Fast → Slow · season profile (no GW filter)</span>
+    </div>
+    <div class="timing-grid">
+      ${axis}
+      ${leagueRow}
+      ${rows || `<div class="timing-row"><div class="timing-team">—</div><div>No teams selected</div><div></div></div>`}
+    </div>`;
+}
+
+function pct(part, whole) {
+  if (!whole) return "—";
+  return `${((part / whole) * 100).toFixed(1)}%`;
+}
+
+function seasonMetricTotal() {
+  return seasonTeamsAll().reduce((a, t) => a + teamRankValue(t), 0);
+}
+
+function tipCells(cells) {
+  return cells
+    .map((c) => `<div class="tip-cell"><span>${c.label}</span><b>${c.value}</b></div>`)
+    .join("");
+}
+
+function tipBlock(title, rows) {
+  const body = rows
+    .filter((row) => row && row.length)
+    .map((cells) => `<div class="tip-row cols-${cells.length}">${tipCells(cells)}</div>`)
+    .join("");
+  return `<div class="tip-title">${title}</div>${body}`;
+}
+
+function volumeCells(obj, skip) {
+  const cells = [
+    { key: "xg", label: "xG", value: fmt(obj.xg) },
+    { key: "shots", label: "Sh", value: Math.round(obj.shots || 0) },
+    { key: "sot", label: "SoT", value: Math.round(obj.sot || 0) },
+    { key: "goals", label: "G", value: obj.goals || 0 },
+  ];
+  return cells.filter((c) => c.key !== skip);
+}
+
+function metricSkipKey() {
+  const key = metricKey();
+  if (key === "xg" || key === "xg_p90") return "xg";
+  if (key === "shots" || key === "shots_p90") return "shots";
+  if (key === "sot" || key === "sot_p90") return "sot";
+  return null;
+}
+
+function teamTip(t) {
+  const key = metricKey();
+  const v = isAgainstView() ? teamRankValue(t) : val(t, key);
+  const lab = rankMetricLabel();
+  const extra = [{ label: "xA_sf", value: fmt(t.xa) }];
+  return tipBlock(`${t.team || t.team_short}`, [
+    [{ label: "Matches", value: t.matches ?? "—" }],
+    [
+      { label: lab, value: fmt(v) },
+      { label: `Share of ${state.season}`, value: pct(v, seasonMetricTotal()) },
+    ],
+    volumeCells(t, metricSkipKey()),
+    extra,
+  ]);
+}
+
+function playerTip(p, team) {
+  if (!p) return "";
+  const src = withPlayerRates(p);
+  const key = metricKey();
+  const v = val(src, key);
+  const roster = (resolveTeam(team).players || team.players || []).filter(playerPassesMins);
+  const teamTot = roster.reduce((a, x) => a + val(x, key), 0);
+  const lab = metricLabel();
+  const extra = [
+        { label: "xA_sf", value: fmt(src.xa) },
+        { label: "Mins", value: src.minutes != null ? fmt(src.minutes) : "—" },
+      ];
+  return tipBlock(`${src.fullName || decodeHtml(src.player_name)} · ${team.team_short}`, [
+    [
+      { label: "Matches", value: src.matches ?? "—" },
+      { label: "Avg mins/90", value: src.mins_per90 != null ? fmt(src.mins_per90) : "—" },
+    ],
+    [
+      { label: lab, value: fmt(v) },
+      { label: `Share of ${team.team_short}`, value: pct(v, teamTot) },
+    ],
+    volumeCells(src, metricSkipKey()),
+    extra,
+  ]);
+}
+
+function teamMeta(t, key) {
+  const sitActive = activeSituations();
+  if (sitActive) {
+    const rows = (t.by_situation || []).filter((r) => sitActive.has(r.situation));
+    const v = rows.reduce((a, r) => a + situationCellValue(r, false), 0);
+    const sh = rows.reduce((a, r) => a + (r.shots || 0), 0);
+    const sot = rows.reduce((a, r) => a + (r.sot || 0), 0);
+    return `${metricShort()} - ${fmt(v)} · Sh - ${sh} · SoT - ${sot}`;
+  }
+  if (key === "xa" || key === "xa_p90") return `xA_sf - ${fmt(val(t, key))}` ;
+  if (key === "shots" || key === "shots_p90") return `Sh - ${fmt(val(t, key))} · SoT - ${t.sot || 0}`;
+  if (key === "sot" || key === "sot_p90") return `SoT - ${fmt(val(t, key))} · Sh - ${t.shots || 0}`;
+  return `xG - ${fmt(val(t, key))} · Sh - ${t.shots || 0} · SoT - ${t.sot || 0}`;
+}
+
+function teamSolid(short) {
+  return teamColor(short);
+}
+
+function val(obj, key) {
+  const v = obj?.[key];
+  return Number.isFinite(v) ? v : 0;
+}
+
+function fmt(n) {
+  if (!Number.isFinite(n)) return "—";
+  if (Math.abs(n) >= 100) return n.toFixed(0);
+  if (Math.abs(n) >= 10) return n.toFixed(1);
+  return n.toFixed(2);
+}
+
+function shortName(name) {
+  const clean = decodeHtml(name || "");
+  const parts = clean.trim().split(/\s+/);
+  return parts.length <= 1 ? clean : parts[parts.length - 1];
+}
+
+function decodeHtml(s) {
+  const el = document.createElement("textarea");
+  el.innerHTML = s || "";
+  return el.value;
+}
+
+function truncate(s, n) {
+  if (!s) return "";
+  return s.length <= n ? s : `${s.slice(0, Math.max(1, n - 1))}…`;
+}
+
+function showTip(event, html) {
+  if (!els.tip) return;
+  if (els.tip.parentElement !== document.body) {
+    els.tip.classList.add("ss-shots");
+    document.body.appendChild(els.tip);
+  }
+  els.tip.hidden = false;
+  els.tip.innerHTML = html;
+  const x = Math.min(window.innerWidth - 320, event.clientX + 14);
+  const y = Math.min(window.innerHeight - 240, event.clientY + 14);
+  els.tip.style.left = `${Math.max(8, x)}px`;
+  els.tip.style.top = `${Math.max(8, y)}px`;
+  els.tip.style.transform = "none";
+}
+
+function hideTip() {
+  els.tip.hidden = true;
+}
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+})();
