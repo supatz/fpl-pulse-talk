@@ -20,6 +20,9 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | SofaScore player map | Auto-map unique club names (exact / last+initial / extra FPL surnames / same name tokens / fuzzy≥95). Duplicate FPL season rows do not block a unique `player_code`. Unmapped players stay on SofaScore visuals. Worksheet `suggested_player_code` is accepted as override when reviewed. |
 | SofaScore pages | `#insights-sofascore` (treemap, situation, against-situation, timing) and `#insights-sofascore-sides`. Situation legend uses SofaScore labels as-is. Omit last-action and attack tempo (no source). |
 | Site competition | **Premier League only** across the site. Serving (`teams_gw`, fixtures upcoming, player merge) and UI aggregations drop cups / Europe / friendlies. No competition picker. |
+| Teams table sections | Teams table columns are ordered Attack then Defence (-A), with a section band and tinted cells (`col-attack` / `col-defend`). |
+| GW FDR | `#gw-fdr`. **Firewire** = top-7 **G** vs leaky top-7 xGC; **Frost** = top-7 **G** vs top-4 elite defence; **Shield** = bottom-7 **G** vs top-7 tight defence. Page-wide **Last N** slider. Fixture cards: **Home vs Away** + tags on top, spider left · metrics right. Single Download exports all fixtures at 1080px. |
+| GW Review export | `#gw-review` downloads use phone width **1080** with min **9:15** height; content **fills width** (no side letterboxing). Tall boards grow taller rather than shrinking with side gaps. Capture keeps 2-col splits. |
 | Merged site | Player pages read Premier League `master/pl_merge/player_match`. FPL/Opta and Understat measures remain separately labeled; never average or silently coalesce them. |
 | Metric precedence | When FPL-Core has the same player metric, the site shows FPL-Core only. Hide duplicate US minutes/xG/xA/npxG/shots/key passes; retain Understat-only xGChain/xGBuildup, BCC/BCT/BCS/BCM (xG > 0.27), and Understat-native insight views. |
 | Big chance (US) | Shots with `xg > 0.27`. **BCT** = taken (shooter); **BCS** = scored; **BCM** = missed (`BCT = BCS + BCM`); **BCC** = created (`player_assisted`, name→id). Match-level `us_*` → site `BCC`/`BCT`/`BCS`/`BCM`. Site **BCM** is Understat (not Opta `big_chances_missed`, kept as `BCM_opta`). Creativity = BCC; Threat = BCT/BCS/BCM. Per-90 uses Understat minutes. |
@@ -98,6 +101,76 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 **Where:** `pipeline/sofascore/`, `build_sofascore.py`, `data/sofascore/maps/`, `web/sofascore-shots.js`, `web/sofascore-sides.js`, `#insights-sofascore`, `#insights-sofascore-sides`, `build_serving.py` left join, `scripts/refresh.sh`.
 
 **Drawbacks:** Unofficial API can 403/rate-limit; unmapped player-table `*_sf` chips stay null until `player_code` is set (treemap no longer drops those shooters).
+
+### 2026-11-17 — GW FDR single download + match title row
+
+**Choice:** One Download for all fixtures again. Each card top row = Home vs Away, then Firewire/Frost/Shield tags beside it.
+
+**Where:** `web/gw-fdr.js`, `web/index.html`, `web/styles.css`, docs.
+
+### 2026-11-17 — GW FDR dual download buttons + badge export fix
+
+**Choice:** Separate Download 1/2 and 2/2 buttons. Stop forcing export clone height (it stretched badge pills). Capture fixtures at 1080px with larger type/spider; badges are now non-stretching inline chips.
+
+**Where:** `web/gw-fdr.js`, `web/chart-export.js`, `web/index.html`, `web/styles.css`.
+
+### 2026-11-17 — GW Review export fills phone width
+
+**Choice:** Stop contain-letterboxing 9:15 exports. Capture at 1080px with 2-col layout; composite width-fill; height ≥ 9:15 (grows if content is taller).
+
+**Where:** `web/chart-export.js`, `web/gw-review.js`, `web/styles.css`.
+
+### 2026-11-17 — GW FDR G-based tags + Last N slider
+
+**Choice:** Tag attacks by goals (G), not xG. Last-7 checkbox → page-wide Last N slider (default = all finished); applies to season train, Pulse, and fixtures. Controls sit above the season outlook.
+
+**Where:** `web/gw-fdr.js`, `web/index.html`, `web/styles.css`, docs.
+
+### 2026-11-17 — GW FDR layout/Frost/download + GW Review 9:15
+
+**Choice:** Fixture spider on left, metrics on right. Frost uses top-4 elite defence (Shield stays top-7). Fixture Download emits two equal-height half-GW images. GW Review exports only use 9:15 phone frame with stacked capture layout.
+
+**Where:** `web/gw-fdr.js`, `web/gw-review.js`, `web/chart-export.js`, `web/styles.css`, docs.
+
+### 2026-11-17 — GW FDR dual heats + top/bottom-3 marks
+
+**Choice:** Replace cancelled `5+Fire−Shield` Pulse with Goal/CS/Frost heats scaled vs remaining GWs, plus a climate verdict. Fixture metric cells mark league top-3 (▲) / bottom-3 (▼) by per-match rate without extra columns.
+
+**Why:** Fire≈Shield left the old score stuck near 5; dual heats keep both goal and CS signal readable. Extremes marks show strength vs league without clutter.
+
+**Where:** `web/gw-fdr.js`, `web/styles.css`, docs.
+
+### 2026-11-17 — GW FDR spider opposite axes
+
+**Choice:** Fixture spiders place each attack metric directly opposite its -A twin (xG↔xG-A, SoT↔SoT-A, SiB↔SiB-A, BCC↔BCC-A).
+
+**Where:** `web/gw-fdr.js`.
+
+### 2026-11-17 — GW FDR pulse, spiders, stacked legend
+
+**Choice:** FDR Pulse = `clamp(5 + Firewire − Shield, 0, 10)` with grey/green/red tones. Per-fixture spider. Season-outlook tag defs stacked vertically. Download on fixtures header exports the fixture list.
+
+**Where:** `web/gw-fdr.js`, `web/index.html`, `web/styles.css`, docs.
+
+### 2026-11-17 — GW FDR fixture Attack/Defence sections
+
+**Choice:** Fixture metric grid uses one container with Attack | Defence (-A) band + tint (same columns as Teams). Keeps Firewire/Frost/Shield tags above.
+
+**Where:** `web/gw-fdr.js`, `web/styles.css`, docs.
+
+### 2026-11-17 — GW FDR Frost + slim fixtures + per-match
+
+**Choice:** Add **Frost** (top-7 xG vs tight top-7 defence) on train bogies, tips, pulse meta, and fixture tags. Slim fixture cards to tags + metric grid only. Move `gw_fdr.controls` under the fixtures header; add Per match toggle (rates vs window totals).
+
+**Why:** Frost flags low-scoring clashes of elite attack vs elite defence; left match block duplicated team labels already in the grid; per-match helps compare across windows.
+
+**Where:** `web/gw-fdr.js`, `web/index.html`, `web/styles.css`, docs.
+
+### 2026-11-17 — Teams Attack/Defence split + GW FDR page
+
+**Choice:** Teams table groups Attack metrics left and Defence (-A) right with a section header band. New `#gw-fdr` page: season Firewire / Shield / FDR Pulse for all future GWs; GW picker + Last 7 toggle for fixture scored/conceded cards.
+
+**Where:** `web/{registry,components,gw-fdr,app,index,styles}.*`, docs.
 
 ### 2026-11-02 — Understat refresh keeps stale index on DNS failure
 

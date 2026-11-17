@@ -675,6 +675,22 @@
           title: captionTitle(id),
           metrics: "FPL-Core PL match layer · DGW rows summed · pts / xG / xA / xGI / DefCon",
           meta: `${state.season} · GW ${state.gw} · @fpl_pulse_talk`,
+        }),
+        () => ({
+          aspect: [9, 15],
+          frameWidth: 1080,
+          prepare: (node) => {
+            if (!node) return;
+            node.classList.add("gwrev-export--phone");
+            node.style.width = "1080px";
+            node.style.maxWidth = "1080px";
+          },
+          cleanup: (node) => {
+            if (!node) return;
+            node.classList.remove("gwrev-export--phone");
+            node.style.width = "";
+            node.style.maxWidth = "";
+          },
         })
       );
     });

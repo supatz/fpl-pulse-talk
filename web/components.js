@@ -884,6 +884,7 @@ export function makeTable(cfg) {
   scroller.dataset.name = `${view}.grid`;
   const table = document.createElement("table");
   table.className = "data-table";
+  if (cfg.columnSections?.length) table.classList.add("data-table--sections");
   scroller.appendChild(table);
   wrap.append(controls, count, scroller);
   host.appendChild(wrap);
@@ -897,6 +898,14 @@ export function makeTable(cfg) {
       if (extra) cols.push(...extra.filter((c) => !cols.includes(c)));
     }
     return cols;
+  }
+
+  function sectionClassFor(key) {
+    const sections = cfg.columnSections || [];
+    for (const sec of sections) {
+      if ((sec.keys || []).includes(key)) return sec.className || "";
+    }
+    return "";
   }
 
   function render() {
@@ -925,6 +934,20 @@ export function makeTable(cfg) {
     if (!cols.includes(state.sort)) state.sort = cfg.defaultSort;
     const sorted = [...rows].sort((a, b) => cmp(cellValue(a, state.sort, state, cfg), cellValue(b, state.sort, state, cfg), state.dir));
     const thead = document.createElement("thead");
+    if (cfg.columnSections?.length) {
+      const band = document.createElement("tr");
+      band.className = "section-band";
+      for (const sec of cfg.columnSections) {
+        const keys = (sec.keys || []).filter((k) => cols.includes(k));
+        if (!keys.length) continue;
+        const th = document.createElement("th");
+        th.colSpan = keys.length;
+        th.className = `section-band-cell ${sec.className || ""}`.trim();
+        th.textContent = sec.label || "";
+        band.appendChild(th);
+      }
+      thead.appendChild(band);
+    }
     const hr = document.createElement("tr");
     cols.forEach((key) => {
       const m = METRICS[key] || { label: key, tip: key, fmt: "text" };
@@ -932,7 +955,8 @@ export function makeTable(cfg) {
       th.dataset.key = key;
       th.dataset.name = `${view}.col.${key}`;
       th.dataset.tip = m.tip;
-      if (state.sort === key) th.className = `sorted ${state.dir}`;
+      const secClass = sectionClassFor(key);
+      th.className = [state.sort === key ? `sorted ${state.dir}` : "", secClass].filter(Boolean).join(" ");
       th.append(nameDot(`${view}.col.${key}`), document.createTextNode(headerLabel(m, key, cfg, state)));
       th.addEventListener("click", (e) => {
         if (e.target.closest(".name-dot")) return;
@@ -955,16 +979,18 @@ export function makeTable(cfg) {
           return `<tr data-pc="${id}">${cols
             .map((key) => {
               const m = METRICS[key] || { fmt: "text" };
+              const secClass = sectionClassFor(key);
               if (key === "player" && cfg.onPlayerClick) {
                 const name = fmt(cellValue(r, key, state, cfg), m.fmt);
-                return `<td class="sticky"><button type="button" class="player-link" data-player-open="${id}">${escapeCell(name)}</button></td>`;
+                return `<td class="sticky ${secClass}"><button type="button" class="player-link" data-player-open="${id}">${escapeCell(name)}</button></td>`;
               }
               if (key === "team" && cfg.onTeamClick) {
                 const name = fmt(cellValue(r, key, state, cfg), m.fmt);
                 const tc = String(r.team_code ?? "");
-                return `<td class="sticky"><button type="button" class="player-link" data-team-open="${tc}">${escapeCell(name)}</button></td>`;
+                return `<td class="sticky ${secClass}"><button type="button" class="player-link" data-team-open="${tc}">${escapeCell(name)}</button></td>`;
               }
-              return `<td class="${key === "player" || key === "team" ? "sticky" : ""}">${fmt(cellValue(r, key, state, cfg), m.fmt)}</td>`;
+              const sticky = key === "player" || key === "team" ? "sticky" : "";
+              return `<td class="${[sticky, secClass].filter(Boolean).join(" ")}">${fmt(cellValue(r, key, state, cfg), m.fmt)}</td>`;
             })
             .join("")}</tr>`;
         })

@@ -347,15 +347,19 @@
     const clone = node.cloneNode(true);
     clone.querySelectorAll(".tip, .fpl-map-tip, [hidden]").forEach((n) => n.remove());
     clone.removeAttribute("hidden");
+    // Width-lock only — forcing height makes CSS grid/flex children stretch (e.g. badge pills).
     clone.style.width = `${width}px`;
-    clone.style.height = `${height}px`;
+    clone.style.maxWidth = `${width}px`;
+    clone.style.height = "auto";
+    clone.style.minHeight = "0";
+    clone.style.alignContent = "start";
     clone.style.background = getComputedStyle(node).backgroundColor || BG;
     const html = new XMLSerializer().serializeToString(clone);
     const css = collectPageCss();
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${pixelW}" height="${pixelH}" viewBox="0 0 ${width} ${height}">
   <foreignObject width="100%" height="100%">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;background:${BG};color:${INK};">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:auto;min-height:${height}px;background:${BG};color:${INK};">
       <style>${css}</style>
       ${html}
     </div>
@@ -377,34 +381,101 @@
     return rasterizeHtml(node);
   }
 
-  async function downloadChart(node, filenamePrefix, caption) {
-    const { img, width, height } = await captureNode(node);
-    const logicalW = width / EXPORT_SCALE;
-    const hasCaption = Boolean(caption && (caption.title || caption.metrics));
-    const headerLogical = hasCaption ? HEADER_H : 0;
-    const headerH = Math.round(headerLogical * EXPORT_SCALE);
-    const bannerH = Math.round(BANNER_H * EXPORT_SCALE);
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = headerH + height + bannerH;
-    const ctx = canvas.getContext("2d");
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.fillStyle = BG;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  /**
+   * @param {HTMLElement|SVGElement} node
+   * @param {string} filenamePrefix
+   * @param {{title?: string, metrics?: string, meta?: string}|null} caption
+   * @param {{
+   *   aspect?: [number, number],
+   *   frameWidth?: number,
+   *   padContentHeight?: number,
+   *   prepare?: (node: HTMLElement) => void,
+   *   cleanup?: (node: HTMLElement) => void,
+   * }} [options]
+   */
+  function raf2() {
+    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
 
-    ctx.save();
-    ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
-    if (hasCaption) drawCaptionBanner(ctx, logicalW, 0, caption);
-    ctx.restore();
+  async function downloadChart(node, filenamePrefix, caption, options = {}) {
+    try {
+      if (options.prepare) options.prepare(node);
+      // Let phone/export layout settle at the forced width before rasterizing.
+      await raf2();
+      const { img, width, height } = await captureNode(node);
+      const hasCaption = Boolean(caption && (caption.title || caption.metrics));
+      const headerLogical = hasCaption ? HEADER_H : 0;
+      const bannerLogical = BANNER_H;
 
-    ctx.drawImage(img, 0, headerH, width, height);
+      if (options.aspect && Array.isArray(options.aspect) && options.aspect.length === 2) {
+        // Phone frame: always fill width (no side letterboxing). Height is at least
+        // the target aspect; taller boards grow instead of shrinking with side gaps.
+        const [aw, ah] = options.aspect;
+        const targetW = Math.max(360, Math.round(options.frameWidth || 1080));
+        const minTotalH = Math.round((targetW * ah) / aw);
+        const minContentLogical = Math.max(1, minTotalH - headerLogical - bannerLogical);
+        const scaleToWidth = (targetW * EXPORT_SCALE) / Math.max(1, width);
+        const drawW = targetW * EXPORT_SCALE;
+        const drawH = height * scaleToWidth;
+        const contentPixelH = Math.max(drawH, Math.round(minContentLogical * EXPORT_SCALE));
+        const totalLogicalH = headerLogical + contentPixelH / EXPORT_SCALE + bannerLogical;
 
-    ctx.save();
-    ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
-    drawBrandBanner(ctx, logicalW, headerLogical + height / EXPORT_SCALE);
-    ctx.restore();
-    triggerDownload(canvas, basename(filenamePrefix));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(targetW * EXPORT_SCALE);
+        canvas.height = Math.round(totalLogicalH * EXPORT_SCALE);
+        const ctx = canvas.getContext("2d");
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.fillStyle = BG;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
+        if (hasCaption) drawCaptionBanner(ctx, targetW, 0, caption);
+        ctx.restore();
+
+        const contentTop = headerLogical * EXPORT_SCALE;
+        const yPad = contentTop + Math.max(0, Math.round((contentPixelH - drawH) / 2));
+        ctx.drawImage(img, 0, yPad, drawW, drawH);
+
+        ctx.save();
+        ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
+        drawBrandBanner(ctx, targetW, headerLogical + contentPixelH / EXPORT_SCALE);
+        ctx.restore();
+        triggerDownload(canvas, basename(filenamePrefix));
+        return;
+      }
+
+      const padLogical = Math.max(height / EXPORT_SCALE, Number(options.padContentHeight) || 0);
+      const contentPixelH = Math.round(padLogical * EXPORT_SCALE);
+      const logicalW = width / EXPORT_SCALE;
+      const headerH = Math.round(headerLogical * EXPORT_SCALE);
+      const bannerH = Math.round(bannerLogical * EXPORT_SCALE);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = headerH + contentPixelH + bannerH;
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.fillStyle = BG;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
+      if (hasCaption) drawCaptionBanner(ctx, logicalW, 0, caption);
+      ctx.restore();
+
+      const yPad = headerH + Math.max(0, Math.round((contentPixelH - height) / 2));
+      ctx.drawImage(img, 0, yPad, width, height);
+
+      ctx.save();
+      ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
+      drawBrandBanner(ctx, logicalW, headerLogical + padLogical);
+      ctx.restore();
+      triggerDownload(canvas, basename(filenamePrefix));
+    } finally {
+      if (options.cleanup) options.cleanup(node);
+    }
   }
 
   function visiblePanel(candidates) {
@@ -417,7 +488,7 @@
     return candidates.find((el) => el && !el.hidden) || null;
   }
 
-  function bindChartDownload(button, getNode, filenamePrefix, getCaption) {
+  function bindChartDownload(button, getNode, filenamePrefix, getCaption, getOptions) {
     if (!button) return;
     button.addEventListener("click", async () => {
       const prev = button.textContent;
@@ -427,7 +498,8 @@
         const node = typeof getNode === "function" ? getNode() : getNode;
         const prefix = typeof filenamePrefix === "function" ? filenamePrefix() : filenamePrefix;
         const caption = typeof getCaption === "function" ? getCaption() : getCaption;
-        await downloadChart(node, prefix, caption);
+        const options = typeof getOptions === "function" ? getOptions() : getOptions || {};
+        await downloadChart(node, prefix, caption, options);
       } catch (err) {
         console.error(err);
         button.textContent = "Failed";

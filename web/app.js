@@ -72,6 +72,7 @@ const PAGE_TITLES = {
   home: "Home",
   fixtures: "Fixtures",
   "gw-review": "GW Review",
+  "gw-fdr": "GW FDR",
   attackers: "Attackers",
   defenders: "Defenders",
   gk: "Goalkeepers",
@@ -222,6 +223,16 @@ function showPage(id) {
       } catch (err) {
         const status = document.getElementById("gwrev-status");
         if (status) status.textContent = `GW Review failed to start: ${err.message}`;
+      }
+    });
+  }
+  if (page === "gw-fdr") {
+    requestAnimationFrame(() => {
+      try {
+        window.initGwFdr?.();
+      } catch (err) {
+        const status = document.getElementById("gwfdr-status");
+        if (status) status.textContent = `GW FDR failed to start: ${err.message}`;
       }
     });
   }

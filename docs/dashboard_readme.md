@@ -52,9 +52,10 @@ Hard-refresh after serving-shape changes. Understat JS/CSS/JSON use `?v=` cache 
 | `#insights-player-performance` | Free X / Y / bubble / sort (incl. GC, xGC, BCC…); sort asc/desc; top 10–40; kit-colour bubbles sized to the on-chart pool; optional trend line; exclude / season / position / GW / Per 90 / 45+. GC/xGC filled in serving from FPL player_gw (outfield Opta match GC is blank). |
 | `#insights-finishing` | SoT% vs shots/90 scatter (top N by total shots). Bubble = xG/90, colour = club; 2-col tooltip (incl. G/xG). |
 | `#insights-team-sides` | Table cells `value (%)`; sort by value or %. Dual vertical pitches (attack ↑ / concede ↓) with dropdowns above each, L/C/R band stats, six-yard boxes, circles sized by xG; centre Opta spider (xG/CC/BCC/SoT/xG-A/CC-A/BC-A/SoT-A) with ChartExport on table, spider, and pitches. Data: `us_team_side_channels.json` + `teams_gw.json`. |
+| `#gw-fdr` | Future GW outlook. Firewire/Frost/Shield by G vs xGC. Page-wide Last N slider. FDR Pulse heats + verdict. Fixtures: Home vs Away + tags, spider left · metrics right; one Download for all fixtures. |
+| `#teams` | Attack columns left, Defence (-A) right, with section band tint. Club table with `-A` against metrics; click team → GW drawer with opponent. |
 | `#insights-fixture-proof` | Dumbbell: npG+A/90 or npxG+xA/90 vs live-season top 5 · rest · bottom 5. Top N by separate rank metric (xG/xGI/…). Position multi-select; exclude/add players. |
-| `#gw-review` | Single-GW FPL social snapshot. Season + GW select. Four cards (Snapshot / Attack / Defence / Points XI pitch) each with Download for X. Attack pairs top-8 tables (xGI\|Goals, CC\|Assists). Defence: DEF+GK\|DefCon. Pitch XI: pts + ownership % + haul badges. Formation dynamic (DEF 3–5, MID 2–5, FWD 1–3). |
-| `#teams` | Club table with `-A` against metrics; click team → GW drawer with opponent |
+| `#gw-review` | Single-GW FPL social snapshot (Snapshot / Attack / Defence / Points XI). Downloads are phone 9:15 with stacked capture layout. |
 
 Standalone Understat: `web/understat-shots.html`.
 
