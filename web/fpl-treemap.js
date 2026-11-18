@@ -48,16 +48,23 @@
     SoT: { label: "SoT", name: "Shots on target", digits: 0 },
     xG: { label: "xG", name: "Expected goals", digits: 2 },
     npxG: { label: "npxG", name: "Non-penalty expected goals", short: "Non-penalty xG", digits: 2 },
+    xGOT: { label: "xGOT", name: "Expected goals on target", digits: 2 },
     A: { label: "A", name: "Assists", digits: 0 },
+    xA: { label: "xA", name: "Expected assists", digits: 2 },
     CC: { label: "CC", name: "Chances created", digits: 0 },
     xGI: { label: "xGI", name: "Expected goal involvements", short: "Expected involvement", digits: 2 },
     DefCon: { label: "DC", name: "Defensive contributions", digits: 0 },
     CS: { label: "CS", name: "Clean sheets", digits: 0 },
+    SiB: { label: "SiB", name: "Shots in box (US)", digits: 0 },
     BCC: { label: "BCC", name: "Big chances created", short: "Big chance created (US)", digits: 0 },
     BCT: { label: "BCT", name: "Big chances taken", short: "Big chance taken (US)", digits: 0 },
     BCS: { label: "BCS", name: "Big chances scored", short: "Big chance scored (US)", digits: 0 },
     BCM: { label: "BCM", name: "Big chances missed", short: "Big chance missed (US)", digits: 0 },
   };
+  /** Optional tile/tooltip metrics the user can add on top of the metric-group pair. */
+  const EXTRA_METRIC_KEYS = ["G", "xG", "npxG", "xGOT", "A", "xA", "CC", "BCC", "BCT", "DefCon", "CS", "SoT", "SiB"];
+  const SUM_KEYS = ["G", "A", "xGI", "xG", "xA", "npxG", "xGOT", "SoT", "SiB", "CC", "DefCon", "BCC", "BCT", "BCS", "BCM"];
+  const MAX_TILE_LINES = 4;
   const { teamFill, textOnTeam } = window.TeamColors;
   const TILE_FONT = "Roboto, Helvetica Neue, Segoe UI, sans-serif";
 
@@ -72,6 +79,7 @@
     gwTo: 38,
     per90: false,
     min45: false,
+    extraMetrics: new Set(),
     teams: new Set(),
     teamMode: "preset",
   };
@@ -122,6 +130,9 @@
     els.allTeams = $("fpl-map-all-teams");
     els.per90 = $("fpl-map-per90");
     els.min45 = $("fpl-map-min45");
+    els.extraDrop = $("fpl-map-extra-drop");
+    els.extraBtn = $("fpl-map-extra-btn");
+    els.extraMenu = $("fpl-map-extra-menu");
     els.chartDl = $("fpl-map-chart-dl");
   }
 
@@ -188,6 +199,18 @@
       state.teamMode = "preset";
       applyTeamMode();
     });
+    els.extraBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = els.extraMenu?.hidden;
+      if (open) {
+        paintExtraMenu();
+        els.extraMenu.hidden = false;
+        els.extraBtn.setAttribute("aria-expanded", "true");
+      } else closeExtraMenu();
+    });
+    document.addEventListener("click", (e) => {
+      if (!els.extraDrop?.contains(e.target)) closeExtraMenu();
+    });
     if (els.chartDl && window.ChartExport && !els.chartDl.dataset.bound) {
       els.chartDl.dataset.bound = "1";
       window.ChartExport.bindChartDownload(
@@ -218,6 +241,10 @@
     for (const key of group.show || []) {
       const f = FIELDS[key];
       if (f) gloss.push(`${f.label} = ${f.name}`);
+    }
+    for (const key of state.extraMetrics) {
+      const f = FIELDS[key];
+      if (f && !gloss.some((g) => g.startsWith(`${f.label} =`))) gloss.push(`${f.label} = ${f.name}`);
     }
     const sortField = FIELDS[state.sortMetric];
     if (sortField) gloss.push(`Tile size = ${sortField.name}`);
@@ -302,6 +329,44 @@
     );
   }
 
+  function extraSummary() {
+    const n = state.extraMetrics.size;
+    if (!n) return "None";
+    if (n === 1) {
+      const key = [...state.extraMetrics][0];
+      return FIELDS[key]?.label || "1 selected";
+    }
+    return `${n} selected`;
+  }
+
+  function paintExtraBtn() {
+    if (els.extraBtn) els.extraBtn.textContent = extraSummary();
+  }
+
+  function closeExtraMenu() {
+    if (!els.extraMenu) return;
+    els.extraMenu.hidden = true;
+    els.extraBtn?.setAttribute("aria-expanded", "false");
+  }
+
+  function paintExtraMenu() {
+    if (!els.extraMenu) return;
+    paintExtraBtn();
+    els.extraMenu.innerHTML = EXTRA_METRIC_KEYS.map((key) => {
+      const f = FIELDS[key];
+      const on = state.extraMetrics.has(key);
+      return `<label class="perf-ms-opt"><input type="checkbox" data-key="${key}" ${on ? "checked" : ""}/> ${f.label} <span>${f.name}</span></label>`;
+    }).join("");
+    els.extraMenu.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("change", () => {
+        if (input.checked) state.extraMetrics.add(input.dataset.key);
+        else state.extraMetrics.delete(input.dataset.key);
+        paintExtraBtn();
+        render();
+      });
+    });
+  }
+
   function teamTotals(players) {
     const totals = new Map();
     for (const player of players) {
@@ -384,8 +449,11 @@
           A: 0,
           xGI: 0,
           xG: 0,
+          xA: 0,
           npxG: 0,
+          xGOT: 0,
           SoT: 0,
+          SiB: 0,
           CC: 0,
           DefCon: 0,
           BCC: 0,
@@ -398,7 +466,7 @@
       const p = players.get(key);
       p.apps += 1;
       p.minutes += num(r.m);
-      for (const metric of ["G", "A", "xGI", "xG", "npxG", "SoT", "CC", "DefCon", "BCC", "BCT", "BCS", "BCM"]) {
+      for (const metric of SUM_KEYS) {
         p[metric] += num(r[metric]);
       }
       if (r.cs != null && !p.csByGw.has(r.gw)) p.csByGw.set(r.gw, num(r.cs));
@@ -412,11 +480,10 @@
       list = list.filter((p) => p.apps > 0 && p.minutes / p.apps >= MIN_MINUTES_PER_APP);
     }
     if (state.per90) {
-      const rateKeys = ["G", "A", "xGI", "xG", "npxG", "SoT", "CC", "DefCon", "BCC", "BCT", "BCS", "BCM"];
       list = list.map((p) => {
         const out = { ...p };
         const scale = p.minutes > 0 ? 90 / p.minutes : 0;
-        for (const key of rateKeys) out[key] = (p[key] || 0) * scale;
+        for (const key of SUM_KEYS) out[key] = (p[key] || 0) * scale;
         return out;
       });
     }
@@ -425,6 +492,7 @@
 
   function render() {
     if (!state.rows.length || !els.chart?.clientWidth) return;
+    paintExtraBtn();
     const metric = METRICS[state.metric];
     const sortKey = state.sortMetric;
     const players = aggregate().filter((p) => state.teams.has(String(p.team_code)));
@@ -441,8 +509,9 @@
     }
     const teams = [...byTeam.values()]
       .map((team) => {
+        const totalKeys = new Set([...metric.keys, ...state.extraMetrics, sortKey]);
         team.totals = Object.fromEntries(
-          metric.keys.map((key) => [key, team.players.reduce((sum, player) => sum + (player[key] || 0), 0)])
+          [...totalKeys].map((key) => [key, team.players.reduce((sum, player) => sum + (player[key] || 0), 0)])
         );
         team.sortTotal = team.players.reduce((sum, player) => sum + (player[sortKey] || 0), 0);
         team.players = team.players
@@ -566,7 +635,8 @@
       .attr("fill", (d) => textOnTeam(d.data.team_short))
       .text((d) =>
         tipKeys(metric, sortKey)
-          .filter((key) => metric.show.includes(key) || key === sortKey)
+          .filter((key) => metric.show.includes(key) || key === sortKey || state.extraMetrics.has(key))
+          .slice(0, 5)
           .map((key) => `${FIELDS[key].label} - ${format(d.data.totals[key], fieldDigits(key))}`)
           .join(" · ")
       );
@@ -588,13 +658,24 @@
     const lines = metric.lines.map((keys) => [...keys]);
     const shown = new Set(lines.flat());
     // Always surface the Size / sort metric on the tile when it is not already paired.
-    if (!shown.has(sortKey)) lines.unshift([sortKey]);
-    return lines;
+    if (!shown.has(sortKey)) {
+      lines.unshift([sortKey]);
+      shown.add(sortKey);
+    }
+    for (const key of state.extraMetrics) {
+      if (shown.has(key)) continue;
+      lines.push([key]);
+      shown.add(key);
+    }
+    return lines.slice(0, MAX_TILE_LINES);
   }
 
   function tipKeys(metric, sortKey) {
     const keys = [...metric.show, ...metric.extra];
     if (!keys.includes(sortKey)) keys.unshift(sortKey);
+    for (const key of state.extraMetrics) {
+      if (!keys.includes(key)) keys.push(key);
+    }
     return keys;
   }
 
@@ -631,7 +712,7 @@
       .attr("fill", ink)
       .text(truncate(shortName(tile.data.player_name), Math.max(2, Math.floor(w / (nameFs * 0.55)))));
     if (!showVals) return;
-    lines.slice(0, 3).forEach((keys, index) => {
+    lines.forEach((keys, index) => {
       g.append("text")
         .attr("class", "fpl-map-player-val")
         .attr("x", cx)

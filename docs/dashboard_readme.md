@@ -41,21 +41,21 @@ Hard-refresh after serving-shape changes. Understat JS/CSS/JSON use `?v=` cache 
 |---|---|
 | `#home` | Jumps into the rest of the site |
 | `#fixtures` | Current GW cards + ticker |
-| `#attackers` / `#defenders` / `#gk` | Merged PL player-match. Click a player name for a gameweek drawer of the visible metrics (Total + Per 90). Metric-group buttons stay visible; Understat-only adds xGChain/xGBuildup |
-| `#teams` | FPL-Core team-match |
+| `#attackers` / `#defenders` / `#gk` | Merged PL player-match. Click a player name for a gameweek drawer of the visible metrics (Total + Per 90). Metric-group buttons stay visible; Understat-only adds xGChain/xGBuildup. Sticky player column + horizontal scroll; Pos as FWD/MID/DEF/GK; filters 2-up under ~860px. |
+| `#teams` | FPL-Core team-match. Attack \| Defence (-A) section band; sticky team column + horizontal scroll; click team → GW drawer. |
 | `#insights-players` / `#insights-matches` | Merged player-match; `#insights-teams` remains FPL team-match |
 | `#insights-understat` | Player treemap + situation / last-action / against. Player drawer = that player’s shot mix; Against is team-only |
 | `#insights-sofascore` | SofaScore treemap + situation / against (situation) / match timing. No last-action or tempo. |
 | `#insights-sofascore-sides` | SofaScore L/C/R table + dual pitch; Opta spider unchanged. |
 | `#home` | Match Insights, Player Insights, and Team Insights boards (moved from former Insights nav pages) |
-| `#insights-fpl-treemap` | Nested player treemap: Top 10 / All / custom teams; All / MID / ATT / DEF + GK; Per 90 + 45+ mins. Size / sort includes BCC/BCT; Big chances metric group. Tiles show metric-pair lines plus the selected Size / sort value. Top six positive players per team; tooltip only, no drawer. Club colours from `web/team-colors.js` |
+| `#insights-fpl-treemap` | Nested player treemap: Top 10 / All / custom teams; All / MID / ATT / DEF + GK; Per 90 + 45+ mins. Size / sort includes BCC/BCT; Big chances metric group. Extra metrics multi-select for additional tile lines. Top six positive players per team; tooltip only, no drawer. Club colours from `web/team-colors.js` |
 | `#insights-player-performance` | Free X / Y / bubble / sort (incl. GC, xGC, BCC…); sort asc/desc; top 10–40; kit-colour bubbles sized to the on-chart pool; optional trend line; exclude / season / position / GW / Per 90 / 45+. GC/xGC filled in serving from FPL player_gw (outfield Opta match GC is blank). |
+| `#insights-team-performance` | Same scatter controls as Player performances; club rollup from player-match. Position / 45+ filter which players contribute; exclude teams; per 90 uses matches × 90. |
 | `#insights-finishing` | SoT% vs shots/90 scatter (top N by total shots). Bubble = xG/90, colour = club; 2-col tooltip (incl. G/xG). |
 | `#insights-team-sides` | Table cells `value (%)`; sort by value or %. Dual vertical pitches (attack ↑ / concede ↓) with dropdowns above each, L/C/R band stats, six-yard boxes, circles sized by xG; centre Opta spider (xG/CC/BCC/SoT/xG-A/CC-A/BC-A/SoT-A) with ChartExport on table, spider, and pitches. Data: `us_team_side_channels.json` + `teams_gw.json`. |
 | `#gw-fdr` | Future GW outlook. Firewire/Frost/Shield by G vs xGC. Page-wide Last N slider. FDR Pulse heats + verdict. Fixtures: Home vs Away + tags, spider left · metrics right; one Download for all fixtures. |
-| `#teams` | Attack columns left, Defence (-A) right, with section band tint. Club table with `-A` against metrics; click team → GW drawer with opponent. |
 | `#insights-fixture-proof` | Dumbbell: npG+A/90 or npxG+xA/90 vs live-season top 5 · rest · bottom 5. Top N by separate rank metric (xG/xGI/…). Position multi-select; exclude/add players. |
-| `#gw-review` | Single-GW FPL social snapshot (Snapshot / Attack / Defence / Points XI). Downloads are phone 9:15 with stacked capture layout. |
+| `#gw-review` | Single-GW FPL social snapshot (Snapshot / Attack / Defence / Points XI). Downloads are fixed 1080-wide / min 9:15 from an off-screen desktop layout (not the live phone UI). |
 
 Standalone Understat: `web/understat-shots.html`.
 
@@ -71,6 +71,7 @@ Standalone Understat: `web/understat-shots.html`.
 | New FPL precomputed field | `build_serving.py` | 🟠 |
 | FPL player treemap | `web/fpl-treemap.js` (uses existing `players_matches.json`) | 🟢 |
 | Player performances scatter | `web/player-performance.js` (uses existing `players_matches.json`) | 🟢 |
+| Team performances scatter | `web/team-performance.js` (club rollup of `players_matches.json`) | 🟢 |
 | Understat player/team splits | `pipeline/understat/shot_treemap.py` then `--serving-only` | 🟠 |
 | Rebuild Parquet masters | `build.py --refresh` / `build_understat.py --refresh` | 🔴 |
 

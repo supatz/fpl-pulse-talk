@@ -22,7 +22,9 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | Site competition | **Premier League only** across the site. Serving (`teams_gw`, fixtures upcoming, player merge) and UI aggregations drop cups / Europe / friendlies. No competition picker. |
 | Teams table sections | Teams table columns are ordered Attack then Defence (-A), with a section band and tinted cells (`col-attack` / `col-defend`). |
 | GW FDR | `#gw-fdr`. **Firewire** = top-7 **G** vs leaky top-7 xGC; **Frost** = top-7 **G** vs top-4 elite defence; **Shield** = bottom-7 **G** vs top-7 tight defence. Page-wide **Last N** slider. Fixture cards: **Home vs Away** + tags on top, spider left · metrics right. Single Download exports all fixtures at 1080px. |
-| GW Review export | `#gw-review` downloads use phone width **1080** with min **9:15** height; content **fills width** (no side letterboxing). Tall boards grow taller rather than shrinking with side gaps. Capture keeps 2-col splits. |
+| GW Review export | `#gw-review` downloads use fixed **1080** width with min **9:15** height; content **fills width** (no side letterboxing). Capture always uses an off-screen desktop layout (`gwrev-export--phone`) so phone `@media` collapse does not drive pixels. Header/footer type is large enough to read full-screen on a phone. |
+| Mobile tables / filters | Data tables keep horizontal scroll; sticky **one** identity column (player or team). Pos cells show `FWD`/`MID`/`DEF`/`GK`. Compact 2-col filter grid under ~860px. No always-on right-edge fade overlay (it painted over mid-table columns). |
+| Social export scale | ChartExport uses fixed `EXPORT_SCALE = 3` (not `devicePixelRatio`) so laptop and phone downloads share the same pixel recipe. |
 | Merged site | Player pages read Premier League `master/pl_merge/player_match`. FPL/Opta and Understat measures remain separately labeled; never average or silently coalesce them. |
 | Metric precedence | When FPL-Core has the same player metric, the site shows FPL-Core only. Hide duplicate US minutes/xG/xA/npxG/shots/key passes; retain Understat-only xGChain/xGBuildup, BCC/BCT/BCS/BCM (xG > 0.27), and Understat-native insight views. |
 | Big chance (US) | Shots with `xg > 0.27`. **BCT** = taken (shooter); **BCS** = scored; **BCM** = missed (`BCT = BCS + BCM`); **BCC** = created (`player_assisted`, name→id). Match-level `us_*` → site `BCC`/`BCT`/`BCS`/`BCM`. Site **BCM** is Understat (not Opta `big_chances_missed`, kept as `BCM_opta`). Creativity = BCC; Threat = BCT/BCS/BCM. Per-90 uses Understat minutes. |
@@ -31,8 +33,9 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | PL merge | Premier League-only identity maps + `master/pl_merge/player_match` in `pipeline/pl_merge/`. This is the player-match source for site serving. |
 | Player map | Curated under `data/pl_merge/maps/player_map.csv`. Fuzzy is a proposal; overrides win. Do not join on season-scoped FPL `player_id`. |
 | Insights → Understat | Same shell (`#insights-understat`). Match timing = shots × FPL GW. Attack tempo = season `attackSpeed` ribbons (`us_team_attack_speed.json`). Standalone `web/understat-shots.html` remains. |
-| FPL treemap | Separate `#insights-fpl-treemap`. Club/player area follow Size / sort. Metric groups include Big chances (BCT · BCS · BCM). Tiles show the metric-pair lines **and** the selected Size / sort value when it is not already in the pair. BCC/BCT/BCS/BCM available under every metric’s sort list. No drawer. Shares `web/team-colors.js`. |
+| FPL treemap | Separate `#insights-fpl-treemap`. Club/player area follow Size / sort. Metric groups include Big chances (BCT · BCS · BCM). Tiles show the metric-pair lines **and** the selected Size / sort value when it is not already in the pair. Optional **Extra metrics** multi-select (G, xG, npxG, xGOT, A, xA, CC, BCC, BCT, DC, CS, SoT, SiB) adds further tile/tooltip lines (capped). BCC/BCT/BCS/BCM available under every metric’s sort list. No drawer. Shares `web/team-colors.js`. |
 | Player performances | `#insights-player-performance`. Free X / Y / bubble / sort (incl. GC + xGC). Sort order asc/desc. Bubble size scaled to the displayed top-N pool; fill = kit colours (`teamKitFill`, distinct reds/blues). Optional trend line (OLS on plotted points). GC/xGC from serving (see GC fill rule). Lede stacks Goal threat / Creativity / Defence lines. |
+| Team performances | `#insights-team-performance`. Same scatter controls as Player performances; aggregates FPL-Core `players_matches` by club. Position / 45+ filters which players contribute. CS/GC/xGC take the max per match (not sum across teammates). Per 90 uses matches × 90. |
 | Player GC fill | Opta match `goals_conceded` is GK-only. Serving GC: GK keeps Opta match GC; outfield non-DGW prefers FPL `player_gw.goals_conceded` (on-pitch), else `team_goals_conceded`; DGW outfield uses per-match `team_goals_conceded` to avoid double-counting the GW total. xGC from `player_gw.expected_goals_conceded` (on DGW, stored on first match row only). |
 | Sidebar | Children of a nav parent are indented with a left guide rule (`.nav-kids`). Collapsed rail still hides them entirely. |
 | Local preview | `scripts/serve.command` (double-click) or `.venv/bin/python serve.py --port N`. Port defaults to 8765; `serve.py` has no persistent port setting. |
@@ -63,6 +66,32 @@ Related docs: [README](../README.md) · [dashboard](./dashboard_readme.md) · [F
 | UI rollback | Keep the last two dashboard commits. Ask before going further back. |
 
 ## Chronology
+
+### 2026-11-18 — Remove table scroll-cue overlay
+
+**Choice:** Drop `.table-scroll::after` right-edge fade; keep sticky identity column with a 1px edge instead of a soft shadow.
+
+**Why:** The fade is fixed to the visible right edge of the scroller, so it looked like a random vertical band through metric columns (e.g. between TiB and BCT) on desktop and phone.
+
+**Where:** `web/styles.css`.
+
+### 2026-11-18 — Treemap extra metrics + Team performances
+
+**Choice:** FPL treemap gains an Extra metrics multi-select for additional tile/tooltip lines. New Insights page `#insights-team-performance` mirrors Player performances with club rollups from player-match.
+
+**Why:** Users wanted optional metrics beyond the fixed metric-group pair, and a team-level scatter with the same filter surface.
+
+**Where:** `web/fpl-treemap.js`, `web/team-performance.js`, `web/index.html`, `web/app.js`, docs.
+
+### 2026-11-18 — Mobile tables + fixed social exports
+
+**Choice:** Keep comparison tables with horizontal scroll; sticky only the primary identity column; shorten Pos; denser padding and a right-edge scroll cue on phone. Filters go to a 2-column grid under ~860px. Social PNGs always compose from a fixed 1080-wide off-screen layout (GW Review `gwrev-export--phone`, GW FDR `gwfdr-fx-export`) with larger ChartExport header/footer and fixed scale 3 — never from the live phone viewport.
+
+**Why:** Sticky player+team both at `left:0` overlapped on horizontal scroll. Phone media collapse during capture made pitch/splits jump and type tiny. Device DPR made laptop vs phone downloads differ.
+
+**Where:** `web/components.js` (`stickyColumnKey`, `shortPos`), `web/styles.css`, `web/chart-export.js`, `web/gw-review.js`, `web/gw-fdr.js`, `web/index.html` / `web/app.js` cache busts.
+
+**Drawbacks:** Horizontal scroll remains (cued). On-page preview can still look phone-narrow; the download is the canonical social frame.
 
 ### 2026-11-16 — Drop BCS_sf; City–Palace postponed listing is not a second map
 

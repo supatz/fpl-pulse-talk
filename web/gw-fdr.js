@@ -128,8 +128,14 @@
 
     try {
       list.classList.add("gwfdr-fx-export");
+      // Fixed 1080 social canvas — independent of phone viewport media queries.
       list.style.width = "1080px";
       list.style.maxWidth = "1080px";
+      list.style.position = "fixed";
+      list.style.left = "-12000px";
+      list.style.top = "0";
+      list.style.zIndex = "-1";
+      list.style.pointerEvents = "none";
       const spiderData = state._spiderData || [];
       list.querySelectorAll("[data-spider-idx]").forEach((host) => {
         const i = Number(host.getAttribute("data-spider-idx"));
@@ -154,6 +160,11 @@
       list.classList.remove("gwfdr-fx-export");
       list.style.width = "";
       list.style.maxWidth = "";
+      list.style.position = "";
+      list.style.left = "";
+      list.style.top = "";
+      list.style.zIndex = "";
+      list.style.pointerEvents = "";
       const spiderData = state._spiderData || [];
       list.querySelectorAll("[data-spider-idx]").forEach((host) => {
         const i = Number(host.getAttribute("data-spider-idx"));

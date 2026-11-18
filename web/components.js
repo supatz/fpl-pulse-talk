@@ -79,6 +79,18 @@ export function decorateNames(root = document) {
   });
 }
 
+const POS_SHORT = {
+  Forward: "FWD",
+  Midfielder: "MID",
+  Defender: "DEF",
+  Goalkeeper: "GK",
+};
+
+export function shortPos(value) {
+  const s = String(value ?? "");
+  return POS_SHORT[s] || s;
+}
+
 export function fmt(value, kind, { dash = "—" } = {}) {
   if (value === null || value === undefined || Number.isNaN(value)) return dash;
   if (kind === "text") return String(value);
@@ -88,6 +100,13 @@ export function fmt(value, kind, { dash = "—" } = {}) {
   if (kind === "1dp") return n.toFixed(1);
   if (kind === "2dp") return n.toFixed(2);
   return String(n);
+}
+
+/** Primary sticky column: player tables pin player; team table pins team. */
+function stickyColumnKey(cols) {
+  if (cols.includes("player")) return "player";
+  if (cols.includes("team")) return "team";
+  return null;
 }
 
 export function loadState(view) {
@@ -932,6 +951,7 @@ export function makeTable(cfg) {
     }
     const cols = columns();
     if (!cols.includes(state.sort)) state.sort = cfg.defaultSort;
+    const stickyKey = stickyColumnKey(cols);
     const sorted = [...rows].sort((a, b) => cmp(cellValue(a, state.sort, state, cfg), cellValue(b, state.sort, state, cfg), state.dir));
     const thead = document.createElement("thead");
     if (cfg.columnSections?.length) {
@@ -956,7 +976,8 @@ export function makeTable(cfg) {
       th.dataset.name = `${view}.col.${key}`;
       th.dataset.tip = m.tip;
       const secClass = sectionClassFor(key);
-      th.className = [state.sort === key ? `sorted ${state.dir}` : "", secClass].filter(Boolean).join(" ");
+      const sticky = key === stickyKey ? "sticky" : "";
+      th.className = [state.sort === key ? `sorted ${state.dir}` : "", secClass, sticky].filter(Boolean).join(" ");
       th.append(nameDot(`${view}.col.${key}`), document.createTextNode(headerLabel(m, key, cfg, state)));
       th.addEventListener("click", (e) => {
         if (e.target.closest(".name-dot")) return;
@@ -980,17 +1001,19 @@ export function makeTable(cfg) {
             .map((key) => {
               const m = METRICS[key] || { fmt: "text" };
               const secClass = sectionClassFor(key);
+              const sticky = key === stickyKey ? "sticky" : "";
               if (key === "player" && cfg.onPlayerClick) {
                 const name = fmt(cellValue(r, key, state, cfg), m.fmt);
-                return `<td class="sticky ${secClass}"><button type="button" class="player-link" data-player-open="${id}">${escapeCell(name)}</button></td>`;
+                return `<td class="${[sticky, secClass].filter(Boolean).join(" ")}"><button type="button" class="player-link" data-player-open="${id}">${escapeCell(name)}</button></td>`;
               }
               if (key === "team" && cfg.onTeamClick) {
                 const name = fmt(cellValue(r, key, state, cfg), m.fmt);
                 const tc = String(r.team_code ?? "");
-                return `<td class="sticky ${secClass}"><button type="button" class="player-link" data-team-open="${tc}">${escapeCell(name)}</button></td>`;
+                return `<td class="${[sticky, secClass].filter(Boolean).join(" ")}"><button type="button" class="player-link" data-team-open="${tc}">${escapeCell(name)}</button></td>`;
               }
-              const sticky = key === "player" || key === "team" ? "sticky" : "";
-              return `<td class="${[sticky, secClass].filter(Boolean).join(" ")}">${fmt(cellValue(r, key, state, cfg), m.fmt)}</td>`;
+              const raw = cellValue(r, key, state, cfg);
+              const shown = key === "pos" ? shortPos(raw) : fmt(raw, m.fmt);
+              return `<td class="${[sticky, secClass].filter(Boolean).join(" ")}">${escapeCell(shown)}</td>`;
             })
             .join("")}</tr>`;
         })

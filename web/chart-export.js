@@ -1,15 +1,15 @@
 /* Download visible insight charts as PNG with caption header + FPL Pulse Talk footer. */
 (() => {
-  const HEADER_H = 54;
-  const BANNER_H = 38;
+  const HEADER_H = 72;
+  const BANNER_H = 52;
   const BG = "#121820";
   const PAPER = "#1a2430";
   const INK = "#f4f7f6";
   const MUTED = "#9aafb8";
   const ACCENT = "#3ddc97";
   const HANDLE = "@fpl_pulse_talk";
-  /** Export raster scale — high enough for crisp labels in downloads. */
-  const EXPORT_SCALE = Math.max(3, Math.min(4, Math.round((window.devicePixelRatio || 2) + 1)));
+  /** Fixed export scale so phone and laptop downloads match. */
+  const EXPORT_SCALE = 3;
   const SANS = '"Avenir Next", "Segoe UI", Roboto, ui-sans-serif, system-ui, sans-serif';
   const SERIF = '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif';
 
@@ -201,12 +201,12 @@
     ctx.fillStyle = ACCENT;
     ctx.fillRect(0, y + HEADER_H - 1.5, width, 1.5);
 
-    const pad = Math.max(12, Math.round(width * 0.02));
-    const titleSize = Math.max(12, Math.min(15, width / 68));
-    const metaSize = Math.max(9, Math.min(10.5, width / 100));
-    const glossSize = Math.max(9, Math.min(11, width / 92));
-    const titleY = y + 18;
-    const glossY = y + 38;
+    const pad = Math.max(16, Math.round(width * 0.022));
+    const titleSize = Math.max(18, Math.min(24, width / 48));
+    const metaSize = Math.max(12, Math.min(14, width / 78));
+    const glossSize = Math.max(12, Math.min(14, width / 72));
+    const titleY = y + 24;
+    const glossY = y + 50;
 
     let rightReserve = pad;
     if (meta) {
@@ -239,22 +239,22 @@
     ctx.fillStyle = ACCENT;
     ctx.fillRect(0, y, width, 1.5);
 
-    const pad = Math.max(12, Math.round(width * 0.02));
-    const mark = 22;
+    const pad = Math.max(16, Math.round(width * 0.022));
+    const mark = 28;
     drawPulseMark(ctx, pad, y + (BANNER_H - mark) / 2, mark);
 
     ctx.fillStyle = INK;
-    ctx.font = `600 ${Math.max(11, Math.min(13, width / 70))}px ${SERIF}`;
+    ctx.font = `600 ${Math.max(15, Math.min(18, width / 58))}px ${SERIF}`;
     ctx.textBaseline = "middle";
-    ctx.fillText("FPL PULSE TALK", pad + mark + 8, y + BANNER_H / 2);
+    ctx.fillText("FPL PULSE TALK", pad + mark + 10, y + BANNER_H / 2);
 
     const right = width - pad;
-    const handleSize = Math.max(10, Math.min(12, width / 80));
+    const handleSize = Math.max(13, Math.min(16, width / 68));
     ctx.fillStyle = MUTED;
     ctx.font = `500 ${handleSize}px ${SANS}`;
     const handleW = ctx.measureText(HANDLE).width;
-    const icon = 12;
-    const gap = 6;
+    const icon = 14;
+    const gap = 8;
     const blockW = icon + gap + handleW;
     drawXIcon(ctx, right - blockW, y + (BANNER_H - icon) / 2, icon);
     ctx.fillStyle = MUTED;
@@ -348,11 +348,17 @@
     clone.querySelectorAll(".tip, .fpl-map-tip, [hidden]").forEach((n) => n.remove());
     clone.removeAttribute("hidden");
     // Width-lock only — forcing height makes CSS grid/flex children stretch (e.g. badge pills).
+    // Drop off-screen parking from prepare() so foreignObject lays out at the export width.
     clone.style.width = `${width}px`;
     clone.style.maxWidth = `${width}px`;
     clone.style.height = "auto";
     clone.style.minHeight = "0";
     clone.style.alignContent = "start";
+    clone.style.position = "static";
+    clone.style.left = "auto";
+    clone.style.top = "auto";
+    clone.style.zIndex = "auto";
+    clone.style.pointerEvents = "auto";
     clone.style.background = getComputedStyle(node).backgroundColor || BG;
     const html = new XMLSerializer().serializeToString(clone);
     const css = collectPageCss();

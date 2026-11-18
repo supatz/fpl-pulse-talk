@@ -682,14 +682,25 @@
           prepare: (node) => {
             if (!node) return;
             node.classList.add("gwrev-export--phone");
+            // Fixed social canvas layout — independent of phone viewport media queries.
             node.style.width = "1080px";
             node.style.maxWidth = "1080px";
+            node.style.position = "fixed";
+            node.style.left = "-12000px";
+            node.style.top = "0";
+            node.style.zIndex = "-1";
+            node.style.pointerEvents = "none";
           },
           cleanup: (node) => {
             if (!node) return;
             node.classList.remove("gwrev-export--phone");
             node.style.width = "";
             node.style.maxWidth = "";
+            node.style.position = "";
+            node.style.left = "";
+            node.style.top = "";
+            node.style.zIndex = "";
+            node.style.pointerEvents = "";
           },
         })
       );

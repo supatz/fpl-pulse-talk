@@ -6,7 +6,7 @@ The italic **i** appears only when you hover a named label (not on changing valu
 |---|---|
 | `nav.*` | Sidebar and page links |
 | `nav.collapse` / `nav.topbar` | Collapse control and workspace bar |
-| `nav.insights.players` / `.matches` / `.teams` / `.understat` / `.sofascore` / `.sofascore_sides` / `.fpl_treemap` | Insights subpages |
+| `nav.insights.players` / `.matches` / `.teams` / `.understat` / `.sofascore` / `.sofascore_sides` / `.fpl_treemap` / `.player_performance` / `.team_performance` | Insights subpages |
 | `home.title` / `home.meta` / `home.jumps` | Home |
 | `fixtures.title` / `fixtures.gwlabel` / `fixtures.controls` | Fixtures heading and GW note |
 | `fixtures.filter.competition` | Fixtures competition (multi-select) |
@@ -37,5 +37,6 @@ The italic **i** appears only when you hover a named label (not on changing valu
 | `shots.drawer` | Player/team shot-mix drawer |
 | `us-tip` / `.tip` | Treemap hover (moved to `document.body` for positioning) |
 | `insights.fpl_treemap.title` | FPL player treemap heading |
-| `fpl_treemap.controls.metric` / `.sort` / `.gw` / `.teams` | FPL treemap metric, tile-size, gameweek, and team filters |
+| `fpl_treemap.controls.metric` / `.sort` / `.extra` / `.gw` / `.teams` | FPL treemap metric, tile-size, extra metrics, gameweek, and team filters |
 | `fpl_treemap.status` / `.chart` | FPL treemap status and visualization |
+| `insights.team_performance.title` / `team_performance.controls.*` / `.chart` | Team performances scatter |

@@ -18,7 +18,7 @@ import {
   renderMatchBoard,
   renderTicker,
   saveState,
-} from "./components.js?v=17";
+} from "./components.js?v=18";
 import { bindPlayerDrawer, openPlayerDrawer } from "./player-drawer.js?v=6";
 import { openTeamDrawer } from "./team-drawer.js?v=1";
 
@@ -36,6 +36,7 @@ const PAGES = [
   "insights-sofascore-sides",
   "insights-fpl-treemap",
   "insights-player-performance",
+  "insights-team-performance",
   "insights-finishing",
   "insights-team-sides",
   "insights-fixture-proof",
@@ -49,6 +50,7 @@ const INSIGHT_PAGES = [
   "insights-sofascore-sides",
   "insights-fpl-treemap",
   "insights-player-performance",
+  "insights-team-performance",
   "insights-finishing",
   "insights-team-sides",
   "insights-fixture-proof",
@@ -81,6 +83,7 @@ const PAGE_TITLES = {
   "insights-sofascore-sides": "Insights · SofaScore sides",
   "insights-fpl-treemap": "Insights · FPL treemap",
   "insights-player-performance": "Insights · Player performances",
+  "insights-team-performance": "Insights · Team performances",
   "insights-finishing": "Insights · Finishing",
   "insights-team-sides": "Insights · Team shot sides",
   "insights-fixture-proof": "Insights · Fixture Proof",
@@ -173,6 +176,16 @@ function showPage(id) {
       } catch (err) {
         const status = document.getElementById("perf-status");
         if (status) status.textContent = `Player performances failed to start: ${err.message}`;
+      }
+    });
+  }
+  if (page === "insights-team-performance") {
+    requestAnimationFrame(() => {
+      try {
+        window.initTeamPerformance?.();
+      } catch (err) {
+        const status = document.getElementById("tperf-status");
+        if (status) status.textContent = `Team performances failed to start: ${err.message}`;
       }
     });
   }
